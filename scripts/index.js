@@ -222,9 +222,15 @@ function initRightPanel(containerId) {
   const layer = new Konva.Layer(); stage.add(layer);
 
   const tr = new Konva.Transformer({
-	  rotateEnabled: true,
 	  keepRatio: false,
-	  enabledAnchors: ['top-left','top-right','bottom-left','bottom-right'] // basic resize handles
+	  rotateEnabled: true,
+	  rotationSnaps: [0, 90, 180, 270],
+	rotationSnapTolerance: 5,
+	  enabledAnchors: [
+		  'top-left','top-center','top-right',
+		  'middle-left','middle-right',
+		  'bottom-left','bottom-center','bottom-right'
+		]
 	});
 	layer.add(tr);
 
@@ -258,6 +264,14 @@ function initRightPanel(containerId) {
 		    layer.batchDraw();
 		  });
 
+		  konvaImg.on('dragmove', () => {
+			  snapToStageEdges(konvaImg, stage.width(), stage.height());
+			});
+
+			konvaImg.on('transform', () => {
+			  snapToStageEdges(konvaImg, stage.width(), stage.height());
+			});
+
 	      layer.add(konvaImg);
 	      tiedRects[groupId] = konvaImg;
 	      layer.batchDraw();
@@ -275,6 +289,26 @@ function initRightPanel(containerId) {
   };
 
   return stage;
+}
+
+const SNAP_DIST = 10; // distance threshold to snap
+
+function snapToStageEdges(shape, stageWidth, stageHeight) {
+  let pos = shape.position();
+  let width = shape.width() * shape.scaleX();
+  let height = shape.height() * shape.scaleY();
+
+  // Snap left
+  if (Math.abs(pos.x) < SNAP_DIST) pos.x = 0;
+  // Snap top
+  if (Math.abs(pos.y) < SNAP_DIST) pos.y = 0;
+  // Snap right
+  if (Math.abs(pos.x + width - stageWidth) < SNAP_DIST) pos.x = stageWidth - width;
+  // Snap bottom
+  if (Math.abs(pos.y + height - stageHeight) < SNAP_DIST) pos.y = stageHeight - height;
+
+  shape.position(pos);
+  shape.getLayer().batchDraw();
 }
 
 // ------------------- Init -------------------
