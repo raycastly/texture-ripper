@@ -58,9 +58,14 @@ function extractTextureFromPolygon(group, bgImage, outWidth = 128, outHeight = 1
   if (!bgImage) return null;
 
   const groupPos = group.position();
-  const points = group.find('.vertex').map(v => ({
-    x: v.x() + groupPos.x, y: v.y() + groupPos.y
-  }));
+  const points = [];
+group.find('.vertex').forEach(vertex => {
+  const absPos = vertex.getAbsolutePosition();
+  points.push({
+    x: absPos.x - bgImage.x(),
+    y: absPos.y - bgImage.y()
+  });
+});
   if (points.length !== 4) return null;
 
   const dst = [{ x: 0, y: 0 }, { x: outWidth - 1, y: 0 }, { x: outWidth - 1, y: outHeight - 1 }, { x: 0, y: outHeight - 1 }];
