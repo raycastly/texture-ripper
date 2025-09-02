@@ -242,10 +242,56 @@ document.getElementById('extractAllLeft').addEventListener('click', () => {
   });
 
   document.getElementById(deleteBtnId).addEventListener('click', () => {
+    // Case 1: polygon selected
     if (selectedGroup) {
       if (window.rightPanel) window.rightPanel.removeTexture(selectedGroup._id);
-      selectedGroup.destroy(); selectedGroup = null; polygonLayer.draw();
+      selectedGroup.destroy();
+      selectedGroup = null;
+      polygonLayer.draw();
+      return;
     }
+
+    // Case 2: background image selected with transformer
+    const selectedNodes = tr.nodes();
+    if (selectedNodes.length > 0) {
+      selectedNodes.forEach(node => {
+        if (node instanceof Konva.Image) {
+          node.destroy();
+        }
+      });
+      tr.nodes([]); // clear transformer
+      bgLayer.draw();
+    }
+  });
+
+
+  // Transformer for background images only
+  const tr = new Konva.Transformer({
+    keepRatio: false,
+    rotateEnabled: true,
+    enabledAnchors: [
+      'top-left','top-center','top-right',
+      'middle-left','middle-right',
+      'bottom-left','bottom-center','bottom-right'
+    ]
+  });
+  bgLayer.add(tr);
+
+  // Click to select background image
+  stage.on('click', (e) => {
+    if (e.target instanceof Konva.Image) {
+      tr.nodes([e.target]);   // select image
+    } else {
+      tr.nodes([]);           // deselect if clicking empty space / polygon
+    }
+    bgLayer.batchDraw();
+  });
+
+  stage.on('keydown', (e) => {
+    if (e.key === 'Shift') tr.keepRatio(true);
+  });
+  stage.on('keyup', (e) => {
+    if (e.key === 'Shift') tr.keepRatio(false);
   });
 
   return stage;
@@ -423,6 +469,13 @@ function initRightPanel(containerId) {
       }
     }
   };
+
+  stage.on('keydown', (e) => {
+    if (e.key === 'Shift') tr.keepRatio(true);
+  });
+  stage.on('keyup', (e) => {
+    if (e.key === 'Shift') tr.keepRatio(false);
+  });
 
   return stage;
 }
