@@ -43,7 +43,6 @@ function createPolygonGroup(stage, layer) {
       rectPoints[i] = { x: vertex.x(), y: vertex.y() };
       polygon.points(rectPoints.flatMap(p => [p.x, p.y]));
       drawGrid(group, rectPoints);
-      layer.batchDraw();
     });
 
     group.add(vertex);
@@ -164,8 +163,12 @@ function extractTextureFromPolygon(group, bgImage, opts = {}) {
 function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
   const container = document.getElementById(containerId);
   const stage = new Konva.Stage({ container: containerId, width: container.clientWidth, height: container.clientHeight});
-  const bgLayer = new Konva.Layer(), polygonLayer = new Konva.Layer();
-  stage.add(bgLayer).add(polygonLayer);
+
+  const uiLayer = new Konva.Layer();
+  const bgLayer = new Konva.Layer();
+  const polygonLayer = new Konva.Layer();
+
+  stage.add(bgLayer).add(polygonLayer).add(uiLayer);
 
 const bgImages = []; // store multiple images
 let selectedGroup = null;
@@ -275,7 +278,7 @@ document.getElementById('extractAllLeft').addEventListener('click', () => {
       'bottom-left','bottom-center','bottom-right'
     ]
   });
-  bgLayer.add(tr);
+  uiLayer.add(tr);
 
   // Click to select background image
   stage.on('click', (e) => {
@@ -320,14 +323,19 @@ function initRightPanel(containerId) {
   const stagePixelWidth = parseInt(document.getElementById('rightWidth').value);
   const stagePixelHeight = parseInt(document.getElementById('rightHeight').value);
 
+  const uiLayer = new Konva.Layer();
+  const guidesLayer = new Konva.Layer();
+  const imageLayer = new Konva.Layer();
+
   const stage = new Konva.Stage({
     container: containerId,
     width: stagePixelWidth,
     height: stagePixelHeight,
   });
 
-  const layer = new Konva.Layer();
-  stage.add(layer);
+  stage.add(imageLayer)
+  .add(guidesLayer)
+  .add(uiLayer);
 
   // Transformer for selected rectangles
   const tr = new Konva.Transformer({
@@ -341,7 +349,7 @@ function initRightPanel(containerId) {
       'bottom-left','bottom-center','bottom-right'
     ]
   });
-  layer.add(tr);
+  uiLayer.add(tr);
 
   const GUIDELINE_OFFSET = 5; // for snapping
   const tiedRects = {}; // id -> Konva.Image
@@ -410,7 +418,7 @@ function initRightPanel(containerId) {
 	    });
 	    if (g.orientation === 'V') line.absolutePosition({ x: g.lineGuide, y: 0 });
 	    else if (g.orientation === 'H') line.absolutePosition({ x: 0, y: g.lineGuide });
-	    layer.add(line);
+	    guidesLayer.add(line);
 	  });
 	}
 
@@ -422,7 +430,7 @@ function initRightPanel(containerId) {
       img.onload = () => {
         if (tiedRects[groupId]) {
           tiedRects[groupId].image(img);
-          layer.batchDraw();
+          guidesLayer.batchDraw();
         } else {
           const konvaImg = new Konva.Image({
             x: stagePixelWidth / 4,
@@ -431,7 +439,7 @@ function initRightPanel(containerId) {
             draggable: true,
             id: `rect_${groupId}`
           });
-          layer.add(konvaImg);
+          imageLayer.add(konvaImg);
           tiedRects[groupId] = konvaImg;
 
           // Make selectable with transformer
@@ -439,7 +447,7 @@ function initRightPanel(containerId) {
 
           // Snapping logic
           konvaImg.on('dragmove', e => {
-            layer.find('.guid-line').forEach(l=>l.destroy());
+            guidesLayer.find('.guid-line').forEach(l=>l.destroy());
             const lineGuideStops = getLineGuideStops(konvaImg);
             const itemBounds = getObjectSnappingEdges(konvaImg);
             const guides = getGuides(lineGuideStops, itemBounds);
@@ -454,9 +462,9 @@ function initRightPanel(containerId) {
             });
             konvaImg.absolutePosition(absPos);
           });
-          konvaImg.on('dragend', e => layer.find('.guid-line').forEach(l=>l.destroy()));
+          konvaImg.on('dragend', e => guidesLayer.find('.guid-line').forEach(l=>l.destroy()));
 
-          layer.batchDraw();
+          guidesLayer.batchDraw();
         }
       };
       img.src = textureData;
@@ -465,7 +473,7 @@ function initRightPanel(containerId) {
       if (tiedRects[groupId]) {
         tiedRects[groupId].destroy();
         delete tiedRects[groupId];
-        layer.draw();
+        imageLayer.draw();
       }
     }
   };
