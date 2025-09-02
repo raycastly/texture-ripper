@@ -54,52 +54,110 @@ function createPolygonGroup(stage, layer) {
 }
 
 // Extract texture from a polygon
-function extractTextureFromPolygon(group, bgImage, outWidth = 128, outHeight = 128) {
-  if (!bgImage) return null;
+function extractTextureFromPolygon(group, bgImage, opts = {}) {
+  const minSize = opts.minSize || 16;
+  const maxSize = opts.maxSize || 2048;
+  const upscale = opts.upscale || 1;
 
-  const groupPos = group.position();
-  const points = [];
-group.find('.vertex').forEach(vertex => {
-  const absPos = vertex.getAbsolutePosition();
-  points.push({
-    x: absPos.x - bgImage.x(),
-    y: absPos.y - bgImage.y()
-  });
-});
-  if (points.length !== 4) return null;
+  if (!bgImage || !bgImage.image()) return null;
 
+  // 1) get the 4 vertices in absolute stage coordinates
+  const absPts = [];
+  group.find('.vertex').forEach(vertex => {
+	  const p = vertex.getAbsolutePosition();
+	  absPts.push({ x: p.x, y: p.y });
+	});
+
+
+  if (absPts.length !== 4) return null;
+
+  // 2) convert to coordinates relative to the displayed bgImage (top-left of the image)
+  const imgDispX = bgImage.x();
+  const imgDispY = bgImage.y();
+  const dispPts = absPts.map(p => ({ x: p.x - imgDispX, y: p.y - imgDispY }));
+
+  // 3) map displayed coords to original image pixel coords
+  //    because bgImage is often drawn scaled, we sample from the original image
+  const origImg = bgImage.image(); // HTMLImageElement
+  const ratioX = origImg.width / bgImage.width();
+  const ratioY = origImg.height / bgImage.height();
+  // (usually ratioX === ratioY but handle non-uniform scaling just in case)
+  const srcPts = dispPts.map(p => ({ x: p.x * ratioX, y: p.y * ratioY }));
+
+  // 4) measure widths/heights (in original-image pixels)
+  function dist(a, b) { const dx = a.x - b.x, dy = a.y - b.y; return Math.sqrt(dx*dx + dy*dy); }
+
+  // We assume polygon vertex order is consistent:
+  // rectPoints = [top-left, bottom-left, bottom-right, top-right]
+  const p0 = srcPts[0], p1 = srcPts[1], p2 = srcPts[2], p3 = srcPts[3];
+
+  const topLen = dist(p0, p3);
+  const bottomLen = dist(p1, p2);
+  const avgWidth = (topLen + bottomLen) / 2;
+
+  const leftLen = dist(p0, p1);
+  const rightLen = dist(p3, p2);
+  const avgHeight = (leftLen + rightLen) / 2;
+
+  // 5) compute target output size, apply upscale and clamp
+  let outW = Math.max(minSize, Math.round(avgWidth * upscale));
+  let outH = Math.max(minSize, Math.round(avgHeight * upscale));
+
+  // Protect from pathological sizes
+  outW = Math.min(outW, maxSize);
+  outH = Math.min(outH, maxSize);
+
+  // If either dimension is zero or NaN (degenerate quad), bail out
+  if (!isFinite(outW) || !isFinite(outH) || outW <= 0 || outH <= 0) return null;
+
+  // 6) destination corners (use the ordering that matched your correct orientation)
   const dst = [
-  { x: 0, y: 0 },                  // top-left
-  { x: 0, y: outHeight - 1 },      // bottom-left
-  { x: outWidth - 1, y: outHeight - 1 }, // bottom-right
-  { x: outWidth - 1, y: 0 }        // top-right
-];
+    { x: 0, y: 0 },                     // top-left
+    { x: 0, y: outH - 1 },              // bottom-left
+    { x: outW - 1, y: outH - 1 },       // bottom-right
+    { x: outW - 1, y: 0 }               // top-right
+  ];
 
+  // 7) compute homography from source (original-image coords) -> dst
+  const H = findHomography(srcPts, dst);
+  const Hinv = invert3(H);
 
-  const H = findHomography(points, dst), Hinv = invert3(H);
+  // 8) prepare a canvas at desired output size and the original image canvas for sampling
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width = outW;
+  outCanvas.height = outH;
+  const outCtx = outCanvas.getContext('2d');
 
-  const canvas = document.createElement('canvas');
-  canvas.width = outWidth; canvas.height = outHeight;
-  const ctx = canvas.getContext('2d');
+  // Draw original image at its native resolution onto a tmp canvas
+  const srcCanvas = document.createElement('canvas');
+  srcCanvas.width = origImg.width;
+  srcCanvas.height = origImg.height;
+  const srcCtx = srcCanvas.getContext('2d');
+  srcCtx.drawImage(origImg, 0, 0, origImg.width, origImg.height);
 
-  const tmpCanvas = document.createElement('canvas');
-  tmpCanvas.width = bgImage.width(); tmpCanvas.height = bgImage.height();
-  const tmpCtx = tmpCanvas.getContext('2d');
-  tmpCtx.drawImage(bgImage.image(), 0, 0, bgImage.width(), bgImage.height());
-  const imgData = tmpCtx.getImageData(0, 0, bgImage.width(), bgImage.height());
+  const srcImageData = srcCtx.getImageData(0, 0, srcCanvas.width, srcCanvas.height);
+  const srcPixels = srcImageData.data;
+  const srcW = srcImageData.width;
+  const srcH = srcImageData.height;
 
-  const outputData = ctx.createImageData(outWidth, outHeight);
-  for (let y = 0; y < outHeight; y++) {
-    for (let x = 0; x < outWidth; x++) {
-      const srcPt = applyHomography(Hinv, { x, y });
-      const rgba = sampleBilinear(imgData.data, imgData.width, imgData.height, srcPt.x, srcPt.y);
-      const idx = (y * outWidth + x) * 4;
-      outputData.data.set(rgba, idx);
+  const outImageData = outCtx.createImageData(outW, outH);
+  const outPixels = outImageData.data;
+
+  // 9) for each pixel (x,y) in output, map back to source and bilinear-sample
+  for (let y = 0; y < outH; y++) {
+    for (let x = 0; x < outW; x++) {
+      const srcPt = applyHomography(Hinv, { x: x, y: y }); // returns {x,y} in original-image pixels
+      const rgba = sampleBilinear(srcPixels, srcW, srcH, srcPt.x, srcPt.y);
+      const idx = (y * outW + x) * 4;
+      outPixels[idx] = rgba[0];
+      outPixels[idx + 1] = rgba[1];
+      outPixels[idx + 2] = rgba[2];
+      outPixels[idx + 3] = rgba[3];
     }
   }
 
-  ctx.putImageData(outputData, 0, 0);
-  return canvas.toDataURL('image/png');
+  outCtx.putImageData(outImageData, 0, 0);
+  return outCanvas.toDataURL('image/png');
 }
 
 // ------------------- Left Panel -------------------
