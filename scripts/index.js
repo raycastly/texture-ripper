@@ -170,32 +170,45 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
 const bgImages = []; // store multiple images
 let selectedGroup = null;
 
-  document.getElementById('extractAllLeft').addEventListener('click', () => {
-  polygonLayer.find('.group').forEach(group => {
+document.getElementById('extractAllLeft').addEventListener('click', () => {
+  polygonLayer.find('.group').forEach(async group => {
     const overlappingImgs = getUnderlyingImages(group);
     if (!overlappingImgs.length) return;
 
-    // create an offscreen canvas to composite the final texture
-    const absPts = group.getClientRect(); // polygon bounding box
+    // bounding box
+    const absPts = group.getClientRect();
     const canvasW = Math.round(absPts.width);
     const canvasH = Math.round(absPts.height);
+
     const outCanvas = document.createElement('canvas');
     outCanvas.width = canvasW;
     outCanvas.height = canvasH;
     const ctx = outCanvas.getContext('2d');
 
-    overlappingImgs.forEach(img => {
-      const texture = extractTextureFromPolygon(group, img);
-      if (texture) {
-        const tmpImg = new Image();
-        tmpImg.src = texture;
-        ctx.drawImage(tmpImg, 0, 0, canvasW, canvasH);
-      }
+    // helper: load image from data URL
+    const loadImage = src => new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.src = src;
     });
 
-    if (window.rightPanel) window.rightPanel.updateTexture(group._id, outCanvas.toDataURL());
+    // extract textures → load them as real Image objects
+    const textures = overlappingImgs
+      .map(img => extractTextureFromPolygon(group, img))
+      .filter(Boolean);
+
+    const loadedImgs = await Promise.all(textures.map(loadImage));
+
+    // draw them all in order
+    loadedImgs.forEach(img => ctx.drawImage(img, 0, 0, canvasW, canvasH));
+
+    // update once at the end
+    if (window.rightPanel) {
+      window.rightPanel.updateTexture(group._id, outCanvas.toDataURL());
+    }
   });
 });
+
 
   document.getElementById(uploadId).addEventListener('change', e => {
     const file = e.target.files[0]; if (!file) return;
