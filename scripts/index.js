@@ -218,97 +218,157 @@ function initRightPanel(containerId) {
   const stagePixelWidth = parseInt(document.getElementById('rightWidth').value);
   const stagePixelHeight = parseInt(document.getElementById('rightHeight').value);
 
-  const stage = new Konva.Stage({ container: containerId, width: stagePixelWidth, height: stagePixelHeight });
-  const layer = new Konva.Layer(); stage.add(layer);
+  const stage = new Konva.Stage({
+    container: containerId,
+    width: stagePixelWidth,
+    height: stagePixelHeight,
+  });
 
+  const layer = new Konva.Layer();
+  stage.add(layer);
+
+  // Transformer for selected rectangles
   const tr = new Konva.Transformer({
-	  keepRatio: false,
-	  rotateEnabled: true,
-	  rotationSnaps: [0, 90, 180, 270],
-	rotationSnapTolerance: 5,
-	  enabledAnchors: [
-		  'top-left','top-center','top-right',
-		  'middle-left','middle-right',
-		  'bottom-left','bottom-center','bottom-right'
-		]
-	});
-	layer.add(tr);
+    keepRatio: false,
+    rotateEnabled: true,
+    rotationSnaps: [0, 90, 180, 270],
+    rotationSnapTolerance: 5,
+    enabledAnchors: [
+      'top-left','top-center','top-right',
+      'middle-left','middle-right',
+      'bottom-left','bottom-center','bottom-right'
+    ]
+  });
+  layer.add(tr);
+
+  const GUIDELINE_OFFSET = 5; // for snapping
+  const tiedRects = {}; // id -> Konva.Image
+
+  // ---------- Helper functions for snapping ----------
+  function getLineGuideStops(skipNode) {
+    const vertical = [0, stage.width()/2, stage.width()];
+    const horizontal = [0, stage.height()/2, stage.height()];
+    Object.values(tiedRects).forEach(node => {
+      if (node === skipNode) return;
+      const box = node.getClientRect();
+      vertical.push(box.x, box.x + box.width, box.x + box.width/2);
+      horizontal.push(box.y, box.y + box.height, box.y + box.height/2);
+    });
+    return { vertical: vertical.flat(), horizontal: horizontal.flat() };
+  }
+
+  function getObjectSnappingEdges(node) {
+    const box = node.getClientRect();
+    const absPos = node.absolutePosition();
+    return {
+      vertical: [
+        { guide: Math.round(box.x), offset: Math.round(absPos.x - box.x) },
+        { guide: Math.round(box.x + box.width/2), offset: Math.round(absPos.x - box.x - box.width/2) },
+        { guide: Math.round(box.x + box.width), offset: Math.round(absPos.x - box.x - box.width) }
+      ],
+      horizontal: [
+        { guide: Math.round(box.y), offset: Math.round(absPos.y - box.y) },
+        { guide: Math.round(box.y + box.height/2), offset: Math.round(absPos.y - box.y - box.height/2) },
+        { guide: Math.round(box.y + box.height), offset: Math.round(absPos.y - box.y - box.height) }
+      ]
+    };
+  }
+
+  	function getGuides(lineGuideStops, itemBounds) {
+	  let resultV = [], resultH = [];
+
+	  lineGuideStops.vertical.forEach(lineGuide => {
+	    itemBounds.vertical.forEach(item => {
+	      const diff = Math.abs(lineGuide - item.guide);
+	      if (diff < GUIDELINE_OFFSET) resultV.push({ lineGuide, diff, offset: item.offset, orientation: 'V' });
+	    });
+	  });
+
+	  lineGuideStops.horizontal.forEach(lineGuide => {
+	    itemBounds.horizontal.forEach(item => {
+	      const diff = Math.abs(lineGuide - item.guide);
+	      if (diff < GUIDELINE_OFFSET) resultH.push({ lineGuide, diff, offset: item.offset, orientation: 'H' });
+	    });
+	  });
+
+	  const guides = [];
+	  if (resultV.length) guides.push(resultV.sort((a,b)=>a.diff-b.diff)[0]);
+	  if (resultH.length) guides.push(resultH.sort((a,b)=>a.diff-b.diff)[0]);
+	  return guides;
+	}
+
+	function drawGuides(guides) {
+	  guides.forEach(g => {
+	    const line = new Konva.Line({
+	      points: g.orientation === 'V' ? [0, -6000, 0, 6000] : [-6000, 0, 6000, 0],
+	      stroke: 'rgb(0, 161, 255)',
+	      strokeWidth: 1,
+	      dash: [4,6],
+	      name: 'guid-line'
+	    });
+	    if (g.orientation === 'V') line.absolutePosition({ x: g.lineGuide, y: 0 });
+	    else if (g.orientation === 'H') line.absolutePosition({ x: 0, y: g.lineGuide });
+	    layer.add(line);
+	  });
+	}
 
 
-  const tiedRects = {};
-
+  // ---------- Main API ----------
   window.rightPanel = {
     updateTexture(groupId, textureData) {
-	  if (tiedRects[groupId]) {
-		  const img = new Image();
-		  img.onload = () => {
-		    tiedRects[groupId].image(img);
-		    layer.batchDraw();
-		  };
-		  img.src = textureData;
-		}
- 		else {
-	    // Create new Konva.Image if none exists
-	    const img = new Image();
-	    img.onload = () => {
-	      const konvaImg = new Konva.Image({
-	        x: stagePixelWidth / 4,
-	        y: stagePixelHeight / 4,
-	        image: img,
-	        draggable: true,
-	        id: `rect_${groupId}`
-	      });
+      const img = new Image();
+      img.onload = () => {
+        if (tiedRects[groupId]) {
+          tiedRects[groupId].image(img);
+          layer.batchDraw();
+        } else {
+          const konvaImg = new Konva.Image({
+            x: stagePixelWidth / 4,
+            y: stagePixelHeight / 4,
+            image: img,
+            draggable: true,
+            id: `rect_${groupId}`
+          });
+          layer.add(konvaImg);
+          tiedRects[groupId] = konvaImg;
 
-	      konvaImg.on('click', (evt) => {
-		    tr.nodes([konvaImg]);  // attach transformer to the clicked rectangle
-		    layer.batchDraw();
-		  });
+          // Make selectable with transformer
+          konvaImg.on('click', () => tr.nodes([konvaImg]));
 
-		  konvaImg.on('dragmove', () => {
-			  snapToStageEdges(konvaImg, stage.width(), stage.height());
-			});
+          // Snapping logic
+          konvaImg.on('dragmove', e => {
+            layer.find('.guid-line').forEach(l=>l.destroy());
+            const lineGuideStops = getLineGuideStops(konvaImg);
+            const itemBounds = getObjectSnappingEdges(konvaImg);
+            const guides = getGuides(lineGuideStops, itemBounds);
 
-			konvaImg.on('transform', () => {
-			  snapToStageEdges(konvaImg, stage.width(), stage.height());
-			});
+            if (!guides.length) return;
 
-	      layer.add(konvaImg);
-	      tiedRects[groupId] = konvaImg;
-	      layer.batchDraw();
-	    };
-	    img.src = textureData;
-	  }
-	},
+            drawGuides(guides);
+            const absPos = konvaImg.absolutePosition();
+            guides.forEach(g => {
+              if (g.orientation === 'V') absPos.x = g.lineGuide + g.offset;
+              else if (g.orientation === 'H') absPos.y = g.lineGuide + g.offset;
+            });
+            konvaImg.absolutePosition(absPos);
+          });
+          konvaImg.on('dragend', e => layer.find('.guid-line').forEach(l=>l.destroy()));
+
+          layer.batchDraw();
+        }
+      };
+      img.src = textureData;
+    },
     removeTexture(groupId) {
-	    if (tiedRects[groupId]) {
-	      tiedRects[groupId].destroy();
-	      delete tiedRects[groupId];
-	      layer.draw();
-	    }
-	  }
+      if (tiedRects[groupId]) {
+        tiedRects[groupId].destroy();
+        delete tiedRects[groupId];
+        layer.draw();
+      }
+    }
   };
 
   return stage;
-}
-
-const SNAP_DIST = 10; // distance threshold to snap
-
-function snapToStageEdges(shape, stageWidth, stageHeight) {
-  let pos = shape.position();
-  let width = shape.width() * shape.scaleX();
-  let height = shape.height() * shape.scaleY();
-
-  // Snap left
-  if (Math.abs(pos.x) < SNAP_DIST) pos.x = 0;
-  // Snap top
-  if (Math.abs(pos.y) < SNAP_DIST) pos.y = 0;
-  // Snap right
-  if (Math.abs(pos.x + width - stageWidth) < SNAP_DIST) pos.x = stageWidth - width;
-  // Snap bottom
-  if (Math.abs(pos.y + height - stageHeight) < SNAP_DIST) pos.y = stageHeight - height;
-
-  shape.position(pos);
-  shape.getLayer().batchDraw();
 }
 
 // ------------------- Init -------------------
