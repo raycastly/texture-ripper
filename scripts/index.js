@@ -418,27 +418,6 @@ function initRightPanel(containerId) {
 const stageLeft = initLeftPanel('canvasLeftContainer', 'addRectLeft', 'deleteObjLeft', 'bgUploadLeft');
 const stageRight = initRightPanel('canvasRightContainer');
 
-
-
-const layer = new Konva.Layer();
-stageLeft.add(layer);
-
-// Example image (replace with your image)
-const imageObj = new Image();
-imageObj.src = 'your-image.png';
-imageObj.onload = function () {
-  const konvaImage = new Konva.Image({
-    x: 50,
-    y: 50,
-    image: imageObj,
-    width: 200,
-    height: 200,
-    draggable: true, // optional
-  });
-  layer.add(konvaImage);
-  layer.draw();
-};
-
 let isPanning = false;
 let lastPos = { x: 0, y: 0 };
 
