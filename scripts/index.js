@@ -68,7 +68,14 @@ group.find('.vertex').forEach(vertex => {
 });
   if (points.length !== 4) return null;
 
-  const dst = [{ x: 0, y: 0 }, { x: outWidth - 1, y: 0 }, { x: outWidth - 1, y: outHeight - 1 }, { x: 0, y: outHeight - 1 }];
+  const dst = [
+  { x: 0, y: 0 },                  // top-left
+  { x: 0, y: outHeight - 1 },      // bottom-left
+  { x: outWidth - 1, y: outHeight - 1 }, // bottom-right
+  { x: outWidth - 1, y: 0 }        // top-right
+];
+
+
   const H = findHomography(points, dst), Hinv = invert3(H);
 
   const canvas = document.createElement('canvas');
