@@ -199,16 +199,19 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
   return stage;
 }
 
-function initRightPanel(containerId, addBtnId, deleteBtnId, uploadId) {
+function initRightPanel(containerId, uploadId) {
     const container = document.getElementById(containerId);
 
-    let width = parseInt(document.getElementById('rightWidth').value);
-    let height = parseInt(document.getElementById('rightHeight').value);
+    const displayWidth = container.clientWidth;
+    const displayHeight = container.clientHeight;
+
+    let stagePixelWidth = parseInt(document.getElementById('rightWidth').value);
+    let stagePixelHeight = parseInt(document.getElementById('rightHeight').value);
 
     const stage = new Konva.Stage({
         container: containerId,
-        width: width,
-        height: height
+        width: stagePixelWidth,
+        height: stagePixelHeight
     });
 
     const layer = new Konva.Layer();
@@ -219,7 +222,17 @@ function initRightPanel(containerId, addBtnId, deleteBtnId, uploadId) {
 
     let selectedNodes = [];
 
-    // Load image from file input
+    // Scale stage to fit display container
+    function rescaleStage() {
+        stage.scale({
+            x: displayWidth / stagePixelWidth,
+            y: displayHeight / stagePixelHeight
+        });
+        stage.draw();
+    }
+    rescaleStage();
+
+    // Load images
     document.getElementById(uploadId).addEventListener('change', e => {
         const file = e.target.files[0];
         if (!file) return;
@@ -229,25 +242,19 @@ function initRightPanel(containerId, addBtnId, deleteBtnId, uploadId) {
             const imgObj = new Image();
             imgObj.onload = () => {
                 const konvaImg = new Konva.Image({
-                    x: stage.width() / 4,
-                    y: stage.height() / 4,
+                    x: stagePixelWidth / 4,
+                    y: stagePixelHeight / 4,
                     image: imgObj,
                     draggable: true,
                 });
 
-                konvaImg.on('transform', () => layer.batchDraw());
                 konvaImg.on('click', (ev) => {
-                    // Handle multi-selection with shift/ctrl/meta
                     const metaPressed = ev.evt.shiftKey || ev.evt.ctrlKey || ev.evt.metaKey;
                     const isSelected = selectedNodes.indexOf(konvaImg) >= 0;
 
-                    if (!metaPressed && !isSelected) {
-                        selectedNodes = [konvaImg];
-                    } else if (metaPressed && isSelected) {
-                        selectedNodes = selectedNodes.filter(n => n !== konvaImg);
-                    } else if (metaPressed && !isSelected) {
-                        selectedNodes.push(konvaImg);
-                    }
+                    if (!metaPressed && !isSelected) selectedNodes = [konvaImg];
+                    else if (metaPressed && isSelected) selectedNodes = selectedNodes.filter(n => n !== konvaImg);
+                    else if (metaPressed && !isSelected) selectedNodes.push(konvaImg);
 
                     tr.nodes(selectedNodes);
                     layer.batchDraw();
@@ -261,92 +268,49 @@ function initRightPanel(containerId, addBtnId, deleteBtnId, uploadId) {
         reader.readAsDataURL(file);
     });
 
-    // Selection rectangle
-    const selectionRect = new Konva.Rect({
-        fill: 'rgba(0,0,255,0.2)',
-        visible: false
-    });
-    layer.add(selectionRect);
-
-    let x1, y1, x2, y2;
-
-    stage.on('mousedown touchstart', e => {
-        if (e.target !== stage) return;
-        x1 = stage.getPointerPosition().x;
-        y1 = stage.getPointerPosition().y;
-        selectionRect.visible(true);
-        selectionRect.width(0);
-        selectionRect.height(0);
+    // Set output pixel size
+    document.getElementById('resizeRight').addEventListener('click', () => {
+        stagePixelWidth = parseInt(document.getElementById('rightWidth').value);
+        stagePixelHeight = parseInt(document.getElementById('rightHeight').value);
+        stage.width(stagePixelWidth);
+        stage.height(stagePixelHeight);
+        rescaleStage();
     });
 
-    stage.on('mousemove touchmove', () => {
-        if (!selectionRect.visible()) return;
-        x2 = stage.getPointerPosition().x;
-        y2 = stage.getPointerPosition().y;
-
-        selectionRect.setAttrs({
-            x: Math.min(x1, x2),
-            y: Math.min(y1, y2),
-            width: Math.abs(x2 - x1),
-            height: Math.abs(y2 - y1)
-        });
-        layer.batchDraw();
-    });
-
-    stage.on('mouseup touchend', () => {
-        if (!selectionRect.visible()) return;
-        selectionRect.visible(false);
-
-        const box = selectionRect.getClientRect();
-        const shapes = stage.find('Image');
-        selectedNodes = shapes.filter(shape => Konva.Util.haveIntersection(box, shape.getClientRect()));
-        tr.nodes(selectedNodes);
-        layer.batchDraw();
-    });
-
-    // Zoom with mouse wheel
-    stage.on('wheel', e => {
-        e.evt.preventDefault();
-        const oldScale = stage.scaleX();
-        const pointer = stage.getPointerPosition();
-        const scaleBy = 1.1;
-        const direction = e.evt.deltaY > 0 ? 1/scaleBy : scaleBy;
-        const newScale = oldScale * direction;
-
-        stage.scale({ x: newScale, y: newScale });
-
-        const mousePointTo = {
-            x: (pointer.x - stage.x()) / oldScale,
-            y: (pointer.y - stage.y()) / oldScale
-        };
-
-        stage.position({
-            x: pointer.x - mousePointTo.x * newScale,
-            y: pointer.y - mousePointTo.y * newScale
-        });
-
-        stage.batchDraw();
-    });
-
-    // Panning
-    stage.draggable(true);
-
-    // Resize button logic
-    const widthInput = document.getElementById('rightWidth');
-    const heightInput = document.getElementById('rightHeight');
-    const resizeBtn = document.getElementById('resizeRight');
-
-    resizeBtn.addEventListener('click', () => {
-        const w = Math.max(50, parseInt(widthInput.value));
-        const h = Math.max(50, parseInt(heightInput.value));
-        stage.width(w);
-        stage.height(h);
-        stage.batchDraw();
+    // Export texture atlas
+    document.getElementById('exportRight').addEventListener('click', () => {
+        const dataURL = stage.toDataURL({ pixelRatio: 1 }); // pixelRatio=1 ensures exact pixel size
+        const link = document.createElement('a');
+        link.download = 'texture_atlas.png';
+        link.href = dataURL;
+        link.click();
     });
 
     return stage;
+
+    // Add dashed border around the stage
+	function addDashedBorder(stage, layer) {
+	    const border = new Konva.Line({
+	        points: [
+	            0, 0,
+	            stage.width(), 0,
+	            stage.width(), stage.height(),
+	            0, stage.height(),
+	            0, 0
+	        ],
+	        stroke: 'white',
+	        strokeWidth: 2,
+	        dash: [10, 5], // 10px dash, 5px gap
+	        listening: false // make sure it doesn't capture events
+	    });
+	    layer.add(border);
+	    layer.draw();
+	}
+
+	// Call after layer is created
+	addDashedBorder(stage, layer);
 }
 
 // Initialize the panels
 const stageLeft = initLeftPanel('canvasLeftContainer', 'addRectLeft', 'deleteObjLeft', 'bgUploadLeft');
-const stageRight = initRightPanel('canvasRightContainer', 'addRectRight', 'deleteObjRight', 'bgUploadRight');
+const stageRight = initRightPanel('canvasRightContainer', 'bgUploadRight');
