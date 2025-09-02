@@ -163,19 +163,39 @@ function extractTextureFromPolygon(group, bgImage, opts = {}) {
 // ------------------- Left Panel -------------------
 function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
   const container = document.getElementById(containerId);
-  const stage = new Konva.Stage({ container: containerId, width: container.clientWidth, height: container.clientHeight });
+  const stage = new Konva.Stage({ container: containerId, width: container.clientWidth, height: container.clientHeight});
   const bgLayer = new Konva.Layer(), polygonLayer = new Konva.Layer();
   stage.add(bgLayer).add(polygonLayer);
 
-  let bgImage = null, selectedGroup = null;
+const bgImages = []; // store multiple images
+let selectedGroup = null;
 
   document.getElementById('extractAllLeft').addEventListener('click', () => {
-    if (!bgImage) return;
-    polygonLayer.find('.group').forEach(group => {
-      const texture = extractTextureFromPolygon(group, bgImage);
-      if (texture && window.rightPanel) window.rightPanel.updateTexture(group._id, texture);
+  polygonLayer.find('.group').forEach(group => {
+    const overlappingImgs = getUnderlyingImages(group);
+    if (!overlappingImgs.length) return;
+
+    // create an offscreen canvas to composite the final texture
+    const absPts = group.getClientRect(); // polygon bounding box
+    const canvasW = Math.round(absPts.width);
+    const canvasH = Math.round(absPts.height);
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = canvasW;
+    outCanvas.height = canvasH;
+    const ctx = outCanvas.getContext('2d');
+
+    overlappingImgs.forEach(img => {
+      const texture = extractTextureFromPolygon(group, img);
+      if (texture) {
+        const tmpImg = new Image();
+        tmpImg.src = texture;
+        ctx.drawImage(tmpImg, 0, 0, canvasW, canvasH);
+      }
     });
+
+    if (window.rightPanel) window.rightPanel.updateTexture(group._id, outCanvas.toDataURL());
   });
+});
 
   document.getElementById(uploadId).addEventListener('change', e => {
     const file = e.target.files[0]; if (!file) return;
@@ -183,14 +203,20 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
     reader.onload = evt => {
       const img = new Image();
       img.onload = () => {
-        if (bgImage) bgImage.destroy();
         const scale = Math.min(stage.width() / img.width, stage.height() / img.height);
-        bgImage = new Konva.Image({
+
+        const konvaImg = new Konva.Image({
           x: (stage.width() - img.width * scale) / 2,
           y: (stage.height() - img.height * scale) / 2,
-          image: img, width: img.width * scale, height: img.height * scale
+          image: img,
+          width: img.width * scale,
+          height: img.height * scale,
+          draggable: true
         });
-        bgLayer.add(bgImage).batchDraw();
+
+        bgLayer.add(konvaImg);
+        bgImages.push(konvaImg);
+        bgLayer.batchDraw();
       };
       img.src = evt.target.result;
     };
@@ -210,6 +236,23 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
   });
 
   return stage;
+}
+
+// Given a polygon group, return the Konva.Image underneath it
+function getUnderlyingImages(group) {
+  const images = stageLeft.find('Image');
+  if (!images || images.length === 0) return [];
+
+  const groupBox = group.getClientRect();
+  return images.filter(img => {
+    const imgBox = img.getClientRect();
+    return (
+      groupBox.x + groupBox.width > imgBox.x &&
+      groupBox.x < imgBox.x + imgBox.width &&
+      groupBox.y + groupBox.height > imgBox.y &&
+      groupBox.y < imgBox.y + imgBox.height
+    );
+  });
 }
 
 // ------------------- Right Panel -------------------
@@ -374,3 +417,100 @@ function initRightPanel(containerId) {
 // ------------------- Init -------------------
 const stageLeft = initLeftPanel('canvasLeftContainer', 'addRectLeft', 'deleteObjLeft', 'bgUploadLeft');
 const stageRight = initRightPanel('canvasRightContainer');
+
+
+
+const layer = new Konva.Layer();
+stageLeft.add(layer);
+
+// Example image (replace with your image)
+const imageObj = new Image();
+imageObj.src = 'your-image.png';
+imageObj.onload = function () {
+  const konvaImage = new Konva.Image({
+    x: 50,
+    y: 50,
+    image: imageObj,
+    width: 200,
+    height: 200,
+    draggable: true, // optional
+  });
+  layer.add(konvaImage);
+  layer.draw();
+};
+
+let isPanning = false;
+let lastPos = { x: 0, y: 0 };
+
+stageLeft.on("mousedown", (e) => {
+  if (e.evt.button === 1) { // middle click
+    isPanning = true;
+    lastPos = stageLeft.getPointerPosition();
+    e.evt.preventDefault();
+
+    // temporarily disable dragging for nodes so Konva doesn't "steal" the event
+    stageLeft.find("Image").forEach(img => img.draggable(false));
+    stageLeft.find(".group").forEach(g => g.draggable(false));
+  }
+});
+
+stageLeft.on("mouseup", () => {
+  if (isPanning) {
+    isPanning = false;
+
+    // re-enable node dragging for left click
+    stageLeft.find("Image").forEach(img => img.draggable(true));
+    stageLeft.find(".group").forEach(g => g.draggable(true));
+  }
+});
+
+stageLeft.on("mousemove", () => {
+  if (!isPanning) return;
+
+  const pos = stageLeft.getPointerPosition();
+  const dx = pos.x - lastPos.x;
+  const dy = pos.y - lastPos.y;
+
+  stageLeft.x(stageLeft.x() + dx);
+  stageLeft.y(stageLeft.y() + dy);
+  stageLeft.batchDraw();
+
+  lastPos = pos;
+});
+
+// prevent context menu on middle click
+stageLeft.container().addEventListener("contextmenu", (e) => e.preventDefault());
+
+
+const scaleBy = 1.1;
+stageLeft.on('wheel', (e) => {
+  // stop default scrolling
+  e.evt.preventDefault();
+
+  const oldScale = stageLeft.scaleX();
+  const pointer = stageLeft.getPointerPosition();
+
+  const mousePointTo = {
+    x: (pointer.x - stageLeft.x()) / oldScale,
+    y: (pointer.y - stageLeft.y()) / oldScale,
+  };
+
+  // how to scale? Zoom in? Or zoom out?
+  let direction = e.evt.deltaY > 0 ? -1 : 1;
+
+  // when we zoom on trackpad, e.evt.ctrlKey is true
+  // in that case lets revert direction
+  if (e.evt.ctrlKey) {
+    direction = -direction;
+  }
+
+  const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+  stageLeft.scale({ x: newScale, y: newScale });
+
+  const newPos = {
+    x: pointer.x - mousePointTo.x * newScale,
+    y: pointer.y - mousePointTo.y * newScale,
+  };
+  stageLeft.position(newPos);
+});
