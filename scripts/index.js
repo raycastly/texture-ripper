@@ -228,18 +228,39 @@ function initRightPanel(containerId) {
 
   window.rightPanel = {
     updateTexture(groupId, textureData) {
-      if (tiedRects[groupId]) {
-        tiedRects[groupId].image().src = textureData;
-      } else {
-        Konva.Image.fromURL(textureData, (konvaImg) => {
-          konvaImg.setAttrs({ x: stagePixelWidth / 4, y: stagePixelHeight / 4, draggable: true, id: `rect_${groupId}` });
-          layer.add(konvaImg); tiedRects[groupId] = konvaImg; layer.batchDraw();
-        });
-      }
-    },
+	  if (tiedRects[groupId]) {
+	    // Update existing rectangle with a new image without creating duplicates
+	    const img = new Image();
+	    img.onload = () => {
+	      tiedRects[groupId].image(img);
+	      layer.batchDraw();
+	    };
+	    img.src = textureData;
+	  } else {
+	    // Create new Konva.Image if none exists
+	    const img = new Image();
+	    img.onload = () => {
+	      const konvaImg = new Konva.Image({
+	        x: stagePixelWidth / 4,
+	        y: stagePixelHeight / 4,
+	        image: img,
+	        draggable: true,
+	        id: `rect_${groupId}`
+	      });
+	      layer.add(konvaImg);
+	      tiedRects[groupId] = konvaImg;
+	      layer.batchDraw();
+	    };
+	    img.src = textureData;
+	  }
+	},
     removeTexture(groupId) {
-      if (tiedRects[groupId]) { tiedRects[groupId].destroy(); delete tiedRects[groupId]; layer.draw(); }
-    }
+	    if (tiedRects[groupId]) {
+	      tiedRects[groupId].destroy();
+	      delete tiedRects[groupId];
+	      layer.draw();
+	    }
+	  }
   };
 
   return stage;
