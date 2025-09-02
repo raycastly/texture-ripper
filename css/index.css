@@ -1,0 +1,31 @@
+body, html {
+    height: 100%;
+    margin: 0;
+    background-color: #2e2e2e;
+    color: #f1f1f1;
+}
+.split {
+    height: 100%;
+    display: flex;
+}
+.panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #444;
+    background-color: #1e1e1e;
+}
+.panel:last-child {
+    border-right: none;
+}
+.toolbar {
+    background-color: #333;
+    padding: 0.5rem;
+}
+.canvas-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem;
+}
