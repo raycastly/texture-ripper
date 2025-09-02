@@ -10,39 +10,39 @@
 </head>
 <body>
     <div class="split">
-		<!-- Left Panel -->
-		<div class="panel">
-		    <div class="toolbar d-flex justify-content-between">
-		    	<div class="toolbar d-flex justify-content-between">
-				    <input type="file" id="bgUploadLeft" accept="image/*" class="form-control form-control-sm" style="width:auto;display:inline-block;">
-				</div>
-		    </div>
-		    <div class="canvas-container" id="canvasLeftContainer"></div>
-		    <div class="toolbar d-flex justify-content-between">
-		        <button id="addRectLeft" class="btn btn-sm btn-primary">Add Rectangle</button>
-		        <button id="deleteObjLeft" class="btn btn-sm btn-danger">Delete</button>
-		    </div>
-		</div>
+        <!-- Left Panel -->
+        <div class="panel">
+            <div class="toolbar d-flex justify-content-between">
+                <input type="file" id="bgUploadLeft" accept="image/*" class="form-control form-control-sm" style="width:auto;display:inline-block;">
+            </div>
+            <div class="canvas-container" id="canvasLeftContainer"></div>
+            <div class="toolbar d-flex justify-content-between">
+                <button id="addRectLeft" class="btn btn-sm btn-primary">Add Rectangle</button>
+                <button id="deleteObjLeft" class="btn btn-sm btn-danger">Delete</button>
+                <button id="extractAllLeft" class="btn btn-sm btn-success">Extract All</button>
+            </div>
+        </div>
 
-		<!-- Right Panel -->
-		<div class="panel">
-		    <div class="toolbar d-flex gap-2 align-items-center">
-			    <input type="file" id="bgUploadRight" accept="image/*" class="form-control form-control-sm" style="width:auto;display:inline-block;">
-			    <button id="exportRight" class="btn btn-sm btn-success">Export Atlas</button>
-			</div>
-		    <div class="canvas-container" id="canvasRightContainer"></div>
-		    <div class="toolbar d-flex justify-content-left">
-			    <label>Width: <input type="number" id="rightWidth" value="256" style="width:80px;"></label>
-			    <label>Height: <input type="number" id="rightHeight" value="256" style="width:80px;"></label>
-			    <button id="resizeRight" class="btn btn-sm btn-primary">Set Output Size</button>
-		    </div>
-		</div>
+        <!-- Right Panel -->
+        <div class="panel">
+            <div class="toolbar d-flex gap-2 align-items-center">
+                <button id="exportRight" class="btn btn-sm btn-success">Export Atlas</button>
+                <div style="flex: 1"></div>
+                <label>Width: <input type="number" id="rightWidth" value="512" style="width:80px;"></label>
+                <label>Height: <input type="number" id="rightHeight" value="512" style="width:80px;"></label>
+                <button id="resizeRight" class="btn btn-sm btn-primary">Set Size</button>
+            </div>
+            <div class="canvas-container" id="canvasRightContainer"></div>
+            <div class="thumbs-container" id="thumbsContainer"></div>
+        </div>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./scripts/jquery.min.js"></script>
   	<script src="https://cdn.jsdelivr.net/npm/konva@8.4.3/konva.min.js"></script>
-    <script src="./scripts/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+    <script src="./scripts/homography.js"></script>
+	<script src="./scripts/index.js"></script>
 </body>
 </html>
