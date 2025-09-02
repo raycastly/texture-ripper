@@ -27,13 +27,16 @@
 		<!-- Right Panel -->
 		<div class="panel">
 		    <div class="toolbar d-flex justify-content-between">
-		    	<div class="toolbar d-flex justify-content-between">
-				    <input type="file" id="bgUploadRight" accept="image/*" class="form-control form-control-sm" style="width:auto;display:inline-block;">
-				</div>
+		        <div>
+		            <input type="file" id="bgUploadRight" accept="image/*" class="form-control form-control-sm" style="width:auto;display:inline-block;">
+		        </div>
+		        <div class="d-flex gap-2 align-items-center">
+		            <label>Width: <input type="number" id="rightWidth" value="600" style="width:80px;"></label>
+		            <label>Height: <input type="number" id="rightHeight" value="400" style="width:80px;"></label>
+		            <button id="resizeRight" class="btn btn-sm btn-primary">Resize</button>
+		        </div>
 		    </div>
-		    <div class="canvas-container" id="canvasRightContainer"></div>
-		    <div class="toolbar d-flex justify-content-between">
-		    </div>
+		    <div class="canvas-container" id="canvasRightContainer" style="border:1px solid #ccc;"></div>
 		</div>
     </div>
 

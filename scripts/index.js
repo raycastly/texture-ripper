@@ -193,15 +193,6 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
   window.addEventListener('resize', () => {
     stage.width(container.clientWidth);
     stage.height(container.clientHeight);
-    bgRect.width(container.clientWidth);
-    bgRect.height(container.clientHeight);
-    if (bgImage) {
-      const scale = Math.min(stage.width() / bgImage.image().width, stage.height() / bgImage.image().height);
-      bgImage.width(bgImage.image().width * scale);
-      bgImage.height(bgImage.image().height * scale);
-      bgImage.x((stage.width() - bgImage.width())/2);
-      bgImage.y((stage.height() - bgImage.height())/2);
-    }
     stage.batchDraw();
   });
 
@@ -211,16 +202,19 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
 function initRightPanel(containerId, addBtnId, deleteBtnId, uploadId) {
     const container = document.getElementById(containerId);
 
+    let width = parseInt(document.getElementById('rightWidth').value);
+    let height = parseInt(document.getElementById('rightHeight').value);
+
     const stage = new Konva.Stage({
         container: containerId,
-        width: container.clientWidth,
-        height: container.clientHeight
+        width: width,
+        height: height
     });
 
     const layer = new Konva.Layer();
     stage.add(layer);
 
-    let tr = new Konva.Transformer();
+    const tr = new Konva.Transformer();
     layer.add(tr);
 
     let selectedNodes = [];
@@ -265,14 +259,6 @@ function initRightPanel(containerId, addBtnId, deleteBtnId, uploadId) {
             imgObj.src = evt.target.result;
         };
         reader.readAsDataURL(file);
-    });
-
-    // Delete selected images
-    document.getElementById(deleteBtnId).addEventListener('click', () => {
-        selectedNodes.forEach(node => node.destroy());
-        selectedNodes = [];
-        tr.nodes([]);
-        layer.batchDraw();
     });
 
     // Selection rectangle
@@ -345,11 +331,17 @@ function initRightPanel(containerId, addBtnId, deleteBtnId, uploadId) {
     // Panning
     stage.draggable(true);
 
-    // Responsive resizing
-    window.addEventListener('resize', () => {
-        stage.width(container.clientWidth);
-        stage.height(container.clientHeight);
-        layer.batchDraw();
+    // Resize button logic
+    const widthInput = document.getElementById('rightWidth');
+    const heightInput = document.getElementById('rightHeight');
+    const resizeBtn = document.getElementById('resizeRight');
+
+    resizeBtn.addEventListener('click', () => {
+        const w = Math.max(50, parseInt(widthInput.value));
+        const h = Math.max(50, parseInt(heightInput.value));
+        stage.width(w);
+        stage.height(h);
+        stage.batchDraw();
     });
 
     return stage;
