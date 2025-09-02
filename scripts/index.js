@@ -221,22 +221,27 @@ function initRightPanel(containerId) {
   const stage = new Konva.Stage({ container: containerId, width: stagePixelWidth, height: stagePixelHeight });
   const layer = new Konva.Layer(); stage.add(layer);
 
-  const tr = new Konva.Transformer({ enabledAnchors: ['top-left','top-right','bottom-left','bottom-right'], rotateEnabled: true });
-  layer.add(tr);
+  const tr = new Konva.Transformer({
+	  rotateEnabled: true,
+	  keepRatio: false,
+	  enabledAnchors: ['top-left','top-right','bottom-left','bottom-right'] // basic resize handles
+	});
+	layer.add(tr);
+
 
   const tiedRects = {};
 
   window.rightPanel = {
     updateTexture(groupId, textureData) {
 	  if (tiedRects[groupId]) {
-	    // Update existing rectangle with a new image without creating duplicates
-	    const img = new Image();
-	    img.onload = () => {
-	      tiedRects[groupId].image(img);
-	      layer.batchDraw();
-	    };
-	    img.src = textureData;
-	  } else {
+		  const img = new Image();
+		  img.onload = () => {
+		    tiedRects[groupId].image(img);
+		    layer.batchDraw();
+		  };
+		  img.src = textureData;
+		}
+ 		else {
 	    // Create new Konva.Image if none exists
 	    const img = new Image();
 	    img.onload = () => {
@@ -247,6 +252,12 @@ function initRightPanel(containerId) {
 	        draggable: true,
 	        id: `rect_${groupId}`
 	      });
+
+	      konvaImg.on('click', (evt) => {
+		    tr.nodes([konvaImg]);  // attach transformer to the clicked rectangle
+		    layer.batchDraw();
+		  });
+
 	      layer.add(konvaImg);
 	      tiedRects[groupId] = konvaImg;
 	      layer.batchDraw();
