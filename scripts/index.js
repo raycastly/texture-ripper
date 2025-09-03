@@ -316,13 +316,54 @@ function initRightPanel(containerId) {
     container: containerId,
     width: container.clientWidth,
     height: container.clientHeight,
-    draggable: true,
+    draggable: false, // REMOVE THIS - we'll handle panning manually
   });
 
   stage.add(bgLayer)
-  .add(imageLayer)
-  .add(guidesLayer)
-  .add(uiLayer);
+       .add(imageLayer)
+       .add(guidesLayer)
+       .add(uiLayer);
+
+  let isPanning = false;
+  let lastPos = { x: 0, y: 0 };
+
+  // Middle click panning (same as left panel)
+  stage.on("mousedown", (e) => {
+    if (e.evt.button === 1) { // middle click
+      isPanning = true;
+      lastPos = stage.getPointerPosition();
+      e.evt.preventDefault();
+
+      // temporarily disable dragging for images
+      Object.values(tiedRects).forEach(img => img.draggable(false));
+    }
+  });
+
+  stage.on("mouseup", () => {
+    if (isPanning) {
+      isPanning = false;
+      
+      // re-enable dragging for images
+      Object.values(tiedRects).forEach(img => img.draggable(true));
+    }
+  });
+
+  stage.on("mousemove", () => {
+    if (!isPanning) return;
+
+    const pos = stage.getPointerPosition();
+    const dx = pos.x - lastPos.x;
+    const dy = pos.y - lastPos.y;
+
+    stage.x(stage.x() + dx);
+    stage.y(stage.y() + dy);
+    stage.batchDraw();
+
+    lastPos = pos;
+  });
+
+  // prevent context menu
+  stage.container().addEventListener("contextmenu", (e) => e.preventDefault());
 
   // Light grey background
   const bgRect = new Konva.Rect({
@@ -336,7 +377,7 @@ function initRightPanel(containerId) {
   bgLayer.add(bgRect);
   stage.bgRect = bgRect;
 
-  // Transformer for selected rectangles
+  // Transformer for selection
   const tr = new Konva.Transformer({
     keepRatio: false,
     rotateEnabled: true,
@@ -353,50 +394,147 @@ function initRightPanel(containerId) {
   const GUIDELINE_OFFSET = 5;
   const tiedRects = {};
   stage.tiedRects = tiedRects;
-  
-  // ---------- Fixed helper functions for snapping (account for stage position) ----------
+
+  // ---------------- Selection Rectangle ----------------
+  const selectionRectangle = new Konva.Rect({
+    fill: 'rgba(0,0,255,0.3)',
+    visible: false,
+    listening: false // don't interfere with other mouse events
+  });
+  uiLayer.add(selectionRectangle);
+
+  let x1, y1, x2, y2;
+  let isSelecting = false;
+
+  stage.on('mousedown', (e) => {
+    // Only left mouse button for selection
+    if (e.evt.button !== 0) return;
+    
+    // Don't start selection if clicking on an image or transformer
+    if (e.target !== stage && e.target !== bgRect) return;
+
+    isSelecting = true;
+    const pos = stage.getPointerPosition();
+    
+    // Convert to stage-relative coordinates (accounting for panning)
+    x1 = (pos.x - stage.x()) / stage.scaleX();
+    y1 = (pos.y - stage.y()) / stage.scaleY();
+    x2 = x1;
+    y2 = y1;
+
+    selectionRectangle.setAttrs({
+      x: x1,
+      y: y1,
+      width: 0,
+      height: 0,
+      visible: true,
+    });
+  });
+
+  stage.on('mousemove', () => {
+    if (!isSelecting) return;
+    
+    const pos = stage.getPointerPosition();
+    
+    // Convert to stage-relative coordinates (accounting for panning)
+    x2 = (pos.x - stage.x()) / stage.scaleX();
+    y2 = (pos.y - stage.y()) / stage.scaleY();
+
+    selectionRectangle.setAttrs({
+      x: Math.min(x1, x2),
+      y: Math.min(y1, y2),
+      width: Math.abs(x2 - x1),
+      height: Math.abs(y2 - y1),
+    });
+    uiLayer.batchDraw();
+  });
+
+  stage.on('mouseup', () => {
+    if (!isSelecting) return;
+    isSelecting = false;
+
+    setTimeout(() => selectionRectangle.visible(false));
+
+    const images = Object.values(tiedRects);
+    
+    // Get the selection rectangle in absolute coordinates
+    const selRect = selectionRectangle.getClientRect();
+    
+    const selected = images.filter(img => {
+      const imgRect = img.getClientRect();
+      
+      // Check for intersection in absolute coordinates
+      return (
+        selRect.x <= imgRect.x + imgRect.width &&
+        selRect.x + selRect.width >= imgRect.x &&
+        selRect.y <= imgRect.y + imgRect.height &&
+        selRect.y + selRect.height >= imgRect.y
+      );
+    });
+
+    tr.nodes(selected);
+  });
+
+  // ---------------- Click selection ----------------
+  stage.on('click tap', (e) => {
+    // Don't process clicks if we were selecting
+    if (selectionRectangle.visible() && selectionRectangle.width() > 0 && selectionRectangle.height() > 0) {
+      return;
+    }
+
+    if (e.target === stage || e.target === bgRect) {
+      tr.nodes([]);
+      return;
+    }
+
+    if (!(e.target instanceof Konva.Image)) return;
+
+    const metaPressed = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
+    const isSelected = tr.nodes().indexOf(e.target) >= 0;
+
+    if (!metaPressed && !isSelected) {
+      tr.nodes([e.target]);
+    } else if (metaPressed && isSelected) {
+      const nodes = tr.nodes().slice();
+      nodes.splice(nodes.indexOf(e.target), 1);
+      tr.nodes(nodes);
+    } else if (metaPressed && !isSelected) {
+      tr.nodes(tr.nodes().concat([e.target]));
+    }
+  });
+
+  // ---------------- Snapping helpers ----------------
   function getLineGuideStops(skipNode) {
-    // Get stage transform
     const stagePos = stage.position();
     const stageScale = stage.scaleX();
-    
-    // Convert bgRect to absolute coordinates (accounting for stage position and scale)
-    const bgRectBox = bgRect.getClientRect();
-    const vertical = [
-      bgRectBox.x,
-      bgRectBox.x + bgRectBox.width / 2,
-      bgRectBox.x + bgRectBox.width
-    ];
-    const horizontal = [
-      bgRectBox.y,
-      bgRectBox.y + bgRectBox.height / 2,
-      bgRectBox.y + bgRectBox.height
-    ];
 
-    // Add other rectangles' edges (already in absolute coordinates)
+    const bgRectBox = bgRect.getClientRect();
+    const vertical = [bgRectBox.x, bgRectBox.x + bgRectBox.width/2, bgRectBox.x + bgRectBox.width];
+    const horizontal = [bgRectBox.y, bgRectBox.y + bgRectBox.height/2, bgRectBox.y + bgRectBox.height];
+
     Object.values(tiedRects).forEach(node => {
       if (node === skipNode) return;
       const box = node.getClientRect();
-      vertical.push(box.x, box.x + box.width, box.x + box.width / 2);
-      horizontal.push(box.y, box.y + box.height, box.y + box.height / 2);
+      vertical.push(box.x, box.x + box.width, box.x + box.width/2);
+      horizontal.push(box.y, box.y + box.height, box.y + box.height/2);
     });
 
     return { vertical, horizontal };
   }
 
   function getObjectSnappingEdges(node) {
-    const box = node.getClientRect(); // already in absolute coordinates
+    const box = node.getClientRect();
     const absPos = node.absolutePosition();
 
     return {
       vertical: [
         { guide: Math.round(box.x), offset: absPos.x - box.x },
-        { guide: Math.round(box.x + box.width / 2), offset: absPos.x - (box.x + box.width / 2) },
+        { guide: Math.round(box.x + box.width / 2), offset: absPos.x - (box.x + box.width/2) },
         { guide: Math.round(box.x + box.width), offset: absPos.x - (box.x + box.width) }
       ],
       horizontal: [
         { guide: Math.round(box.y), offset: absPos.y - box.y },
-        { guide: Math.round(box.y + box.height / 2), offset: absPos.y - (box.y + box.height / 2) },
+        { guide: Math.round(box.y + box.height / 2), offset: absPos.y - (box.y + box.height/2) },
         { guide: Math.round(box.y + box.height), offset: absPos.y - (box.y + box.height) }
       ]
     };
@@ -404,21 +542,18 @@ function initRightPanel(containerId) {
 
   function getGuides(lineGuideStops, itemBounds) {
     let resultV = [], resultH = [];
-
     lineGuideStops.vertical.forEach(lineGuide => {
       itemBounds.vertical.forEach(item => {
         const diff = Math.abs(lineGuide - item.guide);
         if (diff < GUIDELINE_OFFSET) resultV.push({ lineGuide, diff, offset: item.offset, orientation: 'V' });
       });
     });
-
     lineGuideStops.horizontal.forEach(lineGuide => {
       itemBounds.horizontal.forEach(item => {
         const diff = Math.abs(lineGuide - item.guide);
         if (diff < GUIDELINE_OFFSET) resultH.push({ lineGuide, diff, offset: item.offset, orientation: 'H' });
       });
     });
-
     const guides = [];
     if (resultV.length) guides.push(resultV.sort((a,b)=>a.diff-b.diff)[0]);
     if (resultH.length) guides.push(resultH.sort((a,b)=>a.diff-b.diff)[0]);
@@ -426,47 +561,38 @@ function initRightPanel(containerId) {
   }
 
   function drawGuides(guides) {
-  guidesLayer.find('.guid-line').forEach(l => l.destroy());
+    guidesLayer.find('.guid-line').forEach(l=>l.destroy());
+    const stagePos = stage.position();
+    const stageScale = stage.scaleX();
 
-  const stagePos = stage.position();
-  const stageScale = stage.scaleX();
+    guides.forEach(g => {
+      if (g.orientation === 'H') {
+        const line = new Konva.Line({
+          points: [-10000, 0, 10000, 0],
+          stroke: 'rgb(0, 161, 255)',
+          strokeWidth: 1 / stageScale,
+          dash: [4 / stageScale, 6 / stageScale],
+          name: 'guid-line'
+        });
+        line.position({ x: (-stagePos.x)/stageScale, y: (g.lineGuide - stagePos.y)/stageScale });
+        guidesLayer.add(line);
+      } else if (g.orientation === 'V') {
+        const line = new Konva.Line({
+          points: [0, -10000, 0, 10000],
+          stroke: 'rgb(0, 161, 255)',
+          strokeWidth: 1 / stageScale,
+          dash: [4 / stageScale, 6 / stageScale],
+          name: 'guid-line'
+        });
+        line.position({ x: (g.lineGuide - stagePos.x)/stageScale, y: (-stagePos.y)/stageScale });
+        guidesLayer.add(line);
+      }
+    });
 
-  guides.forEach(g => {
-    if (g.orientation === 'H') {
-      const line = new Konva.Line({
-        points: [-10000, 0, 10000, 0],
-        stroke: 'rgb(0, 161, 255)',
-        strokeWidth: 1 / stageScale,
-        dash: [4 / stageScale, 6 / stageScale],
-        name: 'guid-line'
-      });
-      // Convert absolute coordinate to stage-relative coordinate
-      line.position({
-        x: (-stagePos.x) / stageScale,
-        y: (g.lineGuide - stagePos.y) / stageScale
-      });
-      guidesLayer.add(line);
-    } else if (g.orientation === 'V') {
-      const line = new Konva.Line({
-        points: [0, -10000, 0, 10000],
-        stroke: 'rgb(0, 161, 255)',
-        strokeWidth: 1 / stageScale,
-        dash: [4 / stageScale, 6 / stageScale],
-        name: 'guid-line'
-      });
-      // Convert absolute coordinate to stage-relative coordinate
-      line.position({
-        x: (g.lineGuide - stagePos.x) / stageScale,
-        y: (-stagePos.y) / stageScale
-      });
-      guidesLayer.add(line);
-    }
-  });
+    guidesLayer.batchDraw();
+  }
 
-  guidesLayer.batchDraw();
-}
-
-  // ---------- Main API ----------
+  // ---------------- API ----------------
   window.rightPanel = {
     updateTexture(groupId, textureData) {
       const img = new Image();
@@ -479,16 +605,14 @@ function initRightPanel(containerId) {
             x: stagePixelWidth / 4,
             y: stagePixelHeight / 4,
             image: img,
-            draggable: true,
-            id: `rect_${groupId}`
+            id: `rect_${groupId}`,
+            draggable: true
           });
           imageLayer.add(konvaImg);
           tiedRects[groupId] = konvaImg;
 
-          // Make selectable with transformer
           konvaImg.on('click', () => tr.nodes([konvaImg]));
 
-          // Snapping logic
           konvaImg.on('dragmove', e => {
             guidesLayer.find('.guid-line').forEach(l=>l.destroy());
             const lineGuideStops = getLineGuideStops(konvaImg);
@@ -520,22 +644,6 @@ function initRightPanel(containerId) {
       }
     }
   };
-
-  stage.on('keydown', (e) => {
-    if (e.key === 'Shift') tr.keepRatio(true);
-  });
-  stage.on('keyup', (e) => {
-    if (e.key === 'Shift') tr.keepRatio(false);
-  });
-
-  // Click to select image
-  stage.on('click', (e) => {
-    if (e.target instanceof Konva.Image) {
-      tr.nodes([e.target]);
-    } else {
-      tr.nodes([]);
-    }
-  });
 
   return stage;
 }
