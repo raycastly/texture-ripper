@@ -188,14 +188,15 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
         img.src = src;
       });
 
-      // extract textures → load them as real Image objects
+      // extract textures from ALL overlapping images (in reverse order - bottom to top)
       const textures = overlappingImgs
         .map(img => extractTextureFromPolygon(group, img))
         .filter(Boolean);
 
       const loadedImgs = await Promise.all(textures.map(loadImage));
 
-      // draw them all in order
+      // Draw them in the correct order (bottom first, top last)
+      // This preserves the layering from the original scene
       loadedImgs.forEach(img => ctx.drawImage(img, 0, 0, canvasW, canvasH));
 
       // update once at the end
@@ -204,7 +205,6 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
       }
     });
   });
-
 
   document.getElementById(uploadId).addEventListener('change', e => {
     const file = e.target.files[0]; if (!file) return;
@@ -689,7 +689,20 @@ document.getElementById('exportRight').addEventListener('click', () => {
 
   if (isNaN(exportWidth) || isNaN(exportHeight) || exportWidth <= 0 || exportHeight <= 0) return;
 
-  // Get the main image layer by its name
+  // Temporarily reset stage position for clean export
+  const originalX = stageRight.x();
+  const originalY = stageRight.y();
+  const originalScaleX = stageRight.scaleX();
+  const originalScaleY = stageRight.scaleY();
+
+  // Reset to no panning/zooming for export
+  stageRight.x(0);
+  stageRight.y(0);
+  stageRight.scaleX(1);
+  stageRight.scaleY(1);
+  stageRight.batchDraw();
+
+  // Get the main image layer
   const imageLayer = stageRight.findOne('.imageLayer');
   if (!imageLayer) return;
 
@@ -712,7 +725,7 @@ document.getElementById('exportRight').addEventListener('click', () => {
     imageLayer.draw();
   }
 
-  // Export only the image layer (ignores guides/UI/bottom on-screen grey layer)
+  // Export only the bgRect area
   const dataURL = imageLayer.toDataURL({
     x: stageRight.bgRect.x(),
     y: stageRight.bgRect.y(),
@@ -726,6 +739,13 @@ document.getElementById('exportRight').addEventListener('click', () => {
     tempBg.destroy();
     imageLayer.draw();
   }
+
+  // Restore stage position
+  stageRight.x(originalX);
+  stageRight.y(originalY);
+  stageRight.scaleX(originalScaleX);
+  stageRight.scaleY(originalScaleY);
+  stageRight.batchDraw();
 
   // Trigger download
   const link = document.createElement('a');
