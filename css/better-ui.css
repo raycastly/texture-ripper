@@ -100,3 +100,26 @@ input[type="number"]:focus, input[type="file"]:focus {
     background-color: #555;
     border-radius: 3px;
 }
+
+.paste-feedback {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.paste-feedback.show {
+    opacity: 1;
+}
+
+.instruction {
+    font-size: 12px;
+}

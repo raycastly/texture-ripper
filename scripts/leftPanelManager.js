@@ -45,6 +45,73 @@ const LeftPanelManager = {
             bgLayer.batchDraw();
         });
 
+        // Clipboard paste handler with feedback
+        document.addEventListener('paste', (e) => {
+            // Don't handle paste events if we're in drawing mode
+            if (drawingMode) return;
+            
+            // Check if we're pasting image data
+            const items = e.clipboardData.items;
+            let imageFound = false;
+            
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    imageFound = true;
+                    const blob = items[i].getAsFile();
+                    const reader = new FileReader();
+                    
+                    reader.onload = (evt) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const scale = Math.min(stage.width() / img.width, stage.height() / img.height);
+
+                            const konvaImg = new Konva.Image({
+                                x: (stage.width() - img.width * scale) / 2,
+                                y: (stage.height() - img.height * scale) / 2,
+                                image: img,
+                                width: img.width * scale,
+                                height: img.height * scale,
+                                draggable: !imagesLocked
+                            });
+
+                            bgLayer.add(konvaImg);
+                            bgImages.push(konvaImg);
+                            bgLayer.batchDraw();
+                            
+                            // Show feedback
+                            showPasteFeedback('Image pasted successfully!');
+                        };
+                        img.src = evt.target.result;
+                    };
+                    reader.readAsDataURL(blob);
+                    break; // Only handle the first image
+                }
+            }
+            
+            if (!imageFound) {
+                showPasteFeedback('No image found in clipboard');
+            }
+        });
+
+        // Function to show paste feedback
+        function showPasteFeedback(message) {
+            // Create or get feedback element
+            let feedbackEl = document.getElementById('paste-feedback');
+            if (!feedbackEl) {
+                feedbackEl = document.createElement('div');
+                feedbackEl.id = 'paste-feedback';
+                feedbackEl.className = 'paste-feedback';
+                document.body.appendChild(feedbackEl);
+            }
+            
+            feedbackEl.textContent = message;
+            feedbackEl.classList.add('show');
+            
+            setTimeout(() => {
+                feedbackEl.classList.remove('show');
+            }, 2000);
+        }
+
         // Drawing mode toggle button
         document.getElementById('toggleDrawingMode').addEventListener('click', () => {
             drawingMode = !drawingMode;
