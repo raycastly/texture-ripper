@@ -284,12 +284,12 @@ document.getElementById('extractAllLeft').addEventListener('click', () => {
   return stage;
 }
 
-// Given a polygon group, return the Konva.Image underneath it
+// Given a polygon group, return the Konva.Image underneath it (panning-safe)
 function getUnderlyingImages(group) {
   const images = stageLeft.find('Image');
   if (!images || images.length === 0) return [];
 
-  const groupBox = group.getClientRect();
+  const groupBox = group.getClientRect(); // absolute coordinates
   return images.filter(img => {
     const imgBox = img.getClientRect();
     return (
@@ -314,8 +314,9 @@ function initRightPanel(containerId) {
 
   const stage = new Konva.Stage({
     container: containerId,
-    width: stagePixelWidth,
-    height: stagePixelHeight,
+    width: container.clientWidth,
+    height: container.clientHeight,
+    draggable: true,
   });
 
   stage.add(bgLayer)
@@ -329,10 +330,11 @@ function initRightPanel(containerId) {
     y: 0,
     width: stagePixelWidth,
     height: stagePixelHeight,
-    fill: '#e0e0e0',  // light grey
-    listening: false   // so it doesn’t block mouse events
+    fill: '#e0e0e0',
+    listening: false
   });
   bgLayer.add(bgRect);
+  stage.bgRect = bgRect;
 
   // Transformer for selected rectangles
   const tr = new Konva.Transformer({
@@ -348,77 +350,121 @@ function initRightPanel(containerId) {
   });
   uiLayer.add(tr);
 
-  const GUIDELINE_OFFSET = 5; // for snapping
-  const tiedRects = {}; // id -> Konva.Image
-
-  // ---------- Helper functions for snapping ----------
+  const GUIDELINE_OFFSET = 5;
+  const tiedRects = {};
+  stage.tiedRects = tiedRects;
+  
+  // ---------- Fixed helper functions for snapping (account for stage position) ----------
   function getLineGuideStops(skipNode) {
-    const vertical = [0, stage.width()/2, stage.width()];
-    const horizontal = [0, stage.height()/2, stage.height()];
+    // Get stage transform
+    const stagePos = stage.position();
+    const stageScale = stage.scaleX();
+    
+    // Convert bgRect to absolute coordinates (accounting for stage position and scale)
+    const bgRectBox = bgRect.getClientRect();
+    const vertical = [
+      bgRectBox.x,
+      bgRectBox.x + bgRectBox.width / 2,
+      bgRectBox.x + bgRectBox.width
+    ];
+    const horizontal = [
+      bgRectBox.y,
+      bgRectBox.y + bgRectBox.height / 2,
+      bgRectBox.y + bgRectBox.height
+    ];
+
+    // Add other rectangles' edges (already in absolute coordinates)
     Object.values(tiedRects).forEach(node => {
       if (node === skipNode) return;
       const box = node.getClientRect();
-      vertical.push(box.x, box.x + box.width, box.x + box.width/2);
-      horizontal.push(box.y, box.y + box.height, box.y + box.height/2);
+      vertical.push(box.x, box.x + box.width, box.x + box.width / 2);
+      horizontal.push(box.y, box.y + box.height, box.y + box.height / 2);
     });
-    return { vertical: vertical.flat(), horizontal: horizontal.flat() };
+
+    return { vertical, horizontal };
   }
 
   function getObjectSnappingEdges(node) {
-    const box = node.getClientRect();
+    const box = node.getClientRect(); // already in absolute coordinates
     const absPos = node.absolutePosition();
+
     return {
       vertical: [
-        { guide: Math.round(box.x), offset: Math.round(absPos.x - box.x) },
-        { guide: Math.round(box.x + box.width/2), offset: Math.round(absPos.x - box.x - box.width/2) },
-        { guide: Math.round(box.x + box.width), offset: Math.round(absPos.x - box.x - box.width) }
+        { guide: Math.round(box.x), offset: absPos.x - box.x },
+        { guide: Math.round(box.x + box.width / 2), offset: absPos.x - (box.x + box.width / 2) },
+        { guide: Math.round(box.x + box.width), offset: absPos.x - (box.x + box.width) }
       ],
       horizontal: [
-        { guide: Math.round(box.y), offset: Math.round(absPos.y - box.y) },
-        { guide: Math.round(box.y + box.height/2), offset: Math.round(absPos.y - box.y - box.height/2) },
-        { guide: Math.round(box.y + box.height), offset: Math.round(absPos.y - box.y - box.height) }
+        { guide: Math.round(box.y), offset: absPos.y - box.y },
+        { guide: Math.round(box.y + box.height / 2), offset: absPos.y - (box.y + box.height / 2) },
+        { guide: Math.round(box.y + box.height), offset: absPos.y - (box.y + box.height) }
       ]
     };
   }
 
-  	function getGuides(lineGuideStops, itemBounds) {
-	  let resultV = [], resultH = [];
+  function getGuides(lineGuideStops, itemBounds) {
+    let resultV = [], resultH = [];
 
-	  lineGuideStops.vertical.forEach(lineGuide => {
-	    itemBounds.vertical.forEach(item => {
-	      const diff = Math.abs(lineGuide - item.guide);
-	      if (diff < GUIDELINE_OFFSET) resultV.push({ lineGuide, diff, offset: item.offset, orientation: 'V' });
-	    });
-	  });
+    lineGuideStops.vertical.forEach(lineGuide => {
+      itemBounds.vertical.forEach(item => {
+        const diff = Math.abs(lineGuide - item.guide);
+        if (diff < GUIDELINE_OFFSET) resultV.push({ lineGuide, diff, offset: item.offset, orientation: 'V' });
+      });
+    });
 
-	  lineGuideStops.horizontal.forEach(lineGuide => {
-	    itemBounds.horizontal.forEach(item => {
-	      const diff = Math.abs(lineGuide - item.guide);
-	      if (diff < GUIDELINE_OFFSET) resultH.push({ lineGuide, diff, offset: item.offset, orientation: 'H' });
-	    });
-	  });
+    lineGuideStops.horizontal.forEach(lineGuide => {
+      itemBounds.horizontal.forEach(item => {
+        const diff = Math.abs(lineGuide - item.guide);
+        if (diff < GUIDELINE_OFFSET) resultH.push({ lineGuide, diff, offset: item.offset, orientation: 'H' });
+      });
+    });
 
-	  const guides = [];
-	  if (resultV.length) guides.push(resultV.sort((a,b)=>a.diff-b.diff)[0]);
-	  if (resultH.length) guides.push(resultH.sort((a,b)=>a.diff-b.diff)[0]);
-	  return guides;
-	}
+    const guides = [];
+    if (resultV.length) guides.push(resultV.sort((a,b)=>a.diff-b.diff)[0]);
+    if (resultH.length) guides.push(resultH.sort((a,b)=>a.diff-b.diff)[0]);
+    return guides;
+  }
 
-	function drawGuides(guides) {
-	  guides.forEach(g => {
-	    const line = new Konva.Line({
-	      points: g.orientation === 'V' ? [0, -6000, 0, 6000] : [-6000, 0, 6000, 0],
-	      stroke: 'rgb(0, 161, 255)',
-	      strokeWidth: 1,
-	      dash: [4,6],
-	      name: 'guid-line'
-	    });
-	    if (g.orientation === 'V') line.absolutePosition({ x: g.lineGuide, y: 0 });
-	    else if (g.orientation === 'H') line.absolutePosition({ x: 0, y: g.lineGuide });
-	    guidesLayer.add(line);
-	  });
-	}
+  function drawGuides(guides) {
+  guidesLayer.find('.guid-line').forEach(l => l.destroy());
 
+  const stagePos = stage.position();
+  const stageScale = stage.scaleX();
+
+  guides.forEach(g => {
+    if (g.orientation === 'H') {
+      const line = new Konva.Line({
+        points: [-10000, 0, 10000, 0],
+        stroke: 'rgb(0, 161, 255)',
+        strokeWidth: 1 / stageScale,
+        dash: [4 / stageScale, 6 / stageScale],
+        name: 'guid-line'
+      });
+      // Convert absolute coordinate to stage-relative coordinate
+      line.position({
+        x: (-stagePos.x) / stageScale,
+        y: (g.lineGuide - stagePos.y) / stageScale
+      });
+      guidesLayer.add(line);
+    } else if (g.orientation === 'V') {
+      const line = new Konva.Line({
+        points: [0, -10000, 0, 10000],
+        stroke: 'rgb(0, 161, 255)',
+        strokeWidth: 1 / stageScale,
+        dash: [4 / stageScale, 6 / stageScale],
+        name: 'guid-line'
+      });
+      // Convert absolute coordinate to stage-relative coordinate
+      line.position({
+        x: (g.lineGuide - stagePos.x) / stageScale,
+        y: (-stagePos.y) / stageScale
+      });
+      guidesLayer.add(line);
+    }
+  });
+
+  guidesLayer.batchDraw();
+}
 
   // ---------- Main API ----------
   window.rightPanel = {
@@ -482,12 +528,12 @@ function initRightPanel(containerId) {
     if (e.key === 'Shift') tr.keepRatio(false);
   });
 
-  // Click to select background image
+  // Click to select image
   stage.on('click', (e) => {
     if (e.target instanceof Konva.Image) {
-      tr.nodes([e.target]);   // select image
+      tr.nodes([e.target]);
     } else {
-      tr.nodes([]);           // deselect if clicking empty space / polygon
+      tr.nodes([]);
     }
   });
 
@@ -505,8 +551,17 @@ document.getElementById('resizeRight').addEventListener('click', () => {
 
   if (isNaN(newWidth) || isNaN(newHeight) || newWidth <= 0 || newHeight <= 0) return;
 
-  stageRight.width(newWidth);
-  stageRight.height(newHeight);
+  // resize bgRect
+  stageRight.bgRect.width(newWidth);
+  stageRight.bgRect.height(newHeight);
+
+  // optional: reposition images if you want to keep them inside
+  Object.values(stageRight.tiedRects).forEach(img => {
+    const box = img.getClientRect();
+    if (box.x + box.width > stageRight.bgRect.x() + stageRight.bgRect.width()) img.x(stageRight.bgRect.x() + stageRight.bgRect.width() - box.width);
+    if (box.y + box.height > stageRight.bgRect.y() + stageRight.bgRect.height()) img.y(stageRight.bgRect.y() + stageRight.bgRect.height() - box.height);
+  });
+
   stageRight.draw();
 });
 
@@ -542,8 +597,10 @@ document.getElementById('exportRight').addEventListener('click', () => {
 
   // Export only the image layer (ignores guides/UI/bottom on-screen grey layer)
   const dataURL = imageLayer.toDataURL({
-    width: exportWidth,
-    height: exportHeight,
+    x: stageRight.bgRect.x(),
+    y: stageRight.bgRect.y(),
+    width: stageRight.bgRect.width(),
+    height: stageRight.bgRect.height(),
     pixelRatio: 1
   });
 
