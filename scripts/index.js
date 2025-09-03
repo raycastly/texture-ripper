@@ -144,7 +144,6 @@ function extractTextureFromPolygon(group, bgImage, opts = {}) {
 
 
 // ------------------- Left Panel -------------------
-// ------------------- Left Panel -------------------
 function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
   const container = document.getElementById(containerId);
   const stage = new Konva.Stage({ container: containerId, width: container.clientWidth, height: container.clientHeight});
@@ -317,6 +316,100 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
   });
   stage.on('keyup', (e) => {
     if (e.key === 'Shift') tr.keepRatio(false);
+  });
+
+  // ------------------- Panning Handlers -------------------
+  let isPanning = false;
+  let lastPos = { x: 0, y: 0 };
+
+  stage.on("mousedown", (e) => {
+    if (e.evt.button === 1) { // middle click
+      isPanning = true;
+      lastPos = stage.getPointerPosition();
+      e.evt.preventDefault();
+
+      // temporarily disable dragging for nodes so Konva doesn't "steal" the event
+      // but only if they're currently draggable (not locked)
+      stage.find("Image").forEach(img => {
+        img._wasDraggable = img.draggable(); // store current state
+        img.draggable(false);
+      });
+      stage.find(".group").forEach(g => {
+        g._wasDraggable = g.draggable(); // store current state
+        g.draggable(false);
+      });
+    }
+  });
+
+  stage.on("mouseup", () => {
+    if (isPanning) {
+      isPanning = false;
+
+      // restore the original draggable state, respecting the lock state
+      stage.find("Image").forEach(img => {
+        if (img._wasDraggable !== undefined) {
+          img.draggable(img._wasDraggable && !imagesLocked); // respect lock state
+          delete img._wasDraggable;
+        }
+      });
+      stage.find(".group").forEach(g => {
+        if (g._wasDraggable !== undefined) {
+          g.draggable(g._wasDraggable); // groups should always respect their original state
+          delete g._wasDraggable;
+        }
+      });
+    }
+  });
+
+  stage.on("mousemove", () => {
+    if (!isPanning) return;
+
+    const pos = stage.getPointerPosition();
+    const dx = pos.x - lastPos.x;
+    const dy = pos.y - lastPos.y;
+
+    stage.x(stage.x() + dx);
+    stage.y(stage.y() + dy);
+    stage.batchDraw();
+
+    lastPos = pos;
+  });
+
+  // prevent context menu on middle click
+  stage.container().addEventListener("contextmenu", (e) => e.preventDefault());
+
+  // ------------------- Zoom Handler -------------------
+  const scaleBy = 1.1;
+  stage.on('wheel', (e) => {
+    // stop default scrolling
+    e.evt.preventDefault();
+
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+
+    // how to scale? Zoom in? Or zoom out?
+    let direction = e.evt.deltaY > 0 ? -1 : 1;
+
+    // when we zoom on trackpad, e.evt.ctrlKey is true
+    // in that case lets revert direction
+    if (e.evt.ctrlKey) {
+      direction = -direction;
+    }
+
+    const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+    stage.scale({ x: newScale, y: newScale });
+
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+    stage.position(newPos);
   });
 
   return stage;
@@ -684,6 +777,39 @@ function initRightPanel(containerId) {
     }
   };
 
+  const scaleBy = 1.1;
+  stage.on('wheel', (e) => {
+    // stop default scrolling
+    e.evt.preventDefault();
+
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+
+    // how to scale? Zoom in? Or zoom out?
+    let direction = e.evt.deltaY > 0 ? -1 : 1;
+
+    // when we zoom on trackpad, e.evt.ctrlKey is true
+    // in that case lets revert direction
+    if (e.evt.ctrlKey) {
+      direction = -direction;
+    }
+
+    const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+    stage.scale({ x: newScale, y: newScale });
+
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+    stage.position(newPos);
+  });
+
   return stage;
 }
 
@@ -775,112 +901,4 @@ document.getElementById('exportRight').addEventListener('click', () => {
   link.download = 'atlas.png';
   link.href = dataURL;
   link.click();
-});
-
-let isPanning = false;
-let lastPos = { x: 0, y: 0 };
-
-stageLeft.on("mousedown", (e) => {
-  if (e.evt.button === 1) { // middle click
-    isPanning = true;
-    lastPos = stageLeft.getPointerPosition();
-    e.evt.preventDefault();
-
-    // temporarily disable dragging for nodes so Konva doesn't "steal" the event
-    stageLeft.find("Image").forEach(img => img.draggable(false));
-    stageLeft.find(".group").forEach(g => g.draggable(false));
-  }
-});
-
-stageLeft.on("mouseup", () => {
-  if (isPanning) {
-    isPanning = false;
-
-    // re-enable node dragging for left click
-    stageLeft.find("Image").forEach(img => img.draggable(true));
-    stageLeft.find(".group").forEach(g => g.draggable(true));
-  }
-});
-
-stageLeft.on("mousemove", () => {
-  if (!isPanning) return;
-
-  const pos = stageLeft.getPointerPosition();
-  const dx = pos.x - lastPos.x;
-  const dy = pos.y - lastPos.y;
-
-  stageLeft.x(stageLeft.x() + dx);
-  stageLeft.y(stageLeft.y() + dy);
-  stageLeft.batchDraw();
-
-  lastPos = pos;
-});
-
-// prevent context menu on middle click
-stageLeft.container().addEventListener("contextmenu", (e) => e.preventDefault());
-
-
-const scaleBy = 1.1;
-stageLeft.on('wheel', (e) => {
-  // stop default scrolling
-  e.evt.preventDefault();
-
-  const oldScale = stageLeft.scaleX();
-  const pointer = stageLeft.getPointerPosition();
-
-  const mousePointTo = {
-    x: (pointer.x - stageLeft.x()) / oldScale,
-    y: (pointer.y - stageLeft.y()) / oldScale,
-  };
-
-  // how to scale? Zoom in? Or zoom out?
-  let direction = e.evt.deltaY > 0 ? -1 : 1;
-
-  // when we zoom on trackpad, e.evt.ctrlKey is true
-  // in that case lets revert direction
-  if (e.evt.ctrlKey) {
-    direction = -direction;
-  }
-
-  const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-
-  stageLeft.scale({ x: newScale, y: newScale });
-
-  const newPos = {
-    x: pointer.x - mousePointTo.x * newScale,
-    y: pointer.y - mousePointTo.y * newScale,
-  };
-  stageLeft.position(newPos);
-});
-
-stageRight.on('wheel', (e) => {
-  // stop default scrolling
-  e.evt.preventDefault();
-
-  const oldScale = stageRight.scaleX();
-  const pointer = stageRight.getPointerPosition();
-
-  const mousePointTo = {
-    x: (pointer.x - stageRight.x()) / oldScale,
-    y: (pointer.y - stageRight.y()) / oldScale,
-  };
-
-  // how to scale? Zoom in? Or zoom out?
-  let direction = e.evt.deltaY > 0 ? -1 : 1;
-
-  // when we zoom on trackpad, e.evt.ctrlKey is true
-  // in that case lets revert direction
-  if (e.evt.ctrlKey) {
-    direction = -direction;
-  }
-
-  const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-
-  stageRight.scale({ x: newScale, y: newScale });
-
-  const newPos = {
-    x: pointer.x - mousePointTo.x * newScale,
-    y: pointer.y - mousePointTo.y * newScale,
-  };
-  stageRight.position(newPos);
 });
