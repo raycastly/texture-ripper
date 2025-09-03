@@ -476,6 +476,33 @@ function initRightPanel(containerId) {
 const stageLeft = initLeftPanel('canvasLeftContainer', 'addRectLeft', 'deleteObjLeft', 'bgUploadLeft');
 const stageRight = initRightPanel('canvasRightContainer');
 
+// Set Size button
+document.getElementById('resizeRight').addEventListener('click', () => {
+  const newWidth = parseInt(document.getElementById('rightWidth').value);
+  const newHeight = parseInt(document.getElementById('rightHeight').value);
+
+  if (isNaN(newWidth) || isNaN(newHeight) || newWidth <= 0 || newHeight <= 0) return;
+
+  stageRight.width(newWidth);
+  stageRight.height(newHeight);
+  stageRight.draw();
+});
+
+// Export button
+document.getElementById('exportRight').addEventListener('click', () => {
+  const exportWidth = parseInt(document.getElementById('rightWidth').value);
+  const exportHeight = parseInt(document.getElementById('rightHeight').value);
+
+  // Export only the image layer
+  const dataURL = stageRight.findOne('Layer').toDataURL({ width: exportWidth, height: exportHeight });
+
+  // Trigger download
+  const link = document.createElement('a');
+  link.download = 'atlas.png';
+  link.href = dataURL;
+  link.click();
+});
+
 let isPanning = false;
 let lastPos = { x: 0, y: 0 };
 
