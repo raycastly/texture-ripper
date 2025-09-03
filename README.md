@@ -1,4 +1,4 @@
-[![Open in GitHub Pages](https://img.shields.io/badge/Open%20Demo-GitHub%20Pages-blue?logo=github)](https://raycastly.github.io/texture-ripper)
+[![Open in GitHub Pages](https://img.shields.io/badge/Open%20Demo-GitHub%20Pages-blue?logo=github)](https://raycastly.github.io/texture-ripper) 👈 Click here to open the app
 
 # Raycastly Texture Ripper
 
