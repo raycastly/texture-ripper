@@ -22,7 +22,7 @@ This tool is based on the Shoebox Texture Ripper. I didn't like the controls on 
 
 ## 🚀 How to Use
 
-[![Watch the 5 minute tutorial!](https://img.youtube.com/vi/35BKxvY3vLY/0.jpg)](https://youtu.be/35BKxvY3vLY)
+[![Watch the 5 minute tutorial!](img/click-to-watch.jpg)](https://youtu.be/35BKxvY3vLY)
 
 1. Go to [Raycastly Texture Ripper](https://raycastly.github.io/texture-ripper)
 2. Upload one or more images
