@@ -144,6 +144,7 @@ function extractTextureFromPolygon(group, bgImage, opts = {}) {
 
 
 // ------------------- Left Panel -------------------
+// ------------------- Left Panel -------------------
 function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
   const container = document.getElementById(containerId);
   const stage = new Konva.Stage({ container: containerId, width: container.clientWidth, height: container.clientHeight});
@@ -156,6 +157,29 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
 
   const bgImages = []; // store multiple images
   let selectedGroup = null;
+  let imagesLocked = false; // Track lock state
+
+  // Lock/Unlock Images button
+  const lockBtn = document.getElementById('lockImagesLeft');
+  lockBtn.addEventListener('click', () => {
+    imagesLocked = !imagesLocked;
+    lockBtn.textContent = imagesLocked ? 'Unlock Images' : 'Lock Images';
+    
+    // Update draggable state of all background images
+    bgImages.forEach(img => {
+      img.draggable(!imagesLocked);
+    });
+    
+    // Also update transformer state
+    if (imagesLocked && tr.nodes().length > 0) {
+      const selectedImage = tr.nodes()[0];
+      if (selectedImage instanceof Konva.Image) {
+        tr.nodes([]); // Deselect any selected image when locking
+      }
+    }
+    
+    bgLayer.batchDraw();
+  });
 
   document.getElementById('extractAllLeft').addEventListener('click', () => {
     polygonLayer.find('.group').forEach(async group => {
@@ -188,15 +212,14 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
         img.src = src;
       });
 
-      // extract textures from ALL overlapping images (in reverse order - bottom to top)
+      // extract textures → load them as real Image objects
       const textures = overlappingImgs
         .map(img => extractTextureFromPolygon(group, img))
         .filter(Boolean);
 
       const loadedImgs = await Promise.all(textures.map(loadImage));
 
-      // Draw them in the correct order (bottom first, top last)
-      // This preserves the layering from the original scene
+      // draw them all in order
       loadedImgs.forEach(img => ctx.drawImage(img, 0, 0, canvasW, canvasH));
 
       // update once at the end
@@ -220,7 +243,7 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
           image: img,
           width: img.width * scale,
           height: img.height * scale,
-          draggable: true
+          draggable: !imagesLocked // Set initial draggable state based on lock status
         });
 
         bgLayer.add(konvaImg);
@@ -253,13 +276,17 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
       selectedNodes.forEach(node => {
         if (node instanceof Konva.Image) {
           node.destroy();
+          // Remove from bgImages array
+          const index = bgImages.indexOf(node);
+          if (index > -1) {
+            bgImages.splice(index, 1);
+          }
         }
       });
       tr.nodes([]); // clear transformer
       bgLayer.draw();
     }
   });
-
 
   // Transformer for background images only
   const tr = new Konva.Transformer({
@@ -273,8 +300,10 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
   });
   uiLayer.add(tr);
 
-  // Click to select background image
+  // Click to select background image (only if not locked)
   stage.on('click', (e) => {
+    if (imagesLocked) return; // Don't select images when locked
+    
     if (e.target instanceof Konva.Image) {
       tr.nodes([e.target]);   // select image
     } else {
@@ -292,6 +321,7 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
 
   return stage;
 }
+
 
 // Given a polygon group, return the Konva.Image underneath it (panning-safe)
 function getUnderlyingImages(group) {
