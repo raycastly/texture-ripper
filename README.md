@@ -1,3 +1,5 @@
+[![Open in GitHub Pages](https://img.shields.io/badge/Open%20Demo-GitHub%20Pages-blue?logo=github)](https://raycastly.github.io/texture-ripper)
+
 # Raycastly Texture Ripper
 
 Raycastly Texture Ripper is a tool that lets you extract textures from angled or perspective photos — making it easier for artists and game developers to turn real-world images into usable assets.
