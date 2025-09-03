@@ -859,3 +859,35 @@ stageLeft.on('wheel', (e) => {
   };
   stageLeft.position(newPos);
 });
+
+stageRight.on('wheel', (e) => {
+  // stop default scrolling
+  e.evt.preventDefault();
+
+  const oldScale = stageRight.scaleX();
+  const pointer = stageRight.getPointerPosition();
+
+  const mousePointTo = {
+    x: (pointer.x - stageRight.x()) / oldScale,
+    y: (pointer.y - stageRight.y()) / oldScale,
+  };
+
+  // how to scale? Zoom in? Or zoom out?
+  let direction = e.evt.deltaY > 0 ? -1 : 1;
+
+  // when we zoom on trackpad, e.evt.ctrlKey is true
+  // in that case lets revert direction
+  if (e.evt.ctrlKey) {
+    direction = -direction;
+  }
+
+  const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+  stageRight.scale({ x: newScale, y: newScale });
+
+  const newPos = {
+    x: pointer.x - mousePointTo.x * newScale,
+    y: pointer.y - mousePointTo.y * newScale,
+  };
+  stageRight.position(newPos);
+});
