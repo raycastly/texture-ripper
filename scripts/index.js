@@ -307,9 +307,10 @@ function initRightPanel(containerId) {
   const stagePixelWidth = parseInt(document.getElementById('rightWidth').value);
   const stagePixelHeight = parseInt(document.getElementById('rightHeight').value);
 
+  const bgLayer = new Konva.Layer();
   const uiLayer = new Konva.Layer();
   const guidesLayer = new Konva.Layer();
-  const imageLayer = new Konva.Layer();
+  const imageLayer = new Konva.Layer({ name: 'imageLayer' });
 
   const stage = new Konva.Stage({
     container: containerId,
@@ -317,9 +318,21 @@ function initRightPanel(containerId) {
     height: stagePixelHeight,
   });
 
-  stage.add(imageLayer)
+  stage.add(bgLayer)
+  .add(imageLayer)
   .add(guidesLayer)
   .add(uiLayer);
+
+  // Light grey background
+  const bgRect = new Konva.Rect({
+    x: 0,
+    y: 0,
+    width: stagePixelWidth,
+    height: stagePixelHeight,
+    fill: '#e0e0e0',  // light grey
+    listening: false   // so it doesn’t block mouse events
+  });
+  bgLayer.add(bgRect);
 
   // Transformer for selected rectangles
   const tr = new Konva.Transformer({
@@ -469,6 +482,15 @@ function initRightPanel(containerId) {
     if (e.key === 'Shift') tr.keepRatio(false);
   });
 
+  // Click to select background image
+  stage.on('click', (e) => {
+    if (e.target instanceof Konva.Image) {
+      tr.nodes([e.target]);   // select image
+    } else {
+      tr.nodes([]);           // deselect if clicking empty space / polygon
+    }
+  });
+
   return stage;
 }
 
@@ -493,8 +515,43 @@ document.getElementById('exportRight').addEventListener('click', () => {
   const exportWidth = parseInt(document.getElementById('rightWidth').value);
   const exportHeight = parseInt(document.getElementById('rightHeight').value);
 
-  // Export only the image layer
-  const dataURL = stageRight.findOne('Layer').toDataURL({ width: exportWidth, height: exportHeight });
+  if (isNaN(exportWidth) || isNaN(exportHeight) || exportWidth <= 0 || exportHeight <= 0) return;
+
+  // Get the main image layer by its name
+  const imageLayer = stageRight.findOne('.imageLayer');
+  if (!imageLayer) return;
+
+  const transparent = document.getElementById('exportTransparent').checked;
+
+  let tempBg = null;
+
+  if (!transparent) {
+    // Create a temporary grey background behind the images
+    tempBg = new Konva.Rect({
+      x: 0,
+      y: 0,
+      width: exportWidth,
+      height: exportHeight,
+      fill: '#e0e0e0'
+    });
+
+    imageLayer.add(tempBg);
+    tempBg.moveToBottom(); // Ensure it's behind all images
+    imageLayer.draw();
+  }
+
+  // Export only the image layer (ignores guides/UI/bottom on-screen grey layer)
+  const dataURL = imageLayer.toDataURL({
+    width: exportWidth,
+    height: exportHeight,
+    pixelRatio: 1
+  });
+
+  // Remove temporary background if it was added
+  if (tempBg) {
+    tempBg.destroy();
+    imageLayer.draw();
+  }
 
   // Trigger download
   const link = document.createElement('a');
