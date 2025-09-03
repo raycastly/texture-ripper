@@ -60,21 +60,21 @@ function extractTextureFromPolygon(group, bgImage, opts = {}) {
 
   if (!bgImage || !bgImage.image()) return null;
 
-  // 1) get the 4 vertices in stage coordinates
+  // 1) get the 4 vertices in LOCAL coordinates (ignore stage scaling)
   const absPts = [];
   group.find('.vertex').forEach(vertex => {
-    // Use only the vertex’s local position relative to the group/image
-    const localPos = vertex.position();  // position inside the polygon group
+    // Use the vertex's local position relative to the group
+    const localPos = vertex.position();
     absPts.push({ x: localPos.x, y: localPos.y });
   });
 
-  // Get coordinates relative to the image top-left
+  // Get coordinates relative to the image top-left (ignore stage scaling)
   const dispPts = absPts.map(p => ({
     x: p.x + group.x() - bgImage.x(),
     y: p.y + group.y() - bgImage.y()
   }));
 
-  // Map to original image pixels
+  // Map to original image pixels (ignore stage scaling)
   const origImg = bgImage.image();
   const ratioX = origImg.width / bgImage.width();
   const ratioY = origImg.height / bgImage.height();
@@ -154,47 +154,56 @@ function initLeftPanel(containerId, addBtnId, deleteBtnId, uploadId) {
 
   stage.add(bgLayer).add(polygonLayer).add(uiLayer);
 
-const bgImages = []; // store multiple images
-let selectedGroup = null;
+  const bgImages = []; // store multiple images
+  let selectedGroup = null;
 
-document.getElementById('extractAllLeft').addEventListener('click', () => {
-  polygonLayer.find('.group').forEach(async group => {
-    const overlappingImgs = getUnderlyingImages(group);
-    if (!overlappingImgs.length) return;
+  document.getElementById('extractAllLeft').addEventListener('click', () => {
+    polygonLayer.find('.group').forEach(async group => {
+      const overlappingImgs = getUnderlyingImages(group);
+      if (!overlappingImgs.length) return;
 
-    // bounding box
-    const absPts = group.getClientRect();
-    const canvasW = Math.round(absPts.width);
-    const canvasH = Math.round(absPts.height);
+      // Use the polygon's ORIGINAL size (not scaled by stage zoom)
+      const vertices = group.find('.vertex');
+      if (vertices.length !== 4) return;
+      
+      // Calculate bounding box from vertex positions (local coordinates)
+      const points = vertices.map(v => v.position());
+      const minX = Math.min(...points.map(p => p.x));
+      const minY = Math.min(...points.map(p => p.y));
+      const maxX = Math.max(...points.map(p => p.x));
+      const maxY = Math.max(...points.map(p => p.y));
+      
+      const canvasW = Math.round(maxX - minX);
+      const canvasH = Math.round(maxY - minY);
 
-    const outCanvas = document.createElement('canvas');
-    outCanvas.width = canvasW;
-    outCanvas.height = canvasH;
-    const ctx = outCanvas.getContext('2d');
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = canvasW;
+      outCanvas.height = canvasH;
+      const ctx = outCanvas.getContext('2d');
 
-    // helper: load image from data URL
-    const loadImage = src => new Promise(resolve => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.src = src;
+      // helper: load image from data URL
+      const loadImage = src => new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.src = src;
+      });
+
+      // extract textures → load them as real Image objects
+      const textures = overlappingImgs
+        .map(img => extractTextureFromPolygon(group, img))
+        .filter(Boolean);
+
+      const loadedImgs = await Promise.all(textures.map(loadImage));
+
+      // draw them all in order
+      loadedImgs.forEach(img => ctx.drawImage(img, 0, 0, canvasW, canvasH));
+
+      // update once at the end
+      if (window.rightPanel) {
+        window.rightPanel.updateTexture(group._id, outCanvas.toDataURL());
+      }
     });
-
-    // extract textures → load them as real Image objects
-    const textures = overlappingImgs
-      .map(img => extractTextureFromPolygon(group, img))
-      .filter(Boolean);
-
-    const loadedImgs = await Promise.all(textures.map(loadImage));
-
-    // draw them all in order
-    loadedImgs.forEach(img => ctx.drawImage(img, 0, 0, canvasW, canvasH));
-
-    // update once at the end
-    if (window.rightPanel) {
-      window.rightPanel.updateTexture(group._id, outCanvas.toDataURL());
-    }
   });
-});
 
 
   document.getElementById(uploadId).addEventListener('change', e => {
