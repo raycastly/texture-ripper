@@ -4,13 +4,19 @@ Extract and flatten textures from perspective images.
 
 Raycastly Texture Ripper is a tool that lets you recover distortion-free textures from angled or perspective photos — making it easier for artists and game developers to turn real-world images into usable assets.
 
+![Match Texture Extraction Example](img/matches-demo.jpg)
+
 ---
 
 ## ✨ Features
-- 📐 Perspective Correction — automatically flatten angled regions into usable textures
-- 🖼 Batch Extraction — extract textures from multiple images in one go
-- 🎨 Atlas Packing — arrange, rotate, and scale textures into a single texture atlas
-- 🌐 Flexible Export — save with or without transparency, ready for any workflow
+- 📐 **Perspective Correction** — automatically flatten angled regions into usable textures
+- 🖼 **Batch Extraction** — extract textures from multiple images in one go
+- 🎨 **Atlas Packing** — arrange, rotate, and scale textures into a single texture atlas
+- ⚙️ **Output Control** — set texture resolution and transparency for exports
+- 🔄 **90° Rotation Snapping** — quickly snap textures to standard angles
+- 📏 **Guidelines & Position Snapping** — snap to edges, guides, and other textures for precise placement
+- 🔧 **Multi-Select Transformations** — scale, rotate, and translate multiple textures at once
+- 📐 **Uniform & Non-Uniform Scaling** — scale textures proportionally or freely along X/Y axes
 
 ---
 
