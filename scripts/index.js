@@ -698,18 +698,11 @@ document.getElementById('resizeRight').addEventListener('click', () => {
 
   if (isNaN(newWidth) || isNaN(newHeight) || newWidth <= 0 || newHeight <= 0) return;
 
-  // resize bgRect
+  // resize bgRect only
   stageRight.bgRect.width(newWidth);
   stageRight.bgRect.height(newHeight);
 
-  // optional: reposition images if you want to keep them inside
-  Object.values(stageRight.tiedRects).forEach(img => {
-    const box = img.getClientRect();
-    if (box.x + box.width > stageRight.bgRect.x() + stageRight.bgRect.width()) img.x(stageRight.bgRect.x() + stageRight.bgRect.width() - box.width);
-    if (box.y + box.height > stageRight.bgRect.y() + stageRight.bgRect.height()) img.y(stageRight.bgRect.y() + stageRight.bgRect.height() - box.height);
-  });
-
-  stageRight.draw();
+  stageRight.draw(); // Redraw the stage
 });
 
 // Export button
