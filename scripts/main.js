@@ -1,6 +1,10 @@
 // ==================== INITIALIZATION ====================
 // Initialize panels when the document is ready
 document.addEventListener('DOMContentLoaded', () => {
+    let drawingMode = false;
+    let currentPolygon = null;
+    let placedPoints = [];
+    
     const stageLeft = LeftPanelManager.init(
         'canvasLeftContainer', 
         'addRectLeft', 

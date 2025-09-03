@@ -1,13 +1,14 @@
 // ==================== PAN AND ZOOM HANDLING ====================
 const PanZoomManager = {
+    isPanning: false,
+
     // Initialize panning for a stage
     initPanning: (stage) => {
-        let isPanning = false;
         let lastPos = { x: 0, y: 0 };
 
         stage.on("mousedown", (e) => {
             if (e.evt.button === 1) { // Middle click
-                isPanning = true;
+                PanZoomManager.isPanning = true;
                 lastPos = stage.getPointerPosition();
                 e.evt.preventDefault();
 
@@ -25,8 +26,8 @@ const PanZoomManager = {
         });
 
         stage.on("mouseup", () => {
-            if (isPanning) {
-                isPanning = false;
+            if (PanZoomManager.isPanning) {
+                PanZoomManager.isPanning = false;
 
                 // Restore the original draggable state
                 stage.find("Image").forEach(img => {
@@ -46,7 +47,7 @@ const PanZoomManager = {
         });
 
         stage.on("mousemove", () => {
-            if (!isPanning) return;
+            if (!PanZoomManager.isPanning) return;
 
             const pos = stage.getPointerPosition();
             const dx = pos.x - lastPos.x;

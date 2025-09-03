@@ -9,7 +9,9 @@ const CONFIG = {
         FILL: 'rgba(0,0,255,0.5)'
     },
     POLYGON: {
-        STROKE: 'black',
+        SELECTED_STROKE: 'rgba(255,0,0,0.8)',
+        SELECTED_STROKE_WIDTH: 3,
+        STROKE: 'blue',
         STROKE_WIDTH: 2,
         CLOSED: true
     },
@@ -30,5 +32,9 @@ const CONFIG = {
     },
     BACKGROUND: {
         FILL: '#e0e0e0'
+    },
+    DRAWING: {
+        ACTIVE_COLOR: 'rgba(255,0,0,0.7)',
+        COMPLETE_COLOR: 'rgba(0,0,255,0.5)'
     }
 };
