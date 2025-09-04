@@ -14,7 +14,7 @@ body, html {
 .split {
     height: 100%;
     display: flex;
-    gap: 16px; /* Increased gap for claymorphism */
+    gap: 16px;
 }
 
 /* Panels - Claymorphism Style */
@@ -22,9 +22,9 @@ body, html {
     flex: 1;
     display: flex;
     flex-direction: column;
-    border-radius: 24px; /* More rounded corners */
+    border-radius: 24px;
     overflow: hidden;
-    background: rgba(18, 20, 40, 0.7); /* Semi-transparent */
+    background: rgba(18, 20, 40, 0.7);
     backdrop-filter: blur(10px);
     box-shadow: 
         0 10px 30px rgba(0, 0, 0, 0.3),
@@ -38,83 +38,13 @@ body, html {
     background: rgba(30, 33, 56, 0.7);
     padding: 0.8rem 1.2rem;
     display: flex;
-    gap: 0.8rem;
+    gap: 0.6rem;
     align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(5px);
     box-shadow: 
         0 4px 10px rgba(0, 0, 0, 0.2),
         inset 0 1px 1px rgba(255, 255, 255, 0.1);
-}
-
-/* Buttons - Claymorphism Style */
-.btn {
-    border-radius: 12px;
-    transition: all 0.2s ease;
-    font-weight: 500;
-    border: none;
-    padding: 0.5rem 1rem;
-    background: rgba(55, 184, 251, 0.8);
-    color: #0b0d19;
-    box-shadow: 
-        0 4px 8px rgba(0, 0, 0, 0.2),
-        inset 0 2px 2px rgba(255, 255, 255, 0.2);
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-        0 6px 12px rgba(0, 0, 0, 0.25),
-        inset 0 2px 2px rgba(255, 255, 255, 0.2);
-    background: rgba(55, 184, 251, 0.9);
-}
-
-.btn:active {
-    transform: translateY(1px);
-    box-shadow: 
-        0 2px 4px rgba(0, 0, 0, 0.2),
-        inset 0 2px 2px rgba(255, 255, 255, 0.1);
-}
-
-.btn-sm {
-    padding: 0.3rem 0.7rem;
-    border-radius: 10px;
-    font-size: 0.875rem;
-}
-
-.btn-primary {
-    background: rgba(55, 184, 251, 0.8);
-    color: #0b0d19;
-}
-
-.btn-danger {
-    background: rgba(236, 18, 78, 0.8);
-    color: #fffffe;
-}
-
-.btn-success {
-    background: rgba(20, 251, 167, 0.8);
-    color: #0b0d19;
-}
-
-/* Inputs - Claymorphism Style */
-input[type="number"], input[type="file"], input[type="checkbox"] {
-    border-radius: 12px;
-    border: none;
-    background: rgba(18, 20, 40, 0.6);
-    color: #fffffe;
-    padding: 0.4rem 0.8rem;
-    transition: all 0.2s ease;
-    box-shadow: 
-        inset 0 2px 4px rgba(0, 0, 0, 0.2),
-        0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-input[type="number"]:focus, input[type="file"]:focus {
-    outline: none;
-    box-shadow: 
-        inset 0 2px 4px rgba(0, 0, 0, 0.2),
-        0 0 0 2px #37b8fb;
 }
 
 /* Canvas container - Claymorphism Style */
@@ -162,32 +92,24 @@ input[type="number"]:focus, input[type="file"]:focus {
     border-radius: 4px;
 }
 
-.paste-feedback {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(11, 13, 25, 0.9);
-    color: #fffffe;
-    padding: 12px 24px;
+/* Inputs - Claymorphism Style */
+input[type="number"], input[type="file"], input[type="checkbox"] {
     border-radius: 12px;
-    z-index: 1000;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s;
-    backdrop-filter: blur(5px);
+    border: none;
+    background: rgba(18, 20, 40, 0.6);
+    color: #fffffe;
+    padding: 0.4rem 0.8rem;
+    transition: all 0.2s ease;
     box-shadow: 
-        0 6px 12px rgba(0, 0, 0, 0.3),
-        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.paste-feedback.show {
-    opacity: 1;
-}
-
-.instruction {
-    font-size: 12px;
-    opacity: 0.8;
+input[type="number"]:focus, input[type="file"]:focus {
+    outline: none;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 0 0 2px #37b8fb;
 }
 
 /* Form control overrides for claymorphism */
@@ -242,6 +164,35 @@ label {
     gap: 0.5rem;
 }
 
+/* Paste feedback */
+.paste-feedback {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(11, 13, 25, 0.9);
+    color: #fffffe;
+    padding: 12px 24px;
+    border-radius: 12px;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    backdrop-filter: blur(5px);
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.paste-feedback.show {
+    opacity: 1;
+}
+
+.instruction {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
 /* Custom utility classes */
 .ms-2 {
     margin-left: 0.5rem !important;
@@ -259,90 +210,137 @@ label {
     align-items: center !important;
 }
 
-
-/*---------------------------*/
-
-
-/* Drawing Mode Button Styles */
-#toggleDrawingMode {
+/* ===== BUTTON STYLES WITH ICONS ===== */
+/* Button Styles with Icons */
+.btn {
     position: relative;
-    padding: 0.6rem 1.2rem 0.6rem 2.8rem;
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
     border: none;
-    border-radius: 16px;
-    background: rgba(55, 184, 251, 0.15);
-    color: #37b8fb;
+    border-radius: 12px;
     font-weight: 600;
     box-shadow: 
-        0 4px 12px rgba(0, 0, 0, 0.15),
-        inset 0 2px 4px rgba(255, 255, 255, 0.1),
-        inset 0 -4px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+        0 4px 8px rgba(0, 0, 0, 0.15),
+        inset 0 2px 2px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
     overflow: hidden;
     backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.1rem;
+    height: 1.1rem;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    box-shadow: 
+        0 5px 10px rgba(0, 0, 0, 0.2),
+        inset 0 2px 2px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(1px);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.15),
+        inset 0 2px 2px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-sm {
+    padding: 0.3rem 0.7rem 0.3rem 2.2rem;
+    font-size: 0.8rem;
+}
+
+.btn-sm::before {
+    left: 0.7rem;
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Specific Button Icons */
+#toggleDrawingMode::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' fill='%2337b8fb'%3E%3Cpath d='M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z'/%3E%3C/svg%3E");
+}
+
+#lockImagesLeft::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2314fba7' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M12 0a4 4 0 0 1 4 4v2.5h-1V4a3 3 0 1 0-6 0v2h.5A2.5 2.5 0 0 1 12 8.5v5A2.5 2.5 0 0 1 9.5 16h-7A2.5 2.5 0 0 1 0 13.5v-5A2.5 2.5 0 0 1 2.5 6H8V4a4 4 0 0 1 4-4'/%3E%3C/svg%3E");
+}
+
+#lockImagesLeft.locked::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2314fba7' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8 0a4 4 0 0 1 4 4v2.05a2.5 2.5 0 0 1 2 2.45v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4m0 1a3 3 0 0 0-3 3v2h6V4a3 3 0 0 0-3-3'/%3E%3C/svg%3E");
+}
+
+#addRectLeft::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2337b8fb'%3E%3Cpath d='M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z'/%3E%3C/svg%3E");
+}
+
+#deleteObjLeft::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ec124e'%3E%3Cpath d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z'/%3E%3C/svg%3E");
+}
+
+#extractAllLeft::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2314fba7' viewBox='0 0 16 16'%3E%3Cpath d='M4.502 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3'/%3E%3Cpath d='M14.002 13a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2V5A2 2 0 0 1 2 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-1.998 2M14 2H4a1 1 0 0 0-1 1h9.002a2 2 0 0 1 2 2v7A1 1 0 0 0 15 11V3a1 1 0 0 0-1-1M2.002 4a1 1 0 0 0-1 1v8l2.646-2.354a.5.5 0 0 1 .63-.062l2.66 1.773 3.71-3.71a.5.5 0 0 1 .577-.094l1.777 1.947V5a1 1 0 0 0-1-1z'/%3E%3C/svg%3E");
+}
+
+#resizeRight::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' fill='%2337b8fb'%3E%3Cpath d='M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707m4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707'/%3E%3C/svg%3E");
+}
+
+#exportRight::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2314fba7'%3E%3Cpath d='M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z'/%3E%3C/svg%3E");
+}
+
+/* Button Colors */
+.btn-primary {
+    background: rgba(55, 184, 251, 0.15);
+    color: #37b8fb;
     border: 1px solid rgba(55, 184, 251, 0.2);
 }
 
-#toggleDrawingMode::before {
-    content: '';
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 1.2rem;
-    height: 1.2rem;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2337b8fb'%3E%3Cpath d='M20.71,4.63l-1.34-1.34C19.17,3.17,18.92,3,18.66,3c-0.26,0-0.51,0.1-0.71,0.29l-1.39,1.39l2.12,2.12l1.39-1.39C21.1,5.65,21.1,5.05,20.71,4.63z M17.65,6.53l-2.12-2.12L3,15.88V19h3.12L17.65,6.53z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
-    transition: all 0.3s ease;
+.btn-danger {
+    background: rgba(236, 18, 78, 0.15);
+    color: #ec124e;
+    border: 1px solid rgba(236, 18, 78, 0.2);
 }
 
-#toggleDrawingMode:hover {
-    background: rgba(55, 184, 251, 0.25);
-    box-shadow: 
-        0 6px 16px rgba(0, 0, 0, 0.2),
-        inset 0 2px 4px rgba(255, 255, 255, 0.15),
-        inset 0 -4px 8px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+.btn-success {
+    background: rgba(20, 251, 167, 0.15);
+    color: #14fba7;
+    border: 1px solid rgba(20, 251, 167, 0.2);
 }
 
-#toggleDrawingMode:active {
-    transform: translateY(1px);
-    box-shadow: 
-        0 2px 6px rgba(0, 0, 0, 0.15),
-        inset 0 2px 4px rgba(255, 255, 255, 0.1),
-        inset 0 -4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Active/Drawing State */
+/* Active States */
 #toggleDrawingMode.drawing-active {
     background: rgba(236, 18, 78, 0.15);
     color: #ec124e;
-    box-shadow: 
-        0 4px 12px rgba(236, 18, 78, 0.15),
-        inset 0 2px 4px rgba(255, 255, 255, 0.1),
-        inset 0 -4px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(236, 18, 78, 0.2);
 }
 
 #toggleDrawingMode.drawing-active::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ec124e'%3E%3Cpath d='M20.71,4.63l-1.34-1.34C19.17,3.17,18.92,3,18.66,3c-0.26,0-0.51,0.1-0.71,0.29l-1.39,1.39l2.12,2.12l1.39-1.39C21.1,5.65,21.1,5.05,20.71,4.63z M17.65,6.53l-2.12-2.12L3,15.88V19h3.12L17.65,6.53z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ec124e'%3E%3Cpath d='M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z'/%3E%3C/svg%3E");
 }
 
-#toggleDrawingMode.drawing-active:hover {
-    background: rgba(236, 18, 78, 0.25);
-    box-shadow: 
-        0 6px 16px rgba(236, 18, 78, 0.2),
-        inset 0 2px 4px rgba(255, 255, 255, 0.15),
-        inset 0 -4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Pulsing animation when active */
-@keyframes pulse-drawing {
-    0% { box-shadow: 0 0 0 0 rgba(236, 18, 78, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(236, 18, 78, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(236, 18, 78, 0); }
+/* Subtle pulse animation for active drawing mode */
+@keyframes subtle-pulse {
+    0% { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), inset 0 2px 2px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.1); }
+    50% { box-shadow: 0 4px 10px rgba(236, 18, 78, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.1); }
+    100% { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), inset 0 2px 2px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.1); }
 }
 
 #toggleDrawingMode.drawing-active {
-    animation: pulse-drawing 2s infinite;
+    animation: subtle-pulse 3s infinite;
 }
