@@ -69,29 +69,44 @@ const RightPanelManager = {
 
         // Click selection
         stage.on('click tap', (e) => {
-            // Don't process clicks if we were selecting
-            if (selectionRectangle.visible() && selectionRectangle.width() > 0 && selectionRectangle.height() > 0) {
+            // Don't process clicks if we were selecting with rectangle
+            if (selectionRectangle.visible() && selectionRectangle.width() > 5 && selectionRectangle.height() > 5) {
+                selectionRectangle.visible(false);
+                guidesLayer.batchDraw();
                 return;
             }
 
+            // Click on empty space: clear selection unless shift is held
             if (e.target === stage || e.target.name() === 'bgRect') {
-                tr.nodes([]);
+                if (!e.evt.shiftKey) {
+                    tr.nodes([]);
+                }
                 return;
             }
 
-            if (!(e.target instanceof Konva.Image)) return;
+            // Allow selection of any draggable object, not just images
+            if (!e.target.draggable()) return;
 
-            const metaPressed = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
-            const isSelected = tr.nodes().indexOf(e.target) >= 0;
+            const shiftPressed = e.evt.shiftKey;
+            const currentNodes = tr.nodes();
+            const isSelected = currentNodes.includes(e.target);
 
-            if (!metaPressed && !isSelected) {
-                tr.nodes([e.target]);
-            } else if (metaPressed && isSelected) {
-                const nodes = tr.nodes().slice();
-                nodes.splice(nodes.indexOf(e.target), 1);
-                tr.nodes(nodes);
-            } else if (metaPressed && !isSelected) {
-                tr.nodes(tr.nodes().concat([e.target]));
+            if (shiftPressed) {
+                // Shift+click: toggle selection
+                if (isSelected) {
+                    // Remove from selection
+                    const newNodes = currentNodes.filter(node => node !== e.target);
+                    tr.nodes(newNodes);
+                } else {
+                    // Add to selection
+                    tr.nodes([...currentNodes, e.target]);
+                }
+            } else {
+                // Regular click: replace selection
+                if (!isSelected) {
+                    tr.nodes([e.target]);
+                }
+                // If already selected, keep selection (allows for dragging)
             }
         });
 
@@ -119,7 +134,7 @@ const RightPanelManager = {
                         imageLayer.add(konvaImg);
                         tiedRects[groupId] = konvaImg;
 
-                        konvaImg.on('click', () => tr.nodes([konvaImg]));
+                        //konvaImg.on('click', () => tr.nodes([konvaImg]));
 
                         konvaImg.on('dragmove', e => {
                             guidesLayer.find('.guid-line').forEach(l => l.destroy());
