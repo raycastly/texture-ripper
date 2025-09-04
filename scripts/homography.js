@@ -113,11 +113,48 @@ const ImageProcessing = {
             absPts.push({ x: localPos.x, y: localPos.y });
         });
 
-        // Get coordinates relative to the image top-left (ignore stage scaling)
-        const dispPts = absPts.map(p => ({
-            x: p.x + group.x() - bgImage.x(),
-            y: p.y + group.y() - bgImage.y()
-        }));
+        // Get image transformation properties
+        const imgScaleX = bgImage.scaleX();
+        const imgScaleY = bgImage.scaleY();
+        const imgRotation = bgImage.rotation();
+        const imgWidth = bgImage.width();
+        const imgHeight = bgImage.height();
+
+        // Get coordinates relative to the image top-left (account for image scale and rotation)
+        const dispPts = absPts.map(p => {
+            // Apply group transformation
+            const groupX = p.x + group.x();
+            const groupY = p.y + group.y();
+            
+            // Convert to image-local coordinates (account for image position)
+            let localX = groupX - bgImage.x();
+            let localY = groupY - bgImage.y();
+            
+            // Account for image scaling
+            localX /= imgScaleX;
+            localY /= imgScaleY;
+            
+            // Handle image rotation if any
+            if (imgRotation !== 0) {
+                const rad = imgRotation * Math.PI / 180;
+                const centerX = imgWidth / 2;
+                const centerY = imgHeight / 2;
+                
+                // Translate to origin (relative to image center)
+                const translatedX = localX - centerX;
+                const translatedY = localY - centerY;
+                
+                // Apply the rotation
+                const rotatedX = translatedX * Math.cos(rad) - translatedY * Math.sin(rad);
+                const rotatedY = translatedX * Math.sin(rad) + translatedY * Math.cos(rad);
+                
+                // Translate back from origin
+                localX = rotatedX + centerX;
+                localY = rotatedY + centerY;
+            }
+            
+            return { x: localX, y: localY };
+        });
 
         // Map to original image pixels (ignore stage scaling)
         const origImg = bgImage.image();
@@ -174,12 +211,23 @@ const ImageProcessing = {
         for (let y = 0; y < outH; y++) {
             for (let x = 0; x < outW; x++) {
                 const srcPt = Homography.applyHomography(Hinv, { x, y });
-                const rgba = ImageProcessing.sampleBilinear(srcPixels, srcW, srcH, srcPt.x, srcPt.y);
-                const idx = (y * outW + x) * 4;
-                outPixels[idx] = rgba[0];
-                outPixels[idx + 1] = rgba[1];
-                outPixels[idx + 2] = rgba[2];
-                outPixels[idx + 3] = rgba[3];
+                
+                // Add bounds checking to prevent errors
+                if (srcPt.x >= 0 && srcPt.x < srcW && srcPt.y >= 0 && srcPt.y < srcH) {
+                    const rgba = ImageProcessing.sampleBilinear(srcPixels, srcW, srcH, srcPt.x, srcPt.y);
+                    const idx = (y * outW + x) * 4;
+                    outPixels[idx] = rgba[0];
+                    outPixels[idx + 1] = rgba[1];
+                    outPixels[idx + 2] = rgba[2];
+                    outPixels[idx + 3] = rgba[3];
+                } else {
+                    // Set transparent for out-of-bounds pixels
+                    const idx = (y * outW + x) * 4;
+                    outPixels[idx] = 0;
+                    outPixels[idx + 1] = 0;
+                    outPixels[idx + 2] = 0;
+                    outPixels[idx + 3] = 0;
+                }
             }
         }
 

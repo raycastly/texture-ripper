@@ -8,11 +8,23 @@ const PolygonManager = {
             _id: Utils.generateId() // Add unique ID for tracking
         });
         
+        // Get the center of the stage (visible area accounting for zoom/pan)
+        const stageCenterX = stage.width() / 2;
+        const stageCenterY = stage.height() / 2;
+        
+        // Convert stage center to absolute coordinates (accounting for zoom/pan)
+        const absoluteCenter = {
+            x: (stageCenterX - stage.x()) / stage.scaleX(),
+            y: (stageCenterY - stage.y()) / stage.scaleY()
+        };
+        
+        // Create rectangle centered on the stage
+        const rectSize = 100; // Default size
         const rectPoints = [
-            { x: 50, y: 50 }, 
-            { x: 50, y: 150 },
-            { x: 150, y: 150 }, 
-            { x: 150, y: 50 }
+            { x: absoluteCenter.x - rectSize/2, y: absoluteCenter.y - rectSize/2 }, 
+            { x: absoluteCenter.x - rectSize/2, y: absoluteCenter.y + rectSize/2 },
+            { x: absoluteCenter.x + rectSize/2, y: absoluteCenter.y + rectSize/2 }, 
+            { x: absoluteCenter.x + rectSize/2, y: absoluteCenter.y - rectSize/2 }
         ];
 
         const polygon = new Konva.Line({
@@ -53,8 +65,8 @@ const PolygonManager = {
         const images = stage.find('Image');
         if (!images || images.length === 0) return [];
 
-        const groupBox = group.getClientRect(); // Absolute coordinates
-        return images.filter(img => {
+        const groupBox = group.getClientRect();
+        const intersectingImages = images.filter(img => {
             const imgBox = img.getClientRect();
             return (
                 groupBox.x + groupBox.width > imgBox.x &&
@@ -63,6 +75,9 @@ const PolygonManager = {
                 groupBox.y < imgBox.y + imgBox.height
             );
         });
+
+        // Return only the topmost image (last in Konva's drawing order)
+        return intersectingImages.length > 0 ? [intersectingImages[intersectingImages.length - 1]] : [];
     },
 
     initDrawingMode: (stage, polygonLayer, getDrawingMode, onPolygonCreated) => {

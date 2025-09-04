@@ -190,45 +190,12 @@ const LeftPanelManager = {
                 const overlappingImgs = PolygonManager.getUnderlyingImages(group, stage);
                 if (!overlappingImgs.length) return;
 
-                // Use the polygon's ORIGINAL size (not scaled by stage zoom)
-                const vertices = group.find('.vertex');
-                if (vertices.length !== 4) return;
+                // Use only the topmost image
+                const topmostImage = overlappingImgs[0];
+                const textureData = ImageProcessing.extractTexture(group, topmostImage);
                 
-                // Calculate bounding box from vertex positions (local coordinates)
-                const points = vertices.map(v => v.position());
-                const minX = Math.min(...points.map(p => p.x));
-                const minY = Math.min(...points.map(p => p.y));
-                const maxX = Math.max(...points.map(p => p.x));
-                const maxY = Math.max(...points.map(p => p.y));
-                
-                const canvasW = Math.round(maxX - minX);
-                const canvasH = Math.round(maxY - minY);
-
-                const outCanvas = document.createElement('canvas');
-                outCanvas.width = canvasW;
-                outCanvas.height = canvasH;
-                const ctx = outCanvas.getContext('2d');
-
-                // Helper: load image from data URL
-                const loadImage = src => new Promise(resolve => {
-                    const img = new Image();
-                    img.onload = () => resolve(img);
-                    img.src = src;
-                });
-
-                // Extract textures → load them as real Image objects
-                const textures = overlappingImgs
-                    .map(img => ImageProcessing.extractTexture(group, img))
-                    .filter(Boolean);
-
-                const loadedImgs = await Promise.all(textures.map(loadImage));
-
-                // Draw them all in order
-                loadedImgs.forEach(img => ctx.drawImage(img, 0, 0, canvasW, canvasH));
-
-                // Update once at the end
-                if (window.rightPanel) {
-                    window.rightPanel.updateTexture(group._id, outCanvas.toDataURL());
+                if (textureData && window.rightPanel) {
+                    window.rightPanel.updateTexture(group._id, textureData);
                 }
             });
         });
@@ -341,12 +308,11 @@ const LeftPanelManager = {
 
         // Transformer for background images only
         const tr = new Konva.Transformer({
-            keepRatio: false,
-            rotateEnabled: true,
+            keepRatio: true,
+            rotateEnabled: false,
             enabledAnchors: [
-                'top-left','top-center','top-right',
-                'middle-left','middle-right',
-                'bottom-left','bottom-center','bottom-right'
+                'top-left','top-right',
+                'bottom-left','bottom-right'
             ]
         });
         uiLayer.add(tr);
