@@ -28,7 +28,8 @@ const LeftPanelManager = {
         lockBtn.addEventListener('click', () => {
             imagesLocked = !imagesLocked;
             lockBtn.textContent = imagesLocked ? 'Unlock Images' : 'Lock Images';
-            
+            lockBtn.classList.toggle("locked");
+
             // Update draggable state of all background images
             bgImages.forEach(img => {
                 img.draggable(!imagesLocked);
@@ -116,6 +117,7 @@ const LeftPanelManager = {
         document.getElementById('toggleDrawingMode').addEventListener('click', () => {
             drawingMode = !drawingMode;
             const button = document.getElementById('toggleDrawingMode');
+            button.classList.toggle('drawing-active');
             
             if (drawingMode) {
                 button.textContent = 'Exit Drawing Mode';
