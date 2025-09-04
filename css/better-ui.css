@@ -3,102 +3,163 @@ body, html {
     height: 100%;
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #1c1c1c;
-    color: #f1f1f1;
+    background: #0b0d19;
+    color: #fffffe;
+    padding: 12px;
+    box-sizing: border-box;
+    background-image: radial-gradient(circle at 15% 50%, #121428, #0b0d19 80%);
 }
 
 /* Split container */
 .split {
     height: 100%;
     display: flex;
-    gap: 2px; /* small gap between panels */
+    gap: 16px; /* Increased gap for claymorphism */
 }
 
-/* Panels */
+/* Panels - Claymorphism Style */
 .panel {
     flex: 1;
     display: flex;
     flex-direction: column;
-    border-radius: 8px;
+    border-radius: 24px; /* More rounded corners */
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    background: linear-gradient(180deg, #252525, #1a1a1a);
+    background: rgba(18, 20, 40, 0.7); /* Semi-transparent */
+    backdrop-filter: blur(10px);
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2),
+        inset 0 -4px 5px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Last panel without border */
-.panel:last-child {
-    border-right: none;
-}
-
-/* Toolbars */
+/* Toolbars - Claymorphism Style */
 .toolbar {
-    background: linear-gradient(90deg, #333, #444);
-    padding: 0.6rem 1rem;
+    background: rgba(30, 33, 56, 0.7);
+    padding: 0.8rem 1.2rem;
     display: flex;
-    gap: 0.5rem;
+    gap: 0.8rem;
     align-items: center;
-    border-bottom: 1px solid #555;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    box-shadow: 
+        0 4px 10px rgba(0, 0, 0, 0.2),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
-/* Buttons */
+/* Buttons - Claymorphism Style */
 .btn {
-    border-radius: 5px;
+    border-radius: 12px;
     transition: all 0.2s ease;
     font-weight: 500;
+    border: none;
+    padding: 0.5rem 1rem;
+    background: rgba(55, 184, 251, 0.8);
+    color: #0b0d19;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.2),
+        inset 0 2px 2px rgba(255, 255, 255, 0.2);
 }
 
 .btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.25),
+        inset 0 2px 2px rgba(255, 255, 255, 0.2);
+    background: rgba(55, 184, 251, 0.9);
 }
 
-/* Inputs */
-input[type="number"], input[type="file"] {
-    border-radius: 5px;
-    border: 1px solid #555;
-    background-color: #2b2b2b;
-    color: #f1f1f1;
-    padding: 0.2rem 0.5rem;
+.btn:active {
+    transform: translateY(1px);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 2px 2px rgba(255, 255, 255, 0.1);
+}
+
+.btn-sm {
+    padding: 0.3rem 0.7rem;
+    border-radius: 10px;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background: rgba(55, 184, 251, 0.8);
+    color: #0b0d19;
+}
+
+.btn-danger {
+    background: rgba(236, 18, 78, 0.8);
+    color: #fffffe;
+}
+
+.btn-success {
+    background: rgba(20, 251, 167, 0.8);
+    color: #0b0d19;
+}
+
+/* Inputs - Claymorphism Style */
+input[type="number"], input[type="file"], input[type="checkbox"] {
+    border-radius: 12px;
+    border: none;
+    background: rgba(18, 20, 40, 0.6);
+    color: #fffffe;
+    padding: 0.4rem 0.8rem;
     transition: all 0.2s ease;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 input[type="number"]:focus, input[type="file"]:focus {
-    border-color: #00bfff;
     outline: none;
-    box-shadow: 0 0 5px #00bfff;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 0 0 2px #37b8fb;
 }
 
-/* Canvas container */
+/* Canvas container - Claymorphism Style */
 .canvas-container {
     flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #262626;
+    background-color: rgba(15, 17, 32, 0.5);
     position: relative;
-    margin: 0.5rem;
-    border-radius: 8px;
-    border: 1px solid #444;
+    margin: 12px;
+    border-radius: 16px;
+    backdrop-filter: blur(5px);
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 -2px 4px rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Thumbnails container */
+/* Thumbnails container - Claymorphism Style */
 .thumbs-container {
     display: flex;
     flex-wrap: wrap;
-    padding: 0.5rem;
-    gap: 0.5rem;
-    background-color: #1f1f1f;
-    border-top: 1px solid #555;
+    padding: 0.8rem;
+    gap: 0.8rem;
+    background-color: rgba(15, 17, 32, 0.5);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
     overflow-x: auto;
+    backdrop-filter: blur(5px);
+    box-shadow: 
+        inset 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Scrollbar for thumbnails */
 .thumbs-container::-webkit-scrollbar {
-    height: 6px;
+    height: 8px;
+    border-radius: 4px;
 }
 .thumbs-container::-webkit-scrollbar-thumb {
-    background-color: #555;
-    border-radius: 3px;
+    background-color: rgba(55, 184, 251, 0.5);
+    border-radius: 4px;
+}
+.thumbs-container::-webkit-scrollbar-track {
+    background: rgba(18, 20, 40, 0.3);
+    border-radius: 4px;
 }
 
 .paste-feedback {
@@ -106,14 +167,18 @@ input[type="number"]:focus, input[type="file"]:focus {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
+    background: rgba(11, 13, 25, 0.9);
+    color: #fffffe;
+    padding: 12px 24px;
+    border-radius: 12px;
     z-index: 1000;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s;
+    backdrop-filter: blur(5px);
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
 .paste-feedback.show {
@@ -122,4 +187,162 @@ input[type="number"]:focus, input[type="file"]:focus {
 
 .instruction {
     font-size: 12px;
+    opacity: 0.8;
+}
+
+/* Form control overrides for claymorphism */
+.form-control {
+    background: rgba(18, 20, 40, 0.6);
+    border: none;
+    border-radius: 12px;
+    color: #fffffe;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-control:focus {
+    background: rgba(18, 20, 40, 0.8);
+    color: #fffffe;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 0 0 2px #37b8fb;
+}
+
+.form-control-sm {
+    border-radius: 10px;
+    padding: 0.3rem 0.7rem;
+}
+
+/* Checkbox styling */
+.form-check-input {
+    width: 1.1em;
+    height: 1.1em;
+    margin-top: 0.2em;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.form-check-input:checked {
+    background-color: #37b8fb;
+    border-color: #37b8fb;
+}
+
+.form-check-input:focus {
+    box-shadow: 
+        0 0 0 2px #37b8fb,
+        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Label styling */
+label {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Custom utility classes */
+.ms-2 {
+    margin-left: 0.5rem !important;
+}
+
+.gap-2 {
+    gap: 0.5rem !important;
+}
+
+.d-flex {
+    display: flex !important;
+}
+
+.align-items-center {
+    align-items: center !important;
+}
+
+
+/*---------------------------*/
+
+
+/* Drawing Mode Button Styles */
+#toggleDrawingMode {
+    position: relative;
+    padding: 0.6rem 1.2rem 0.6rem 2.8rem;
+    border: none;
+    border-radius: 16px;
+    background: rgba(55, 184, 251, 0.15);
+    color: #37b8fb;
+    font-weight: 600;
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        inset 0 2px 4px rgba(255, 255, 255, 0.1),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(55, 184, 251, 0.2);
+}
+
+#toggleDrawingMode::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.2rem;
+    height: 1.2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2337b8fb'%3E%3Cpath d='M20.71,4.63l-1.34-1.34C19.17,3.17,18.92,3,18.66,3c-0.26,0-0.51,0.1-0.71,0.29l-1.39,1.39l2.12,2.12l1.39-1.39C21.1,5.65,21.1,5.05,20.71,4.63z M17.65,6.53l-2.12-2.12L3,15.88V19h3.12L17.65,6.53z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: all 0.3s ease;
+}
+
+#toggleDrawingMode:hover {
+    background: rgba(55, 184, 251, 0.25);
+    box-shadow: 
+        0 6px 16px rgba(0, 0, 0, 0.2),
+        inset 0 2px 4px rgba(255, 255, 255, 0.15),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+#toggleDrawingMode:active {
+    transform: translateY(1px);
+    box-shadow: 
+        0 2px 6px rgba(0, 0, 0, 0.15),
+        inset 0 2px 4px rgba(255, 255, 255, 0.1),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Active/Drawing State */
+#toggleDrawingMode.drawing-active {
+    background: rgba(236, 18, 78, 0.15);
+    color: #ec124e;
+    box-shadow: 
+        0 4px 12px rgba(236, 18, 78, 0.15),
+        inset 0 2px 4px rgba(255, 255, 255, 0.1),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(236, 18, 78, 0.2);
+}
+
+#toggleDrawingMode.drawing-active::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ec124e'%3E%3Cpath d='M20.71,4.63l-1.34-1.34C19.17,3.17,18.92,3,18.66,3c-0.26,0-0.51,0.1-0.71,0.29l-1.39,1.39l2.12,2.12l1.39-1.39C21.1,5.65,21.1,5.05,20.71,4.63z M17.65,6.53l-2.12-2.12L3,15.88V19h3.12L17.65,6.53z'/%3E%3C/svg%3E");
+}
+
+#toggleDrawingMode.drawing-active:hover {
+    background: rgba(236, 18, 78, 0.25);
+    box-shadow: 
+        0 6px 16px rgba(236, 18, 78, 0.2),
+        inset 0 2px 4px rgba(255, 255, 255, 0.15),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Pulsing animation when active */
+@keyframes pulse-drawing {
+    0% { box-shadow: 0 0 0 0 rgba(236, 18, 78, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(236, 18, 78, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(236, 18, 78, 0); }
+}
+
+#toggleDrawingMode.drawing-active {
+    animation: pulse-drawing 2s infinite;
 }
