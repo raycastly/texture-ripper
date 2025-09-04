@@ -1,17 +1,17 @@
 // ==================== CONSTANTS AND CONFIGURATION ====================
 const CONFIG = {
     GRID: {
-        STROKE: 'rgba(0,0,0,0.4)',
+        STROKE: 'rgba(49,179,247,1)',
         STROKE_WIDTH: 1
     },
     VERTEX: {
-        RADIUS: 5,
-        FILL: 'rgba(0,0,255,0.5)'
+        RADIUS: 2,
+        FILL: 'rgba(20,252,169,1)'
     },
     POLYGON: {
-        SELECTED_STROKE: 'rgba(255,0,0,0.8)',
+        SELECTED_STROKE: 'rgba(49,179,247,1)',
         SELECTED_STROKE_WIDTH: 3,
-        STROKE: 'blue',
+        STROKE: 'rgba(49,179,247,1)',
         STROKE_WIDTH: 2,
         CLOSED: true
     },
