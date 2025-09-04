@@ -6,6 +6,7 @@ const CONFIG = {
     },
     VERTEX: {
         RADIUS: 2,
+        RESPONSIVERADIUS: 10,
         FILL: 'rgba(20,252,169,1)'
     },
     POLYGON: {

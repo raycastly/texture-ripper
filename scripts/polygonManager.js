@@ -41,10 +41,18 @@ const PolygonManager = {
             const vertex = new Konva.Circle({
                 x: point.x, 
                 y: point.y,
-                radius: CONFIG.VERTEX.RADIUS, 
+                radius: CONFIG.VERTEX.RADIUS,
                 fill: CONFIG.VERTEX.FILL,
                 draggable: true, 
-                name: 'vertex'
+                name: 'vertex',
+                // Use custom hit function for reliable larger hit area
+                hitFunc: function(context) {
+                    const enlargedRadius = CONFIG.VERTEX.RADIUS + CONFIG.VERTEX.RESPONSIVERADIUS; // larger hit area
+                    context.beginPath();
+                    context.arc(0, 0, enlargedRadius, 0, Math.PI * 2);
+                    context.closePath();
+                    context.fillStrokeShape(this);
+                }
             });
 
             vertex.on('dragmove', () => {
@@ -101,7 +109,15 @@ const PolygonManager = {
                 radius: CONFIG.VERTEX.RADIUS,
                 fill: isTemp ? CONFIG.DRAWING.ACTIVE_COLOR : CONFIG.VERTEX.FILL,
                 draggable: true,
-                name: isTemp ? 'temp-vertex' : 'vertex'
+                name: isTemp ? 'temp-vertex' : 'vertex',
+                // Use custom hit function for reliable larger hit area
+                hitFunc: function(context) {
+                    const enlargedRadius = CONFIG.VERTEX.RADIUS + CONFIG.VERTEX.RESPONSIVERADIUS; // larger hit area
+                    context.beginPath();
+                    context.arc(0, 0, enlargedRadius, 0, Math.PI * 2);
+                    context.closePath();
+                    context.fillStrokeShape(this);
+                }
             });
             
             vertex.on('dragmove', () => {
@@ -331,7 +347,15 @@ const PolygonManager = {
                 radius: CONFIG.VERTEX.RADIUS, 
                 fill: CONFIG.VERTEX.FILL,
                 draggable: true, 
-                name: 'vertex'
+                name: 'vertex',
+                // Use custom hit function for reliable larger hit area
+                hitFunc: function(context) {
+                    const enlargedRadius = CONFIG.VERTEX.RADIUS + CONFIG.VERTEX.RESPONSIVERADIUS; // larger hit area
+                    context.beginPath();
+                    context.arc(0, 0, enlargedRadius, 0, Math.PI * 2);
+                    context.closePath();
+                    context.fillStrokeShape(this);
+                }
             });
 
             vertex.on('dragmove', () => {
