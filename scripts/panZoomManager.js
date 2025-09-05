@@ -22,28 +22,14 @@ const PanZoomManager = {
                     g._wasDraggable = g.draggable(); // Store current state
                     g.draggable(false);
                 });
+                
+                // Add mouseleave event to container to cancel panning
+                stage.container().addEventListener('mouseleave', PanZoomManager.cancelPanning);
             }
         });
 
         stage.on("mouseup", () => {
-            if (PanZoomManager.isPanning) {
-                PanZoomManager.isPanning = false;
-
-                // Restore the original draggable state
-                stage.find("Image").forEach(img => {
-                    if (img._wasDraggable !== undefined) {
-                        img.draggable(img._wasDraggable);
-                        delete img._wasDraggable;
-                    }
-                });
-                
-                stage.find(".group").forEach(g => {
-                    if (g._wasDraggable !== undefined) {
-                        g.draggable(g._wasDraggable);
-                        delete g._wasDraggable;
-                    }
-                });
-            }
+            PanZoomManager.cancelPanning();
         });
 
         stage.on("mousemove", () => {
@@ -62,6 +48,33 @@ const PanZoomManager = {
 
         // Prevent context menu on middle click
         stage.container().addEventListener("contextmenu", (e) => e.preventDefault());
+    },
+    
+    // Cancel panning and restore draggable state
+    cancelPanning: () => {
+        if (!PanZoomManager.isPanning) return;
+        
+        PanZoomManager.isPanning = false;
+        
+        // Restore the original draggable state for all stages
+        Konva.stages.forEach(stage => {
+            stage.find("Image").forEach(img => {
+                if (img._wasDraggable !== undefined) {
+                    img.draggable(img._wasDraggable);
+                    delete img._wasDraggable;
+                }
+            });
+            
+            stage.find(".group").forEach(g => {
+                if (g._wasDraggable !== undefined) {
+                    g.draggable(g._wasDraggable);
+                    delete g._wasDraggable;
+                }
+            });
+            
+            // Remove mouseleave event listener
+            stage.container().removeEventListener('mouseleave', PanZoomManager.cancelPanning);
+        });
     },
     
     // Initialize zooming for a stage
@@ -100,4 +113,3 @@ const PanZoomManager = {
         });
     }
 };
-
