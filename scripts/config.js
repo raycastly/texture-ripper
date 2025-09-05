@@ -45,7 +45,7 @@ const CONFIG = {
         HANDLE_RESPONSIVE_RADIUS: 8
     },
     MIDPOINT: {
-        RADIUS: 6,
+        RADIUS: 3,
         FILL: '#ff0',
         RESPONSIVE_RADIUS: 10
     },
