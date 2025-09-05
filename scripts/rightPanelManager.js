@@ -6,6 +6,7 @@ const RightPanelManager = {
         const stagePixelWidth = parseInt(document.getElementById('rightWidth').value);
         const stagePixelHeight = parseInt(document.getElementById('rightHeight').value);
 
+        // Give the bgLayer a specific name for easier access
         const bgLayer = new Konva.Layer();
         const uiLayer = new Konva.Layer();
         const guidesLayer = new Konva.Layer({ name: 'guidesLayer' });
@@ -22,6 +23,9 @@ const RightPanelManager = {
              .add(guidesLayer)
              .add(uiLayer);
 
+        // Store reference to bgLayer on the stage
+        stage.bgLayer = bgLayer;
+
         // Light grey background
         const bgRect = new Konva.Rect({
             x: 0,
@@ -35,6 +39,17 @@ const RightPanelManager = {
         
         bgLayer.add(bgRect);
         stage.bgRect = bgRect;
+
+        // Store the current background state
+        stage.isTransparentBackground = false;
+
+        // Set up the transparency toggle
+        const exportTransparentCheckbox = document.getElementById('exportTransparent');
+        if (exportTransparentCheckbox) {
+            exportTransparentCheckbox.addEventListener('change', (e) => {
+                RightPanelManager.toggleTransparency(stage, e.target.checked);
+            });
+        }
 
         // Transformer for selection
         const tr = new Konva.Transformer({
@@ -134,8 +149,6 @@ const RightPanelManager = {
                         imageLayer.add(konvaImg);
                         tiedRects[groupId] = konvaImg;
 
-                        //konvaImg.on('click', () => tr.nodes([konvaImg]));
-
                         konvaImg.on('dragmove', e => {
                             guidesLayer.find('.guid-line').forEach(l => l.destroy());
                             const lineGuideStops = SelectionManager.getLineGuideStops(stage, konvaImg);
@@ -172,9 +185,116 @@ const RightPanelManager = {
                     delete tiedRects[groupId];
                     imageLayer.draw();
                 }
+            },
+
+            updateBackground: () => {
+                const width = parseInt(document.getElementById('rightWidth').value);
+                const height = parseInt(document.getElementById('rightHeight').value);
+                
+                if (stage.isTransparentBackground) {
+                    const checkerboardPattern = CheckerboardManager.createCheckerboard(
+                        width, 
+                        height, 
+                        CONFIG.CHECKERBOARD.CELL_SIZE
+                    );
+                    
+                    // Create a new image and wait for it to load
+                    const checkerboardImg = new Image();
+                    checkerboardImg.onload = () => {
+                        // Remove old background
+                        stage.bgRect.destroy();
+                        
+                        // Create new checkerboard background
+                        const newBgRect = new Konva.Image({
+                            x: 0,
+                            y: 0,
+                            image: checkerboardImg,
+                            width: width,
+                            height: height,
+                            listening: false,
+                            name: 'bgRect'
+                        });
+                        
+                        stage.bgLayer.add(newBgRect);
+                        stage.bgRect = newBgRect;
+                        stage.bgLayer.draw();
+                    };
+                    checkerboardImg.src = checkerboardPattern;
+                } else {
+                    // Switch back to solid color
+                    stage.bgRect.width(width);
+                    stage.bgRect.height(height);
+                    stage.bgRect.fill(CONFIG.BACKGROUND.FILL);
+                    stage.bgLayer.draw();
+                }
             }
         };
 
         return stage;
+    },
+
+    // Toggle between solid color and checkerboard background
+    toggleTransparency: (stage, isTransparent) => {
+        stage.isTransparentBackground = isTransparent;
+        
+        // Use the stored reference to bgLayer
+        const bgLayer = stage.bgLayer;
+        if (!bgLayer) {
+            console.error('Background layer not found');
+            return;
+        }
+        
+        const width = stage.bgRect.width();
+        const height = stage.bgRect.height();
+        
+        if (isTransparent) {
+            const checkerboardPattern = CheckerboardManager.createCheckerboard(
+                width, 
+                height, 
+                CONFIG.CHECKERBOARD.CELL_SIZE
+            );
+            
+            // Create a new image and wait for it to load
+            const checkerboardImg = new Image();
+            checkerboardImg.onload = () => {
+                // Remove old background
+                const oldBgRect = stage.bgRect;
+                
+                // Create new checkerboard background
+                const newBgRect = new Konva.Image({
+                    x: 0,
+                    y: 0,
+                    image: checkerboardImg,
+                    width: width,
+                    height: height,
+                    listening: false,
+                    name: 'bgRect'
+                });
+                
+                bgLayer.add(newBgRect);
+                stage.bgRect = newBgRect;
+                oldBgRect.destroy();
+                bgLayer.draw();
+            };
+            checkerboardImg.src = checkerboardPattern;
+        } else {
+            // Switch back to solid color
+            const oldBgRect = stage.bgRect;
+            
+            const newBgRect = new Konva.Rect({
+                x: 0,
+                y: 0,
+                width: width,
+                height: height,
+                fill: CONFIG.BACKGROUND.FILL,
+                listening: false,
+                name: 'bgRect'
+            });
+            
+            bgLayer.add(newBgRect);
+            stage.bgRect = newBgRect;
+            oldBgRect.destroy();
+            bgLayer.draw();
+        }
     }
 };

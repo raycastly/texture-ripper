@@ -49,4 +49,9 @@ const CONFIG = {
         FILL: '#ff0',
         RESPONSIVE_RADIUS: 10
     },
+    CHECKERBOARD: {
+        COLOR1: '#cccccc',
+        COLOR2: '#ffffff',
+        CELL_SIZE: 20
+    }
 };

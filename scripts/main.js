@@ -25,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
         stageRight.bgRect.width(newWidth);
         stageRight.bgRect.height(newHeight);
 
+        // Update background
+        if (window.rightPanel && window.rightPanel.updateBackground) {
+            window.rightPanel.updateBackground();
+        }
+
         stageRight.draw(); // Redraw the stage
     });
 
@@ -54,21 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const transparent = document.getElementById('exportTransparent').checked;
 
-        let tempBg = null;
-
-        if (!transparent) {
-            // Create a temporary grey background behind the images
-            tempBg = new Konva.Rect({
-                x: 0,
-                y: 0,
-                width: exportWidth,
-                height: exportHeight,
-                fill: CONFIG.BACKGROUND.FILL
-            });
-
-            imageLayer.add(tempBg);
-            tempBg.moveToBottom(); // Ensure it's behind all images
-            imageLayer.draw();
+        // Hide the background if exporting with transparency
+        const originalBgVisibility = stageRight.bgRect.visible();
+        if (transparent) {
+            stageRight.bgRect.visible(false);
         }
 
         // Export only the bgRect area
@@ -80,11 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
             pixelRatio: 1
         });
 
-        // Remove temporary background if it was added
-        if (tempBg) {
-            tempBg.destroy();
-            imageLayer.draw();
-        }
+        // Restore background visibility
+        stageRight.bgRect.visible(originalBgVisibility);
 
         // Restore stage position
         stageRight.x(originalX);
@@ -98,5 +89,11 @@ document.addEventListener('DOMContentLoaded', () => {
         link.download = 'atlas.png';
         link.href = dataURL;
         link.click();
+    });
+
+    // Add event listener for the transparency toggle
+    document.getElementById('exportTransparent').addEventListener('change', (e) => {
+        const isTransparent = e.target.checked;
+        RightPanelManager.toggleTransparency(stageRight, isTransparent);
     });
 });
