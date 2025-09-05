@@ -37,15 +37,54 @@ const PolygonManager = {
             });
         }
 
+        // Create a more accurate drag surface that follows the curved edges
+        const createCurvedDragSurface = (vertices, midpoints) => {
+            const alpha = 0.5;
+            const points = [];
+            
+            for (let i = 0; i < vertices.length; i++) {
+                const nextIdx = (i + 1) % vertices.length;
+                const P0 = vertices[i];
+                const P3 = vertices[nextIdx];
+                const M = midpoints[i];
+                
+                // Compute control points based on midpoint
+                const C1 = {
+                    x: M.x + alpha * (P0.x - M.x),
+                    y: M.y + alpha * (P0.y - M.y)
+                };
+                
+                const C2 = {
+                    x: M.x + alpha * (P3.x - M.x),
+                    y: M.y + alpha * (P3.y - M.y)
+                };
+                
+                // Sample points along the bezier curve
+                const numSamples = 10;
+                for (let j = 0; j <= numSamples; j++) {
+                    const t = j / numSamples;
+                    const mt = 1 - t;
+                    const x = mt*mt*mt*P0.x + 3*mt*mt*t*C1.x + 3*mt*t*t*C2.x + t*t*t*P3.x;
+                    const y = mt*mt*mt*P0.y + 3*mt*mt*t*C1.y + 3*mt*t*t*C2.y + t*t*t*P3.y;
+                    points.push(x, y);
+                }
+            }
+            
+            return points;
+        };
+
+        const dragSurfacePoints = createCurvedDragSurface(vertices, midpoints);
         const dragSurface = new Konva.Line({
-          points: vertices.flatMap(v => [v.x, v.y]),
-          closed: true,
-          fill: 'transparent',
-          strokeWidth: 0,
-          name: 'drag-surface'
+            points: dragSurfacePoints,
+            closed: true,
+            fill: 'rgba(0,0,0,0.01)', // Very slight transparency for better hit detection
+            strokeWidth: 0,
+            name: 'drag-surface',
+            listening: true // Ensure it listens to events
         });
+        
         group.add(dragSurface);
-        dragSurface.moveToBottom(); // so it doesn’t block edges/vertices visually
+        dragSurface.moveToBottom();
 
         // Draw the curved polygon
         PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
@@ -97,6 +136,10 @@ const PolygonManager = {
                 group.find('.midpoint').forEach((midpoint, idx) => {
                     midpoint.position(midpoints[idx]);
                 });
+                
+                // Update drag surface with curved edges
+                const updatedPoints = createCurvedDragSurface(vertices, midpoints);
+                PolygonManager.updateDragSurface(group, updatedPoints);
             });
 
             group.add(vertex);
@@ -127,6 +170,10 @@ const PolygonManager = {
                 // Update polygon and grid
                 PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
                 GridManager.drawGrid(group, vertices, midpoints);
+                
+                // Update drag surface with curved edges
+                const updatedPoints = createCurvedDragSurface(vertices, midpoints);
+                PolygonManager.updateDragSurface(group, updatedPoints);
             });
             
             group.add(midpoint);
@@ -184,6 +231,14 @@ const PolygonManager = {
             });
             
             group.add(edge);
+        }
+    },
+
+    // Helper to update drag surface
+    updateDragSurface: (group, points) => {
+        const dragSurface = group.findOne('.drag-surface');
+        if (dragSurface) {
+            dragSurface.points(points);
         }
     },
 
@@ -442,8 +497,6 @@ const PolygonManager = {
     },
 
     createPolygonGroupFromPoints: (points) => {
-        // For now, create a simple rectangle polygon
-        // We'll need to implement proper midpoint creation later
         const group = new Konva.Group({ 
             draggable: true, 
             name: 'group',
@@ -462,15 +515,54 @@ const PolygonManager = {
             });
         }
 
+        // Create a more accurate drag surface that follows the curved edges
+        const createCurvedDragSurface = (vertices, midpoints) => {
+            const alpha = 0.5;
+            const points = [];
+            
+            for (let i = 0; i < vertices.length; i++) {
+                const nextIdx = (i + 1) % vertices.length;
+                const P0 = vertices[i];
+                const P3 = vertices[nextIdx];
+                const M = midpoints[i];
+                
+                // Compute control points based on midpoint
+                const C1 = {
+                    x: M.x + alpha * (P0.x - M.x),
+                    y: M.y + alpha * (P0.y - M.y)
+                };
+                
+                const C2 = {
+                    x: M.x + alpha * (P3.x - M.x),
+                    y: M.y + alpha * (P3.y - M.y)
+                };
+                
+                // Sample points along the bezier curve
+                const numSamples = 10;
+                for (let j = 0; j <= numSamples; j++) {
+                    const t = j / numSamples;
+                    const mt = 1 - t;
+                    const x = mt*mt*mt*P0.x + 3*mt*mt*t*C1.x + 3*mt*t*t*C2.x + t*t*t*P3.x;
+                    const y = mt*mt*mt*P0.y + 3*mt*mt*t*C1.y + 3*mt*t*t*C2.y + t*t*t*P3.y;
+                    points.push(x, y);
+                }
+            }
+            
+            return points;
+        };
+
+        const dragSurfacePoints = createCurvedDragSurface(vertices, midpoints);
         const dragSurface = new Konva.Line({
-          points: vertices.flatMap(v => [v.x, v.y]),
-          closed: true,
-          fill: 'transparent',
-          strokeWidth: 0,
-          name: 'drag-surface'
+            points: dragSurfacePoints,
+            closed: true,
+            fill: 'rgba(0,0,0,0.01)', // Very slight transparency for better hit detection
+            strokeWidth: 0,
+            name: 'drag-surface',
+            listening: true
         });
+        
         group.add(dragSurface);
-        dragSurface.moveToBottom(); // so it doesn’t block edges/vertices visually
+        dragSurface.moveToBottom();
 
         // Draw the curved polygon
         PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
@@ -522,6 +614,10 @@ const PolygonManager = {
                 group.find('.midpoint').forEach((midpoint, idx) => {
                     midpoint.position(midpoints[idx]);
                 });
+                
+                // Update drag surface with curved edges
+                const updatedPoints = createCurvedDragSurface(vertices, midpoints);
+                PolygonManager.updateDragSurface(group, updatedPoints);
             });
 
             group.add(vertex);
@@ -552,6 +648,10 @@ const PolygonManager = {
                 // Update polygon
                 PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
                 GridManager.drawGrid(group, vertices, midpoints);
+                
+                // Update drag surface with curved edges
+                const updatedPoints = createCurvedDragSurface(vertices, midpoints);
+                PolygonManager.updateDragSurface(group, updatedPoints);
             });
             
             group.add(midpoint);
