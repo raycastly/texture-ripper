@@ -37,8 +37,19 @@ const PolygonManager = {
             });
         }
 
+        const dragSurface = new Konva.Line({
+          points: vertices.flatMap(v => [v.x, v.y]),
+          closed: true,
+          fill: 'transparent',
+          strokeWidth: 0,
+          name: 'drag-surface'
+        });
+        group.add(dragSurface);
+        dragSurface.moveToBottom(); // so it doesn’t block edges/vertices visually
+
         // Draw the curved polygon
         PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
+        GridManager.drawGrid(group, vertices, midpoints);
 
         // Store references
         group.vertices = vertices;
@@ -451,8 +462,19 @@ const PolygonManager = {
             });
         }
 
+        const dragSurface = new Konva.Line({
+          points: vertices.flatMap(v => [v.x, v.y]),
+          closed: true,
+          fill: 'transparent',
+          strokeWidth: 0,
+          name: 'drag-surface'
+        });
+        group.add(dragSurface);
+        dragSurface.moveToBottom(); // so it doesn’t block edges/vertices visually
+
         // Draw the curved polygon
         PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
+        GridManager.drawGrid(group, vertices, midpoints);
 
         // Store references
         group.vertices = vertices;
@@ -494,7 +516,8 @@ const PolygonManager = {
                 
                 // Update polygon
                 PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
-                
+                GridManager.drawGrid(group, vertices, midpoints);
+
                 // Update midpoint visual positions
                 group.find('.midpoint').forEach((midpoint, idx) => {
                     midpoint.position(midpoints[idx]);
@@ -528,6 +551,7 @@ const PolygonManager = {
                 
                 // Update polygon
                 PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
+                GridManager.drawGrid(group, vertices, midpoints);
             });
             
             group.add(midpoint);
