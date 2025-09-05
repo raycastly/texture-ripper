@@ -21,7 +21,8 @@ const CONFIG = {
     },
     GUIDES: {
         STROKE: 'rgb(0, 161, 255)',
-        OFFSET: 5
+        OFFSET: 5,
+        SCALE_OFFSET: 5,
     },
     EXTRACTION: {
         MIN_SIZE: 16,

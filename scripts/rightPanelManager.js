@@ -62,37 +62,151 @@ const RightPanelManager = {
                 'middle-left','middle-right',
                 'bottom-left','bottom-center','bottom-right'
             ],
-            anchorDragBoundFunc: function (oldPos, newPos) {
-              const node = tr.nodes()[0];
-              if (!node) return newPos;
 
-              const stage = node.getStage();
-              const activeAnchor = tr.getActiveAnchor(); // e.g. 'top-left', 'middle-right'
-              const snapDistance = CONFIG.GUIDES.OFFSET;
+            // anchor bound function (uses precomputed snap data stored on transformstart)
+            anchorDragBoundFunc: function(oldPos, newPos) {
+                const node = tr.nodes()[0];
+                if (!node) return newPos;
 
-              // Only snap the moving edge
-              if (activeAnchor.includes('left') || activeAnchor.includes('right')) {
-                const guides = SelectionManager.getLineGuideStops(stage, node).vertical;
-                guides.forEach(guide => {
-                  if (Math.abs(newPos.x - guide) < snapDistance) {
-                    newPos.x = guide;
-                  }
-                });
-              }
-              if (activeAnchor.includes('top') || activeAnchor.includes('bottom')) {
-                const guides = SelectionManager.getLineGuideStops(stage, node).horizontal;
-                guides.forEach(guide => {
-                  if (Math.abs(newPos.y - guide) < snapDistance) {
-                    newPos.y = guide;
-                  }
-                });
-              }
+                const stage = node.getStage();
+                const snapDistance = CONFIG.GUIDES.SCALE_OFFSET ?? CONFIG.GUIDES.OFFSET;
 
-              return newPos;
+                // Use the stage's pointer event to check for Ctrl
+                const evt = stage.getPointerPosition()?.evt || window.event;
+                if (evt?.ctrlKey) {
+                    const guidesLayer = stage.findOne('.guidesLayer');
+                    if (guidesLayer) {
+                        guidesLayer.find('.guid-line').forEach(l => l.destroy());
+                        guidesLayer.batchDraw();
+                    }
+                    return newPos;
+                }
+
+                const guidesLayer = stage.findOne('.guidesLayer');
+                if (guidesLayer) guidesLayer.find('.guid-line').forEach(l => l.destroy());
+
+                const lineGuideStops = tr._snapData?.lineGuides || { vertical: [], horizontal: [] };
+                const activeAnchor = tr.getActiveAnchor();
+
+                // ---------- Uniform scaling (corner + Shift) ----------
+                const isUniformCorner =
+                    (stage.getPointerPosition()?.shiftKey) &&
+                    (activeAnchor.includes('left') || activeAnchor.includes('right')) &&
+                    (activeAnchor.includes('top') || activeAnchor.includes('bottom'));
+
+                if (isUniformCorner) {
+                    const box = tr.getClientRect({ skipTransform: false });
+                    let dx = 0, dy = 0;
+                    const activeGuides = [];
+
+                    // Vertical edges
+                    [box.x, box.x + box.width].forEach(edgeX => {
+                        lineGuideStops.vertical.forEach(g => {
+                            const dist = g - edgeX;
+                            if (Math.abs(dist) < snapDistance) {
+                                dx = dist;
+                                activeGuides.push({
+                                    lineGuide: g,
+                                    orientation: 'V',
+                                    offset: dist,
+                                    snap: 'edge'
+                                });
+                            }
+                        });
+                    });
+
+                    // Horizontal edges
+                    [box.y, box.y + box.height].forEach(edgeY => {
+                        lineGuideStops.horizontal.forEach(g => {
+                            const dist = g - edgeY;
+                            if (Math.abs(dist) < snapDistance) {
+                                dy = dist;
+                                activeGuides.push({
+                                    lineGuide: g,
+                                    orientation: 'H',
+                                    offset: dist,
+                                    snap: 'edge'
+                                });
+                            }
+                        });
+                    });
+
+                    if (activeGuides.length) {
+                        SelectionManager.drawGuides(stage, activeGuides);
+                    }
+
+                    return {
+                        x: newPos.x + dx,
+                        y: newPos.y + dy
+                    };
+                }
+
+                // ---------- Side-anchor snapping ----------
+                const activeGuides = [];
+
+                if (activeAnchor.includes('left') || activeAnchor.includes('right')) {
+                    lineGuideStops.vertical.forEach(g => {
+                        if (Math.abs(newPos.x - g) < snapDistance) {
+                            newPos.x = g;
+                            activeGuides.push({
+                                lineGuide: g,
+                                orientation: 'V',
+                                offset: 0,
+                                snap: 'edge'
+                            });
+                        }
+                    });
+                }
+
+                if (activeAnchor.includes('top') || activeAnchor.includes('bottom')) {
+                    lineGuideStops.horizontal.forEach(g => {
+                        if (Math.abs(newPos.y - g) < snapDistance) {
+                            newPos.y = g;
+                            activeGuides.push({
+                                lineGuide: g,
+                                orientation: 'H',
+                                offset: 0,
+                                snap: 'edge'
+                            });
+                        }
+                    });
+                }
+
+                if (activeGuides.length) {
+                    SelectionManager.drawGuides(stage, activeGuides);
+                }
+
+                return newPos;
             }
+
         });
         
         uiLayer.add(tr);
+
+        // ---------- precompute snap data before transform begins ----------
+        tr.on('transformstart', () => {
+            const node = tr.nodes()[0];
+            if (!node) return;
+            const stage = node.getStage();
+
+            // Precompute line guides once (skip current node)
+            tr._snapData = {
+                lineGuides: SelectionManager.getLineGuideStops(stage, node)
+            };
+        });
+
+        // ---------- cleanup ----------
+        tr.on('transformend', () => {
+          const stage = tr.getStage();
+          if (stage) {
+            const guidesLayer = stage.findOne('.guidesLayer');
+            if (guidesLayer) {
+              guidesLayer.find('.guid-line').forEach(l => l.destroy());
+              guidesLayer.batchDraw();
+            }
+          }
+          delete tr._snapData;
+        });
 
         // Selection rectangle
         const selectionRectangle = new Konva.Rect({
