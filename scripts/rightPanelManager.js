@@ -61,7 +61,35 @@ const RightPanelManager = {
                 'top-left','top-center','top-right',
                 'middle-left','middle-right',
                 'bottom-left','bottom-center','bottom-right'
-            ]
+            ],
+            anchorDragBoundFunc: function (oldPos, newPos) {
+              const node = tr.nodes()[0];
+              if (!node) return newPos;
+
+              const stage = node.getStage();
+              const activeAnchor = tr.getActiveAnchor(); // e.g. 'top-left', 'middle-right'
+              const snapDistance = CONFIG.GUIDES.OFFSET;
+
+              // Only snap the moving edge
+              if (activeAnchor.includes('left') || activeAnchor.includes('right')) {
+                const guides = SelectionManager.getLineGuideStops(stage, node).vertical;
+                guides.forEach(guide => {
+                  if (Math.abs(newPos.x - guide) < snapDistance) {
+                    newPos.x = guide;
+                  }
+                });
+              }
+              if (activeAnchor.includes('top') || activeAnchor.includes('bottom')) {
+                const guides = SelectionManager.getLineGuideStops(stage, node).horizontal;
+                guides.forEach(guide => {
+                  if (Math.abs(newPos.y - guide) < snapDistance) {
+                    newPos.y = guide;
+                  }
+                });
+              }
+
+              return newPos;
+            }
         });
         
         uiLayer.add(tr);
