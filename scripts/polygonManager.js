@@ -1,32 +1,38 @@
 // ==================== POLYGON MANAGEMENT ====================
 const PolygonManager = {
-    // Create a polygon group with draggable vertices and midpoint controls
-    createPolygonGroup: (stage, layer) => {
+    // Unified polygon creation function
+    createPolygonGroup: (stage, layer, points = null) => {
         const group = new Konva.Group({ 
             draggable: true, 
             name: 'group',
             _id: Utils.generateId()
         });
         
-        // Get the center of the stage
-        const stageCenterX = stage.width() / 2;
-        const stageCenterY = stage.height() / 2;
+        // Get vertices - either from provided points or create default rectangle
+        let vertices;
+        if (points && points.length === 4) {
+            vertices = points;
+        } else {
+            // Create default rectangle centered on stage
+            const stageCenterX = stage.width() / 2;
+            const stageCenterY = stage.height() / 2;
+            
+            // Convert stage center to absolute coordinates
+            const absoluteCenter = {
+                x: (stageCenterX - stage.x()) / stage.scaleX(),
+                y: (stageCenterY - stage.y()) / stage.scaleY()
+            };
+            
+            // Create rectangle centered on the stage
+            const rectSize = 100;
+            vertices = [
+                { x: absoluteCenter.x - rectSize/2, y: absoluteCenter.y - rectSize/2 }, 
+                { x: absoluteCenter.x - rectSize/2, y: absoluteCenter.y + rectSize/2 },
+                { x: absoluteCenter.x + rectSize/2, y: absoluteCenter.y + rectSize/2 }, 
+                { x: absoluteCenter.x + rectSize/2, y: absoluteCenter.y - rectSize/2 }
+            ];
+        }
         
-        // Convert stage center to absolute coordinates
-        const absoluteCenter = {
-            x: (stageCenterX - stage.x()) / stage.scaleX(),
-            y: (stageCenterY - stage.y()) / stage.scaleY()
-        };
-        
-        // Create rectangle centered on the stage
-        const rectSize = 100;
-        const vertices = [
-            { x: absoluteCenter.x - rectSize/2, y: absoluteCenter.y - rectSize/2 }, 
-            { x: absoluteCenter.x - rectSize/2, y: absoluteCenter.y + rectSize/2 },
-            { x: absoluteCenter.x + rectSize/2, y: absoluteCenter.y + rectSize/2 }, 
-            { x: absoluteCenter.x + rectSize/2, y: absoluteCenter.y - rectSize/2 }
-        ];
-
         // Create midpoints for each edge
         const midpoints = [];
         for (let i = 0; i < vertices.length; i++) {
@@ -147,6 +153,11 @@ const PolygonManager = {
                 PolygonManager.updateDragSurface(group, updatedPoints);
             });
 
+            // Prevent click events from bubbling to group
+            vertex.on('click', (e) => {
+                e.cancelBubble = true;
+            });
+
             group.add(vertex);
         });
         
@@ -185,11 +196,27 @@ const PolygonManager = {
                 PolygonManager.updateDragSurface(group, updatedPoints);
             });
             
+            // Prevent click events from bubbling to group
+            midpoint.on('click', (e) => {
+                e.cancelBubble = true;
+            });
+            
             group.add(midpoint);
         });
 
         GridManager.drawGrid(group, vertices, midpoints);
+        
+        // Add to layer if provided
+        if (layer) {
+            layer.add(group);
+        }
+        
         return group;
+    },
+
+    // Keep this as a wrapper for backward compatibility
+    createPolygonGroupFromPoints: (points) => {
+        return PolygonManager.createPolygonGroup(null, null, points);
     },
 
     // Draw the curved polygon with sharp corners and proper bezier curves
@@ -197,9 +224,11 @@ const PolygonManager = {
         const alpha = 0.5;
         
         // Remove existing polygon edges
-        group.find('.polygon-edge').forEach(edge => edge.destroy());
+        group.find('.polygon').forEach(polygon => polygon.destroy());
         
-        // Draw each edge as a separate bezier curve
+        // Create a single path for the entire polygon
+        const allPoints = [];
+        
         for (let i = 0; i < vertices.length; i++) {
             const nextIdx = (i + 1) % vertices.length;
             const P0 = vertices[i];
@@ -217,30 +246,34 @@ const PolygonManager = {
                 y: M.y + alpha * (P3.y - M.y)
             };
             
-            // Create a detailed bezier curve by sampling many points
-            const points = [];
-            const numSamples = 20;
+            // For the first point, move to the starting position
+            if (i === 0) {
+                allPoints.push(P0.x, P0.y);
+            }
             
-            for (let j = 0; j <= numSamples; j++) {
+            // Add bezier curve points
+            const numSamples = 20;
+            for (let j = 1; j <= numSamples; j++) {
                 const t = j / numSamples;
                 const mt = 1 - t;
                 const x = mt*mt*mt*P0.x + 3*mt*mt*t*C1.x + 3*mt*t*t*C2.x + t*t*t*P3.x;
                 const y = mt*mt*mt*P0.y + 3*mt*mt*t*C1.y + 3*mt*t*t*C2.y + t*t*t*P3.y;
-                points.push(x, y);
+                allPoints.push(x, y);
             }
-            
-            // Create the edge line
-            const edge = new Konva.Line({
-                points: points,
-                stroke: CONFIG.POLYGON.STROKE,
-                strokeWidth: CONFIG.POLYGON.STROKE_WIDTH,
-                name: 'polygon-edge',
-                lineCap: 'round',
-                lineJoin: 'round'
-            });
-            
-            group.add(edge);
         }
+        
+        // Create the polygon
+        const polygon = new Konva.Line({
+            points: allPoints,
+            stroke: CONFIG.POLYGON.STROKE,
+            strokeWidth: CONFIG.POLYGON.STROKE_WIDTH,
+            name: 'polygon',
+            lineCap: 'round',
+            lineJoin: 'round',
+            closed: true
+        });
+        
+        group.add(polygon);
     },
 
     // Helper to update drag surface
@@ -329,15 +362,16 @@ const PolygonManager = {
         
         function completePolygon() {
             if (tempPoints.length === 4) {
-                const polygonGroup = PolygonManager.createPolygonGroupFromPoints(tempPoints);
-                polygonLayer.add(polygonGroup);
+                const polygonGroup = PolygonManager.createPolygonGroup(stage, polygonLayer, tempPoints);
                 
                 // Clear temporary elements
                 clearTempElements();
                 tempPoints = [];
                 
-                // Add selection event handlers to the new polygon
-                addPolygonSelectionHandlers(polygonGroup);
+                // Just call the callback - selection handlers are now built into createPolygonGroup
+                if (typeof onPolygonCreated === 'function') {
+                    onPolygonCreated(polygonGroup);
+                }
                 
                 // Return the polygon group
                 return polygonGroup;
@@ -346,41 +380,11 @@ const PolygonManager = {
         }
 
         function addPolygonSelectionHandlers(polygonGroup) {
-            const polygon = polygonGroup.findOne('.polygon');
-            
-            // Click handler for selecting the polygon
-            polygonGroup.on('click', (e) => {
-                e.cancelBubble = true; // Prevent event from bubbling to stage
-                
-                // Reset previous selection visual
-                polygonLayer.find('.group').forEach(group => {
-                    if (group !== polygonGroup) {
-                        const otherPolygon = group.findOne('.polygon');
-                        if (otherPolygon) {
-                            otherPolygon.stroke(CONFIG.POLYGON.STROKE);
-                            otherPolygon.strokeWidth(CONFIG.POLYGON.STROKE_WIDTH);
-                        }
-                    }
-                });
-                
-                // Set visual selection for this polygon
-                polygon.stroke(CONFIG.POLYGON.SELECTED_STROKE);
-                polygon.strokeWidth(CONFIG.POLYGON.SELECTED_STROKE_WIDTH);
-                
-                // Set as selected group
-                if (typeof onPolygonCreated === 'function') {
-                    onPolygonCreated(polygonGroup);
-                }
-                
-                polygonLayer.batchDraw();
-            });
-            
-            // Also add the handlers to vertices
-            polygonGroup.find('.vertex').forEach(vertex => {
-                vertex.on('click', (e) => {
-                    e.cancelBubble = true; // Prevent event from bubbling to group
-                });
-            });
+            // Handler is now added in createPolygonGroup itself
+            // Just call the onPolygonCreated callback if provided
+            if (typeof onPolygonCreated === 'function') {
+                onPolygonCreated(polygonGroup);
+            }
         }
         
         // Event handlers
@@ -503,178 +507,5 @@ const PolygonManager = {
                 drawingGroup.destroy();
             }
         };
-    },
-
-    createPolygonGroupFromPoints: (points) => {
-        const group = new Konva.Group({ 
-            draggable: true, 
-            name: 'group',
-            _id: Utils.generateId()
-        });
-        
-        const vertices = points;
-        
-        // Create midpoints for each edge
-        const midpoints = [];
-        for (let i = 0; i < vertices.length; i++) {
-            const nextIdx = (i + 1) % vertices.length;
-            midpoints.push({
-                x: (vertices[i].x + vertices[nextIdx].x) / 2,
-                y: (vertices[i].y + vertices[nextIdx].y) / 2,
-                locked: false
-            });
-        }
-
-        // Create a more accurate drag surface that follows the curved edges
-        const createCurvedDragSurface = (vertices, midpoints) => {
-            const alpha = 0.5;
-            const points = [];
-            
-            for (let i = 0; i < vertices.length; i++) {
-                const nextIdx = (i + 1) % vertices.length;
-                const P0 = vertices[i];
-                const P3 = vertices[nextIdx];
-                const M = midpoints[i];
-                
-                // Compute control points based on midpoint
-                const C1 = {
-                    x: M.x + alpha * (P0.x - M.x),
-                    y: M.y + alpha * (P0.y - M.y)
-                };
-                
-                const C2 = {
-                    x: M.x + alpha * (P3.x - M.x),
-                    y: M.y + alpha * (P3.y - M.y)
-                };
-                
-                // Sample points along the bezier curve
-                const numSamples = 10;
-                for (let j = 0; j <= numSamples; j++) {
-                    const t = j / numSamples;
-                    const mt = 1 - t;
-                    const x = mt*mt*mt*P0.x + 3*mt*mt*t*C1.x + 3*mt*t*t*C2.x + t*t*t*P3.x;
-                    const y = mt*mt*mt*P0.y + 3*mt*mt*t*C1.y + 3*mt*t*t*C2.y + t*t*t*P3.y;
-                    points.push(x, y);
-                }
-            }
-            
-            return points;
-        };
-
-        const dragSurfacePoints = createCurvedDragSurface(vertices, midpoints);
-        const dragSurface = new Konva.Line({
-            points: dragSurfacePoints,
-            closed: true,
-            fill: 'rgba(0,0,0,0.01)', // Very slight transparency for better hit detection
-            strokeWidth: 0,
-            name: 'drag-surface',
-            listening: true
-        });
-        
-        group.add(dragSurface);
-        dragSurface.moveToBottom();
-
-        // Draw the curved polygon
-        PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
-        GridManager.drawGrid(group, vertices, midpoints);
-
-        // Store references
-        group.vertices = vertices;
-        group.midpoints = midpoints;
-
-        // Add vertices
-        vertices.forEach((point, i) => {
-            const vertex = new Konva.Circle({
-                x: point.x, 
-                y: point.y,
-                radius: CONFIG.VERTEX.RADIUS,
-                fill: CONFIG.VERTEX.FILL,
-                draggable: true, 
-                name: 'vertex',
-                hitFunc: function(context) {
-                    const enlargedRadius = CONFIG.VERTEX.RADIUS + CONFIG.VERTEX.RESPONSIVERADIUS;
-                    context.beginPath();
-                    context.arc(0, 0, enlargedRadius, 0, Math.PI * 2);
-                    context.closePath();
-                    context.fillStrokeShape(this);
-                }
-            });
-
-            vertex.on('dragmove', () => {
-                // Update vertex position
-                vertices[i] = { x: vertex.x(), y: vertex.y() };
-                
-                // Update adjacent midpoints to maintain relative position
-                const prevIdx = (i + vertices.length - 1) % vertices.length;
-                const nextIdx = (i + 1) % vertices.length;
-                
-                // Update previous edge midpoint if not locked
-                if (!midpoints[prevIdx].locked) {
-                    midpoints[prevIdx].x = (vertices[prevIdx].x + vertices[i].x) / 2;
-                    midpoints[prevIdx].y = (vertices[prevIdx].y + vertices[i].y) / 2;
-                }
-
-                // Update next edge midpoint if not locked
-                if (!midpoints[i].locked) {
-                    midpoints[i].x = (vertices[i].x + vertices[nextIdx].x) / 2;
-                    midpoints[i].y = (vertices[i].y + vertices[nextIdx].y) / 2;
-                }
-
-                // Update polygon
-                PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
-                GridManager.drawGrid(group, vertices, midpoints);
-
-                // Update midpoint visual positions
-                group.find('.midpoint').forEach((midpoint, idx) => {
-                    midpoint.position(midpoints[idx]);
-                });
-                
-                // Update drag surface with curved edges
-                const updatedPoints = createCurvedDragSurface(vertices, midpoints);
-                PolygonManager.updateDragSurface(group, updatedPoints);
-            });
-
-            group.add(vertex);
-        });
-        
-        // Add midpoints
-        midpoints.forEach((point, i) => {
-            const midpoint = new Konva.Circle({
-                x: point.x,
-                y: point.y,
-                radius: CONFIG.MIDPOINT.RADIUS,
-                fill: CONFIG.MIDPOINT.FILL,
-                draggable: true,
-                name: 'midpoint',
-                hitFunc: function(context) {
-                    const enlargedRadius = CONFIG.MIDPOINT.RADIUS + CONFIG.MIDPOINT.RESPONSIVE_RADIUS;
-                    context.beginPath();
-                    context.arc(0, 0, enlargedRadius, 0, Math.PI * 2);
-                    context.closePath();
-                    context.fillStrokeShape(this);
-                }
-            });
-            
-            midpoint.on('dragmove', () => {
-                // If this is the first manual drag, lock it
-                if (!midpoints[i].locked) midpoints[i].locked = true;
-
-                // Update midpoint position
-                midpoints[i].x = midpoint.x();
-                midpoints[i].y = midpoint.y();
-                
-                // Update polygon
-                PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
-                GridManager.drawGrid(group, vertices, midpoints);
-                
-                // Update drag surface with curved edges
-                const updatedPoints = createCurvedDragSurface(vertices, midpoints);
-                PolygonManager.updateDragSurface(group, updatedPoints);
-            });
-            
-            group.add(midpoint);
-        });
-        
-        return group;
     }
 };

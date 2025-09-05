@@ -10,7 +10,7 @@ const CONFIG = {
         FILL: 'rgba(20,252,169,1)'
     },
     POLYGON: {
-        SELECTED_STROKE: 'rgba(49,179,247,1)',
+        SELECTED_STROKE: 'rgba(59,189,256,1)',
         SELECTED_STROKE_WIDTH: 3,
         STROKE: 'rgba(49,179,247,1)',
         STROKE_WIDTH: 2,

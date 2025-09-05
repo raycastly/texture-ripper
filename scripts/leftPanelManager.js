@@ -129,8 +129,6 @@ const LeftPanelManager = {
                     (newPolygon) => {
                         // Set the newly created polygon as selected
                         selectedGroup = newPolygon;
-                        // Auto-exit drawing mode after creating a polygon
-                        //cancelDrawing();
                     }
                 );
             } else {
@@ -143,8 +141,8 @@ const LeftPanelManager = {
         const cancelDrawing = () => {
             if (drawingModeHandlers) {
                 drawingModeHandlers.clearTempElements();
-                drawingModeHandlers.removeEventListeners(); // Add this line
-                drawingModeHandlers = null; // Add this line
+                drawingModeHandlers.removeEventListeners();
+                drawingModeHandlers = null;
                 drawingMode = false;
             }
         };
@@ -158,31 +156,7 @@ const LeftPanelManager = {
             }
 
             if (e.key === 'Delete' || e.key === 'Backspace') {
-                // Case 1: polygon selected
-                if (selectedGroup) {
-                    if (window.rightPanel) window.rightPanel.removeTexture(selectedGroup._id);
-                    selectedGroup.destroy();
-                    selectedGroup = null;
-                    polygonLayer.draw();
-                    return;
-                }
-
-                // Case 2: background image selected with transformer
-                const selectedNodes = tr.nodes();
-                if (selectedNodes.length > 0) {
-                    selectedNodes.forEach(node => {
-                        if (node instanceof Konva.Image) {
-                            node.destroy();
-                            // Remove from bgImages array
-                            const index = bgImages.indexOf(node);
-                            if (index > -1) {
-                                bgImages.splice(index, 1);
-                            }
-                        }
-                    });
-                    tr.nodes([]); // clear transformer
-                    bgLayer.draw();
-                }
+                deleteSelectedObjects();
             }
         });
 
@@ -234,12 +208,10 @@ const LeftPanelManager = {
         // Add polygon button
         document.getElementById(addBtnId).addEventListener('click', () => {
             const newGroup = PolygonManager.createPolygonGroup(stage, polygonLayer);
-            polygonLayer.add(newGroup);
             setSelectedPolygon(newGroup);
         });
 
         // Delete button
-        // In leftPanelManager.js, update the delete button handler and key handler
         document.getElementById(deleteBtnId).addEventListener('click', () => {
             deleteSelectedObjects();
         });
@@ -266,6 +238,9 @@ const LeftPanelManager = {
                 }
             }
             
+            // Clear image selection
+            tr.nodes([]);
+            
             // Set new selection
             selectedGroup = group;
             if (selectedGroup) {
@@ -279,7 +254,7 @@ const LeftPanelManager = {
             polygonLayer.draw();
         }
 
-        // Add this helper function for deleting selected objects
+        // Helper function for deleting selected objects
         function deleteSelectedObjects() {
             // Case 1: polygon selected
             if (selectedGroup) {
@@ -319,7 +294,7 @@ const LeftPanelManager = {
         });
         uiLayer.add(tr);
 
-        // Click to select background image or polygon (only if not locked)
+        // Click to select background image or polygon
         stage.on('click', (e) => {
             // Don't process clicks if we're in drawing mode
             if (drawingMode) return;
@@ -339,63 +314,30 @@ const LeftPanelManager = {
             tr.nodes([]);
             
             // Check what was clicked
-            if (e.target instanceof Konva.Image && !imagesLocked) {
-                selectedImage = e.target;
-                tr.nodes([selectedImage]);
+            const clickedNode = e.target;
+            
+            // Handle polygon selection
+            if (clickedNode instanceof Konva.Group && clickedNode.name() === 'group') {
+                setSelectedPolygon(clickedNode);
             } 
-            else {
-                // Check if clicked on polygon or its parts (vertex, polygon line, etc.)
-                let node = e.target;
-                let foundGroup = null;
-                
-                // Traverse up the parent chain to find the polygon group
-                while (node && node !== stage) {
-                    if (node instanceof Konva.Group && node.name() === 'group') {
-                        foundGroup = node;
-                        break;
-                    }
-                    node = node.getParent();
-                }
-                
-                if (foundGroup) {
-                    setSelectedPolygon(foundGroup);
-                }
+            // Handle polygon parts (vertices, midpoints, edges, drag surface)
+            else if (clickedNode.getParent() instanceof Konva.Group && clickedNode.getParent().name() === 'group') {
+                setSelectedPolygon(clickedNode.getParent());
+            }
+            // Handle background image selection (only if not locked)
+            else if (clickedNode instanceof Konva.Image && !imagesLocked) {
+                selectedImage = clickedNode;
+                tr.nodes([selectedImage]);
+            }
+            // Click on empty space: clear all selection
+            else if (clickedNode === stage || clickedNode.name() === 'bgRect') {
+                tr.nodes([]);
+                selectedGroup = null;
             }
             
             bgLayer.batchDraw();
             polygonLayer.batchDraw();
         });
-
-        // Also update the deleteSelectedObjects function to be more explicit:
-        function deleteSelectedObjects() {
-            // Case 1: polygon selected
-            if (selectedGroup) {
-                if (window.rightPanel) window.rightPanel.removeTexture(selectedGroup._id);
-                selectedGroup.destroy();
-                selectedGroup = null;
-                polygonLayer.draw();
-                return;
-            }
-
-            // Case 2: background image selected with transformer
-            const selectedNodes = tr.nodes();
-            if (selectedNodes.length > 0) {
-                selectedNodes.forEach(node => {
-                    if (node instanceof Konva.Image) {
-                        node.destroy();
-                        // Remove from bgImages array
-                        const index = bgImages.indexOf(node);
-                        if (index > -1) {
-                            bgImages.splice(index, 1);
-                        }
-                    }
-                });
-                tr.nodes([]); // clear transformer
-                bgLayer.draw();
-            }
-            
-            // If nothing is selected, do nothing (as requested)
-        }
 
         // Keyboard handlers for transformer
         stage.on('keydown', (e) => {
