@@ -96,50 +96,103 @@ const RightPanelManager = {
 
                 if (isUniformCorner) {
                     const box = tr.getClientRect({ skipTransform: false });
-                    let dx = 0, dy = 0;
                     const activeGuides = [];
-
-                    // Vertical edges
-                    [box.x, box.x + box.width].forEach(edgeX => {
-                        lineGuideStops.vertical.forEach(g => {
-                            const dist = g - edgeX;
-                            if (Math.abs(dist) < snapDistance) {
-                                dx = dist;
-                                activeGuides.push({
-                                    lineGuide: g,
-                                    orientation: 'V',
-                                    offset: dist,
-                                    snap: 'edge'
-                                });
-                            }
-                        });
-                    });
-
-                    // Horizontal edges
-                    [box.y, box.y + box.height].forEach(edgeY => {
-                        lineGuideStops.horizontal.forEach(g => {
-                            const dist = g - edgeY;
-                            if (Math.abs(dist) < snapDistance) {
-                                dy = dist;
-                                activeGuides.push({
-                                    lineGuide: g,
-                                    orientation: 'H',
-                                    offset: dist,
-                                    snap: 'edge'
-                                });
-                            }
-                        });
-                    });
-
-                    if (activeGuides.length) {
-                        SelectionManager.drawGuides(stage, activeGuides);
-                    }
-
-                    return {
-                        x: newPos.x + dx,
-                        y: newPos.y + dy
+                    
+                    // Calculate which edges will move based on the active anchor
+                    const movingEdges = {
+                        left: activeAnchor.includes('left'),
+                        right: activeAnchor.includes('right'),
+                        top: activeAnchor.includes('top'),
+                        bottom: activeAnchor.includes('bottom')
                     };
+                    
+                    // Find the closest snap guide for each moving edge
+                    let closestSnap = null;
+                    let minDistance = snapDistance;
+                    
+                    // Check vertical guides for left/right edges
+                    if (movingEdges.left || movingEdges.right) {
+                        const edgeX = movingEdges.left ? box.x : box.x + box.width;
+                        
+                        lineGuideStops.vertical.forEach(g => {
+                            const dist = Math.abs(g - edgeX);
+                            if (dist < minDistance) {
+                                minDistance = dist;
+                                closestSnap = { guide: g, orientation: 'V', edge: movingEdges.left ? 'left' : 'right' };
+                            }
+                        });
+                    }
+                    
+                    // Check horizontal guides for top/bottom edges
+                    if (movingEdges.top || movingEdges.bottom) {
+                        const edgeY = movingEdges.top ? box.y : box.y + box.height;
+                        
+                        lineGuideStops.horizontal.forEach(g => {
+                            const dist = Math.abs(g - edgeY);
+                            if (dist < minDistance) {
+                                minDistance = dist;
+                                closestSnap = { guide: g, orientation: 'H', edge: movingEdges.top ? 'top' : 'bottom' };
+                            }
+                        });
+                    }
+                    
+                    if (closestSnap) {
+                        activeGuides.push({
+                            lineGuide: closestSnap.guide,
+                            orientation: closestSnap.orientation,
+                            offset: minDistance,
+                            snap: 'edge'
+                        });
+                        
+                        SelectionManager.drawGuides(stage, activeGuides);
+                        
+                        // Calculate the required scale factor to snap to the guide
+                        let scaleFactor = 1;
+                        
+                        if (closestSnap.orientation === 'V') {
+                            // Vertical guide - scale based on width
+                            if (closestSnap.edge === 'left') {
+                                scaleFactor = (box.x + box.width - closestSnap.guide) / box.width;
+                            } else {
+                                scaleFactor = (closestSnap.guide - box.x) / box.width;
+                            }
+                        } else {
+                            // Horizontal guide - scale based on height
+                            if (closestSnap.edge === 'top') {
+                                scaleFactor = (box.y + box.height - closestSnap.guide) / box.height;
+                            } else {
+                                scaleFactor = (closestSnap.guide - box.y) / box.height;
+                            }
+                        }
+                        
+                        // Apply the uniform scale
+                        node.scaleX(scaleFactor);
+                        node.scaleY(scaleFactor);
+                        
+                        // Calculate the new position to maintain the correct anchor point
+                        let newX = node.x();
+                        let newY = node.y();
+                        
+                        if (movingEdges.left) {
+                            newX = box.x + box.width - (box.width * scaleFactor);
+                        }
+                        if (movingEdges.top) {
+                            newY = box.y + box.height - (box.height * scaleFactor);
+                        }
+                        
+                        node.position({ x: newX, y: newY });
+                        
+                        // Return the snapped position
+                        return { 
+                            x: movingEdges.left ? closestSnap.guide : newPos.x,
+                            y: movingEdges.top ? closestSnap.guide : newPos.y
+                        };
+                    }
+                    
+                    return newPos;
                 }
+
+
 
                 // ---------- Side-anchor snapping ----------
                 const activeGuides = [];
