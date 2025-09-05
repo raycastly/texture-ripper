@@ -26,7 +26,7 @@ const CONFIG = {
     EXTRACTION: {
         MIN_SIZE: 16,
         MAX_SIZE: 2048,
-        UPSCALE: 1
+        UPSCALE: 2
     },
     ZOOM: {
         SCALE_BY: 1.1
