@@ -282,6 +282,10 @@ const PolygonManager = {
         if (dragSurface) {
             dragSurface.points(points);
         }
+
+        // Make sure vertices and midpoints are always on top
+        group.find('.vertex').forEach(v => v.moveToTop());
+        group.find('.midpoint').forEach(m => m.moveToTop());
     },
 
     // Get the Konva.Image objects underneath a polygon group
