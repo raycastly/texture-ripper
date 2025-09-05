@@ -54,5 +54,17 @@ const CONFIG = {
         COLOR1: '#cccccc',
         COLOR2: '#ffffff',
         CELL_SIZE: 20
+    },
+    SHORTCUTS: {
+        uploadImage: 'KeyQ',
+        toggleImageLock: 'KeyW',
+        
+        toggleDrawingMode: 'KeyA',
+        addRectangle: 'KeyS',
+
+        extractTextures: 'KeyD',
+        exportAtlas: 'KeyF',
+
+        deleteSelected: 'KeyX',
     }
 };

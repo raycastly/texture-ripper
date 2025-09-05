@@ -223,7 +223,7 @@ label {
         inset 0 2px 2px rgba(255, 255, 255, 0.1),
         inset 0 -2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
-    overflow: hidden;
+    overflow: visible;
     backdrop-filter: blur(4px);
     border: 1px solid rgba(255, 255, 255, 0.05);
     font-size: 0.9rem;
@@ -377,4 +377,38 @@ label {
 /* Style for midpoint control handles */
 .konva-circle[fill="#ff0"] {
     cursor: move;
+}
+
+
+
+
+
+/* Add to your styles.css */
+.shortcut-hint {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+    transition: opacity 0.3s;
+}
+
+.button-with-shortcut {
+    position: relative;
+}
+
+.button-with-shortcut::after {
+    content: attr(data-shortcut);
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #007bff;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: bold;
 }
