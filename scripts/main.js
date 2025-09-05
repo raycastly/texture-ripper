@@ -59,19 +59,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const transparent = document.getElementById('exportTransparent').checked;
 
-        // Hide the background if exporting with transparency
+        // Store original background visibility
         const originalBgVisibility = stageRight.bgRect.visible();
+        
+        // For transparent export, hide the background
+        // For non-transparent export, ensure background is visible
         if (transparent) {
             stageRight.bgRect.visible(false);
+        } else {
+            stageRight.bgRect.visible(true);
         }
 
-        // Export only the bgRect area
-        const dataURL = imageLayer.toDataURL({
+        // Export the specified area
+        const dataURL = stageRight.toDataURL({
             x: stageRight.bgRect.x(),
             y: stageRight.bgRect.y(),
             width: stageRight.bgRect.width(),
             height: stageRight.bgRect.height(),
-            pixelRatio: 1
+            pixelRatio: 1,
+            mimeType: 'image/png',
+            quality: 1
         });
 
         // Restore background visibility
