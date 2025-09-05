@@ -33,7 +33,8 @@ const PolygonManager = {
             const nextIdx = (i + 1) % vertices.length;
             midpoints.push({
                 x: (vertices[i].x + vertices[nextIdx].x) / 2,
-                y: (vertices[i].y + vertices[nextIdx].y) / 2
+                y: (vertices[i].y + vertices[nextIdx].y) / 2,
+                locked: false
             });
         }
 
@@ -120,13 +121,17 @@ const PolygonManager = {
                 const prevIdx = (i + vertices.length - 1) % vertices.length;
                 const nextIdx = (i + 1) % vertices.length;
                 
-                // Update previous edge midpoint
-                midpoints[prevIdx].x = (vertices[prevIdx].x + vertices[i].x) / 2;
-                midpoints[prevIdx].y = (vertices[prevIdx].y + vertices[i].y) / 2;
-                
-                // Update next edge midpoint
-                midpoints[i].x = (vertices[i].x + vertices[nextIdx].x) / 2;
-                midpoints[i].y = (vertices[i].y + vertices[nextIdx].y) / 2;
+                // Update previous edge midpoint if not locked
+                if (!midpoints[prevIdx].locked) {
+                    midpoints[prevIdx].x = (vertices[prevIdx].x + vertices[i].x) / 2;
+                    midpoints[prevIdx].y = (vertices[prevIdx].y + vertices[i].y) / 2;
+                }
+
+                // Update next edge midpoint if not locked
+                if (!midpoints[i].locked) {
+                    midpoints[i].x = (vertices[i].x + vertices[nextIdx].x) / 2;
+                    midpoints[i].y = (vertices[i].y + vertices[nextIdx].y) / 2;
+                }
                 
                 // Update polygon and grid
                 PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
@@ -164,8 +169,12 @@ const PolygonManager = {
             });
             
             midpoint.on('dragmove', () => {
+                // If this is the first manual drag, lock it
+                if (!midpoints[i].locked) midpoints[i].locked = true;
+
                 // Update midpoint position
-                midpoints[i] = { x: midpoint.x(), y: midpoint.y() };
+                midpoints[i].x = midpoint.x();
+                midpoints[i].y = midpoint.y();
                 
                 // Update polygon and grid
                 PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
@@ -511,7 +520,8 @@ const PolygonManager = {
             const nextIdx = (i + 1) % vertices.length;
             midpoints.push({
                 x: (vertices[i].x + vertices[nextIdx].x) / 2,
-                y: (vertices[i].y + vertices[nextIdx].y) / 2
+                y: (vertices[i].y + vertices[nextIdx].y) / 2,
+                locked: false
             });
         }
 
@@ -598,14 +608,18 @@ const PolygonManager = {
                 const prevIdx = (i + vertices.length - 1) % vertices.length;
                 const nextIdx = (i + 1) % vertices.length;
                 
-                // Update previous edge midpoint
-                midpoints[prevIdx].x = (vertices[prevIdx].x + vertices[i].x) / 2;
-                midpoints[prevIdx].y = (vertices[prevIdx].y + vertices[i].y) / 2;
-                
-                // Update next edge midpoint
-                midpoints[i].x = (vertices[i].x + vertices[nextIdx].x) / 2;
-                midpoints[i].y = (vertices[i].y + vertices[nextIdx].y) / 2;
-                
+                // Update previous edge midpoint if not locked
+                if (!midpoints[prevIdx].locked) {
+                    midpoints[prevIdx].x = (vertices[prevIdx].x + vertices[i].x) / 2;
+                    midpoints[prevIdx].y = (vertices[prevIdx].y + vertices[i].y) / 2;
+                }
+
+                // Update next edge midpoint if not locked
+                if (!midpoints[i].locked) {
+                    midpoints[i].x = (vertices[i].x + vertices[nextIdx].x) / 2;
+                    midpoints[i].y = (vertices[i].y + vertices[nextIdx].y) / 2;
+                }
+
                 // Update polygon
                 PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
                 GridManager.drawGrid(group, vertices, midpoints);
@@ -642,8 +656,12 @@ const PolygonManager = {
             });
             
             midpoint.on('dragmove', () => {
+                // If this is the first manual drag, lock it
+                if (!midpoints[i].locked) midpoints[i].locked = true;
+
                 // Update midpoint position
-                midpoints[i] = { x: midpoint.x(), y: midpoint.y() };
+                midpoints[i].x = midpoint.x();
+                midpoints[i].y = midpoint.y();
                 
                 // Update polygon
                 PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
