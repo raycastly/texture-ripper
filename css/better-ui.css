@@ -344,3 +344,17 @@ label {
 #toggleDrawingMode.drawing-active {
     animation: subtle-pulse 3s infinite;
 }
+
+/* Style for bezier control handles */
+.konva-circle[fill="rgba(255,0,0,0.7)"] {
+    cursor: nwse-resize;
+}
+
+.konva-circle[fill="rgba(0,0,255,0.7)"] {
+    cursor: nesw-resize;
+}
+
+/* Style for midpoint control handles */
+.konva-circle[fill="#ff0"] {
+    cursor: move;
+}

@@ -37,5 +37,16 @@ const CONFIG = {
     DRAWING: {
         ACTIVE_COLOR: 'rgba(255,0,0,0.7)',
         COMPLETE_COLOR: 'rgba(0,0,255,0.5)'
-    }
+    },
+    BEZIER: {
+        HANDLE_RADIUS: 3,
+        HANDLE_FILL_IN: 'rgba(255,0,0,0.7)',
+        HANDLE_FILL_OUT: 'rgba(0,0,255,0.7)',
+        HANDLE_RESPONSIVE_RADIUS: 8
+    },
+    MIDPOINT: {
+        RADIUS: 6,
+        FILL: '#ff0',
+        RESPONSIVE_RADIUS: 10
+    },
 };
