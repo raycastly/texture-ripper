@@ -412,3 +412,11 @@ label {
     font-size: 10px;
     font-weight: bold;
 }
+
+
+
+
+.drag-over {
+    outline: 2px dashed #2196F3;
+    background-color: rgba(33, 150, 243, 0.1);
+}

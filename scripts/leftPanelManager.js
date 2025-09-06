@@ -205,6 +205,25 @@ const LeftPanelManager = {
             reader.readAsDataURL(file);
         });
 
+        // Initialize drag and drop
+        const dragDropHandler = DragDropManager.init(
+            container,
+            (files) => {
+                DragDropManager.handleImageFiles(
+                    files,
+                    stage,
+                    bgLayer,
+                    bgImages,
+                    imagesLocked,
+                    showPasteFeedback
+                );
+            },
+            {
+                showOverlay: true,
+                overlayId: 'leftPanelDropOverlay'
+            }
+        );
+
         // Add polygon button
         document.getElementById(addBtnId).addEventListener('click', () => {
             const newGroup = PolygonManager.createPolygonGroup(stage, polygonLayer);
