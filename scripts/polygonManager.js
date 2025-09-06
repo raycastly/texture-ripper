@@ -103,17 +103,22 @@ const PolygonManager = {
 
         // Add vertices
         vertices.forEach((point, i) => {
-            const vertex = new Konva.Circle({
-                x: point.x, 
+            const vertex = new Konva.Rect({
+                x: point.x,
                 y: point.y,
-                radius: CONFIG.VERTEX.RADIUS,
+                offsetX: CONFIG.VERTEX.RADIUS,
+                offsetY: CONFIG.VERTEX.RADIUS,
+                width: CONFIG.VERTEX.RADIUS * 2,
+                height: CONFIG.VERTEX.RADIUS * 2,
                 fill: CONFIG.VERTEX.FILL,
-                draggable: true, 
+                stroke: CONFIG.VERTEX.STROKE, // outline color
+                strokeWidth: CONFIG.VERTEX.STROKE_WIDTH, // outline thickness
+                draggable: true,
                 name: 'vertex',
-                hitFunc: function(context) {
+                hitFunc: function (context) {
                     const enlargedRadius = CONFIG.VERTEX.RADIUS + CONFIG.VERTEX.RESPONSIVERADIUS;
                     context.beginPath();
-                    context.arc(0, 0, enlargedRadius, 0, Math.PI * 2);
+                    context.rect(-enlargedRadius, -enlargedRadius, enlargedRadius * 2, enlargedRadius * 2);
                     context.closePath();
                     context.fillStrokeShape(this);
                 }
@@ -168,6 +173,8 @@ const PolygonManager = {
                 y: point.y,
                 radius: CONFIG.MIDPOINT.RADIUS,
                 fill: CONFIG.MIDPOINT.FILL,
+                stroke: CONFIG.MIDPOINT.STROKE, // outline color
+                strokeWidth: CONFIG.MIDPOINT.STROKE_WIDTH, // outline thickness
                 draggable: true,
                 name: 'midpoint',
                 hitFunc: function(context) {
@@ -270,7 +277,8 @@ const PolygonManager = {
             name: 'polygon',
             lineCap: 'round',
             lineJoin: 'round',
-            closed: true
+            closed: true,
+            dash: [5, 5]
         });
         
         group.add(polygon);
@@ -327,7 +335,9 @@ const PolygonManager = {
             const vertex = new Konva.Circle({
                 x, y,
                 radius: CONFIG.VERTEX.RADIUS,
-                fill: isTemp ? CONFIG.DRAWING.ACTIVE_COLOR : CONFIG.VERTEX.FILL,
+                fill: CONFIG.VERTEX.FILL,
+                stroke: CONFIG.VERTEX.STROKE, // outline color
+                strokeWidth: CONFIG.VERTEX.STROKE_WIDTH, // outline thickness
                 draggable: true,
                 name: isTemp ? 'temp-vertex' : 'vertex',
                 // Use custom hit function for reliable larger hit area
@@ -440,7 +450,8 @@ const PolygonManager = {
                         ],
                         stroke: CONFIG.DRAWING.ACTIVE_COLOR,
                         strokeWidth: CONFIG.POLYGON.STROKE_WIDTH,
-                        name: 'temp-line'
+                        name: 'temp-line',
+                        dash: [5, 5]
                     });
                     drawingGroup.add(line);
                     tempLines.push(line);

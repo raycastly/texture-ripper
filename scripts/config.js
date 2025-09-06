@@ -7,13 +7,22 @@ const CONFIG = {
     VERTEX: {
         RADIUS: 2,
         RESPONSIVERADIUS: 10,
-        FILL: 'rgba(20,252,169,1)'
+        FILL: null,
+        STROKE: 'rgba(20,252,169,1)',
+        STROKE_WIDTH: 1,
+    },
+    MIDPOINT: {
+        RADIUS: 3,
+        FILL: null,
+        RESPONSIVE_RADIUS: 10,
+        STROKE: '#ff0',
+        STROKE_WIDTH: 1,
     },
     POLYGON: {
         SELECTED_STROKE: 'rgba(59,189,256,1)',
-        SELECTED_STROKE_WIDTH: 3,
-        STROKE: 'rgba(49,179,247,1)',
-        STROKE_WIDTH: 2,
+        SELECTED_STROKE_WIDTH: 1,
+        STROKE: 'rgba(10,80,127,1)',
+        STROKE_WIDTH: 1,
         CLOSED: true
     },
     SELECTION: {
@@ -44,11 +53,6 @@ const CONFIG = {
         HANDLE_FILL_IN: 'rgba(255,0,0,0.7)',
         HANDLE_FILL_OUT: 'rgba(0,0,255,0.7)',
         HANDLE_RESPONSIVE_RADIUS: 8
-    },
-    MIDPOINT: {
-        RADIUS: 3,
-        FILL: '#ff0',
-        RESPONSIVE_RADIUS: 10
     },
     CHECKERBOARD: {
         COLOR1: '#cccccc',
