@@ -11,7 +11,8 @@ const PolygonManager = {
         // Get vertices - either from provided points or create default rectangle
         let vertices;
         if (points && points.length === 4) {
-            vertices = points;
+            // REORDER vertices to ensure consistent order for both polygon types
+            vertices = Utils.reorderPolygonVertices(points);
         } else {
             // Create default rectangle centered on stage
             const stageCenterX = stage.width() / 2;
@@ -26,10 +27,10 @@ const PolygonManager = {
             // Create rectangle centered on the stage
             const rectSize = 100;
             vertices = [
-                { x: absoluteCenter.x - rectSize/2, y: absoluteCenter.y - rectSize/2 }, 
-                { x: absoluteCenter.x - rectSize/2, y: absoluteCenter.y + rectSize/2 },
-                { x: absoluteCenter.x + rectSize/2, y: absoluteCenter.y + rectSize/2 }, 
-                { x: absoluteCenter.x + rectSize/2, y: absoluteCenter.y - rectSize/2 }
+                { x: absoluteCenter.x - rectSize/2, y: absoluteCenter.y - rectSize/2 }, // Top-left (1)
+                { x: absoluteCenter.x - rectSize/2, y: absoluteCenter.y + rectSize/2 }, // Bottom-left (2)
+                { x: absoluteCenter.x + rectSize/2, y: absoluteCenter.y + rectSize/2 }, // Bottom-right (3)
+                { x: absoluteCenter.x + rectSize/2, y: absoluteCenter.y - rectSize/2 }  // Top-right (4)
             ];
         }
         
@@ -124,9 +125,25 @@ const PolygonManager = {
                 }
             });
 
+            // Add vertex number label for debugging
+            const label = new Konva.Text({
+                x: point.x,
+                y: point.y,
+                text: (i + 1).toString(),
+                fontSize: 7,
+                fill: 'red',
+                offsetX: CONFIG.VERTEX.RADIUS,
+                offsetY: 10,
+                listening: false,
+                name: 'vertex-label'
+            });
+
             vertex.on('dragmove', () => {
                 // Update vertex position
                 vertices[i] = { x: vertex.x(), y: vertex.y() };
+
+                // Update label position when vertex moves
+                label.position({ x: vertex.x(), y: vertex.y() });
                 
                 // Update adjacent midpoints to maintain relative position
                 const prevIdx = (i + vertices.length - 1) % vertices.length;
@@ -174,6 +191,7 @@ const PolygonManager = {
             });
 
             group.add(vertex);
+            group.add(label);
         });
 
         // Add reference midpoints (non-interactable, bigger marker)
@@ -411,18 +429,32 @@ const PolygonManager = {
         
         function completePolygon() {
             if (tempPoints.length === 4) {
-                const polygonGroup = PolygonManager.createPolygonGroup(stage, polygonLayer, tempPoints);
+                // REORDER vertices to match regular polygon order
+                const reorderedPoints = Utils.reorderPolygonVertices(tempPoints);
+                
+                // Create new edges between the reordered points
+                const updatedPoints = [];
+                for (let i = 0; i < 4; i++) {
+                    updatedPoints.push(reorderedPoints[i]);
+                    // Connect to next point (with wrap-around)
+                    if (i < 3) {
+                        updatedPoints.push(reorderedPoints[i + 1]);
+                    }
+                }
+                // Connect last point back to first
+                updatedPoints.push(reorderedPoints[3]);
+                updatedPoints.push(reorderedPoints[0]);
+                
+                const polygonGroup = PolygonManager.createPolygonGroup(stage, polygonLayer, reorderedPoints);
                 
                 // Clear temporary elements
                 clearTempElements();
                 tempPoints = [];
                 
-                // Just call the callback - selection handlers are now built into createPolygonGroup
                 if (typeof onPolygonCreated === 'function') {
                     onPolygonCreated(polygonGroup);
                 }
                 
-                // Return the polygon group
                 return polygonGroup;
             }
             return null;

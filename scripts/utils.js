@@ -35,5 +35,67 @@ const Utils = {
             y: point.x * matrix[3] + point.y * matrix[4] + matrix[5]
         };
     },
+
+    // Sort vertices in counter-clockwise order
+    sortVerticesCounterClockwise: (vertices) => {
+        // Find centroid
+        const centroid = { x: 0, y: 0 };
+        vertices.forEach(v => {
+            centroid.x += v.x;
+            centroid.y += v.y;
+        });
+        centroid.x /= vertices.length;
+        centroid.y /= vertices.length;
+        
+        // Sort by angle from centroid
+        return vertices.sort((a, b) => {
+            const angleA = Math.atan2(a.y - centroid.y, a.x - centroid.x);
+            const angleB = Math.atan2(b.y - centroid.y, b.x - centroid.x);
+            return angleA - angleB;
+        });
+    },
+    
+    // Find the top-left vertex
+    findTopLeftVertex: (vertices) => {
+        return vertices.reduce((topLeft, vertex) => {
+            if (vertex.y < topLeft.y || (vertex.y === topLeft.y && vertex.x < topLeft.x)) {
+                return vertex;
+            }
+            return topLeft;
+        }, { x: Infinity, y: Infinity });
+    },
+    
+    // Reorder to: top-left=1, top-right=2, bottom-right=3, bottom-left=4
+    reorderPolygonVertices: (points) => {
+        if (points.length !== 4) return points;
+        
+        // 1. FIND CENTROID (center point)
+        const centroid = {
+            x: (points[0].x + points[1].x + points[2].x + points[3].x) / 4,
+            y: (points[0].y + points[1].y + points[2].y + points[3].y) / 4
+        };
+        
+        // 2. CALCULATE ANGLE FROM CENTER FOR EACH POINT
+        const pointsWithAngles = points.map(point => {
+            const angle = Math.atan2(point.y - centroid.y, point.x - centroid.x);
+            return { point, angle };
+        });
+        
+        // 3. SORT BY ANGLE (clockwise order)
+        pointsWithAngles.sort((a, b) => a.angle - b.angle);
+        
+        // 4. EXTRACT POINTS IN CLOCKWISE ORDER
+        const clockwiseOrder = pointsWithAngles.map(item => item.point);
+        
+        // 5. REARRANGE TO YOUR DESIRED ORDER:
+        // Clockwise order gives us: [top-left, bottom-left, bottom-right, top-right]
+        // You want: [top-left, top-right, bottom-right, bottom-left]
+        return [
+            clockwiseOrder[0], // top-left (stays first)
+            clockwiseOrder[3], // top-right (moved from fourth to second)
+            clockwiseOrder[2], // bottom-right (moved from third to third)  
+            clockwiseOrder[1]  // bottom-left (moved from second to fourth)
+        ];
+    }
 };
 
