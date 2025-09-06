@@ -227,38 +227,104 @@ const RightPanelManager = {
         }
 
         async function copyTexture(texture) {
-            const width = texture.width() * Math.abs(texture.scaleX());
-            const height = texture.height() * Math.abs(texture.scaleY());
-
+            // Get the absolute transformation matrix
+            const transform = texture.getAbsoluteTransform().copy();
+            
+            // Get the bounding box of the transformed texture
+            const rect = texture.getClientRect();
+            const width = Math.ceil(rect.width);
+            const height = Math.ceil(rect.height);
+            
+            // Create a temporary canvas
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = width;
             tempCanvas.height = height;
             const ctx = tempCanvas.getContext('2d');
-
-            ctx.save();
-
-            // Handle flip
-            ctx.translate(width / 2, height / 2);
-            ctx.scale(texture.scaleX() < 0 ? -1 : 1, texture.scaleY() < 0 ? -1 : 1);
-            ctx.rotate((texture.rotation() * Math.PI) / 180);
-            ctx.drawImage(
-                texture.image(),
-                -texture.width() / 2,
-                -texture.height() / 2,
-                texture.width(),
-                texture.height()
+            
+            // Apply the inverse translation to position the texture correctly
+            ctx.translate(-rect.x, -rect.y);
+            
+            // Apply the Konva transformation matrix
+            const matrix = transform.getMatrix();
+            ctx.transform(
+                matrix[0], matrix[1], 
+                matrix[2], matrix[3], 
+                matrix[4], matrix[5]
             );
-
-            ctx.restore();
-
+            
+            // Draw the original image with proper dimensions
+            ctx.drawImage(
+                texture.image(), 
+                0, 0, 
+                texture.width(), texture.height()
+            );
+            
             try {
-                const blob = await new Promise(resolve => tempCanvas.toBlob(resolve));
-                await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-                FeedbackManager.show('Texture copied to clipboard!');
+                // Get the image data from the canvas
+                const imageData = ctx.getImageData(0, 0, width, height);
+                
+                // Create a new canvas with just the relevant pixels (remove transparent padding)
+                const contentRect = getContentBoundingBox(imageData);
+                
+                if (contentRect.width > 0 && contentRect.height > 0) {
+                    // Create final canvas with only the content
+                    const finalCanvas = document.createElement('canvas');
+                    finalCanvas.width = contentRect.width;
+                    finalCanvas.height = contentRect.height;
+                    const finalCtx = finalCanvas.getContext('2d');
+                    
+                    // Copy only the relevant pixels
+                    finalCtx.putImageData(
+                        imageData,
+                        -contentRect.x, -contentRect.y,
+                        contentRect.x, contentRect.y,
+                        contentRect.width, contentRect.height
+                    );
+                    
+                    // Convert to blob and copy to clipboard
+                    const blob = await new Promise(resolve => finalCanvas.toBlob(resolve, 'image/png'));
+                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                    FeedbackManager.show('Texture copied to clipboard!');
+                } else {
+                    FeedbackManager.show('No visible content to copy.');
+                }
             } catch (err) {
                 console.error('Failed to copy image: ', err);
                 FeedbackManager.show('Failed to copy texture.');
             }
+        }
+
+        // Helper function to find the bounding box of non-transparent pixels
+        function getContentBoundingBox(imageData) {
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+            
+            let minX = width;
+            let minY = height;
+            let maxX = 0;
+            let maxY = 0;
+            
+            // Find the bounds of non-transparent pixels
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const alpha = data[(y * width + x) * 4 + 3];
+                    if (alpha > 0) {
+                        minX = Math.min(minX, x);
+                        minY = Math.min(minY, y);
+                        maxX = Math.max(maxX, x);
+                        maxY = Math.max(maxY, y);
+                    }
+                }
+            }
+            
+            // Return the bounding box (add 1 to max to include the edge pixel)
+            return {
+                x: minX,
+                y: minY,
+                width: maxX - minX + 1,
+                height: maxY - minY + 1
+            };
         }
 
         // Initialize panning and zooming
