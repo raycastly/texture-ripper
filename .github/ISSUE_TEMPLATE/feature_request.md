@@ -1,20 +1,37 @@
----
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
+name: "✨ Feature Request"
+description: "Suggest an idea to improve Texture Ripper"
 
----
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement!  
+        Please fill out the sections below to help us understand your idea better.  
+        - Keep one idea per request.
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+  - type: textarea
+    attributes:
+      label: "Is your feature request related to a problem?"
+      description: "Describe the problem you’re facing. Example: 'I'm always frustrated when…'"
+      placeholder: "It's not possible to copy a single texture and use it in another program."
+    validations:
+      required: true
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+  - type: textarea
+    attributes:
+      label: "Describe the solution you’d like"
+      description: "What do you want to happen?"
+      placeholder: "Add a 'copy' button to copy the selected texture to clipboard."
+    validations:
+      required: true
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+  - type: textarea
+    attributes:
+      label: "Describe alternatives you’ve considered"
+      description: "What other solutions or workarounds have you thought about?"
+      placeholder: "Exporting each texture separately."
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+  - type: textarea
+    attributes:
+      label: "Additional context"
+      description: "Add any other context, references, or screenshots about the feature request."
