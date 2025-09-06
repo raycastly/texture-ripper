@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto Pack button
     document.getElementById('autoPack').addEventListener('click', () => {
-        RightPanelManager.autoPackTextures(stageRight, true);
+        RightPanelManager.autoPackTextures(stageRight, false);
     });
 
     // Export button
