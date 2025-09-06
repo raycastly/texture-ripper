@@ -47,37 +47,26 @@ const PolygonManager = {
 
         // Create a more accurate drag surface that follows the curved edges
         const createCurvedDragSurface = (vertices, midpoints) => {
-            const alpha = 0.5;
             const points = [];
-            
+
             for (let i = 0; i < vertices.length; i++) {
                 const nextIdx = (i + 1) % vertices.length;
                 const P0 = vertices[i];
-                const P3 = vertices[nextIdx];
-                const M = midpoints[i];
-                
-                // Compute control points based on midpoint
-                const C1 = {
-                    x: M.x + alpha * (P0.x - M.x),
-                    y: M.y + alpha * (P0.y - M.y)
-                };
-                
-                const C2 = {
-                    x: M.x + alpha * (P3.x - M.x),
-                    y: M.y + alpha * (P3.y - M.y)
-                };
-                
-                // Sample points along the bezier curve
-                const numSamples = 10;
+                const P2 = vertices[nextIdx];
+                const M  = midpoints[i]; // single control point
+
+                const numSamples = 10; // resolution
                 for (let j = 0; j <= numSamples; j++) {
                     const t = j / numSamples;
                     const mt = 1 - t;
-                    const x = mt*mt*mt*P0.x + 3*mt*mt*t*C1.x + 3*mt*t*t*C2.x + t*t*t*P3.x;
-                    const y = mt*mt*mt*P0.y + 3*mt*mt*t*C1.y + 3*mt*t*t*C2.y + t*t*t*P3.y;
+
+                    const x = mt*mt*P0.x + 2*mt*t*M.x + t*t*P2.x;
+                    const y = mt*mt*P0.y + 2*mt*t*M.y + t*t*P2.y;
+
                     points.push(x, y);
                 }
             }
-            
+
             return points;
         };
 
@@ -281,48 +270,33 @@ const PolygonManager = {
 
     // Draw the curved polygon with sharp corners and proper bezier curves
     drawCurvedPolygon: (group, vertices, midpoints) => {
-        const alpha = 0.5;
-        
         // Remove existing polygon edges
         group.find('.polygon').forEach(polygon => polygon.destroy());
-        
-        // Create a single path for the entire polygon
+
         const allPoints = [];
-        
+
         for (let i = 0; i < vertices.length; i++) {
             const nextIdx = (i + 1) % vertices.length;
             const P0 = vertices[i];
-            const P3 = vertices[nextIdx];
-            const M = midpoints[i];
-            
-            // Compute control points based on midpoint
-            const C1 = {
-                x: M.x + alpha * (P0.x - M.x),
-                y: M.y + alpha * (P0.y - M.y)
-            };
-            
-            const C2 = {
-                x: M.x + alpha * (P3.x - M.x),
-                y: M.y + alpha * (P3.y - M.y)
-            };
-            
-            // For the first point, move to the starting position
+            const P2 = vertices[nextIdx];
+            const M  = midpoints[i]; // single control point
+
             if (i === 0) {
-                allPoints.push(P0.x, P0.y);
+                allPoints.push(P0.x, P0.y); // move to starting vertex
             }
-            
-            // Add bezier curve points
-            const numSamples = 20;
+
+            const numSamples = 20; // resolution
             for (let j = 1; j <= numSamples; j++) {
                 const t = j / numSamples;
                 const mt = 1 - t;
-                const x = mt*mt*mt*P0.x + 3*mt*mt*t*C1.x + 3*mt*t*t*C2.x + t*t*t*P3.x;
-                const y = mt*mt*mt*P0.y + 3*mt*mt*t*C1.y + 3*mt*t*t*C2.y + t*t*t*P3.y;
+
+                const x = mt*mt*P0.x + 2*mt*t*M.x + t*t*P2.x;
+                const y = mt*mt*P0.y + 2*mt*t*M.y + t*t*P2.y;
+
                 allPoints.push(x, y);
             }
         }
-        
-        // Create the polygon
+
         const polygon = new Konva.Line({
             points: allPoints,
             stroke: CONFIG.POLYGON.STROKE,
@@ -333,7 +307,7 @@ const PolygonManager = {
             closed: true,
             dash: CONFIG.POLYGON.DASH,
         });
-        
+
         group.add(polygon);
     },
 

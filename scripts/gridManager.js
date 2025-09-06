@@ -7,12 +7,12 @@ const GridManager = {
     const alpha = 0.5;
 
     // Helper: sample cubic Bezier
-    function sampleBezier(P0, C1, C2, P3, steps=50) {
+    function sampleQuadratic(P0, M, P2, steps=50) {
       const pts = [];
       for (let i=0; i<=steps; i++) {
-        const t = i/steps, mt=1-t;
-        const x = mt*mt*mt*P0.x + 3*mt*mt*t*C1.x + 3*mt*t*t*C2.x + t*t*t*P3.x;
-        const y = mt*mt*mt*P0.y + 3*mt*mt*t*C1.y + 3*mt*t*t*C2.y + t*t*t*P3.y;
+        const t = i/steps, mt = 1-t;
+        const x = mt*mt*P0.x + 2*mt*t*M.x + t*t*P2.x;
+        const y = mt*mt*P0.y + 2*mt*t*M.y + t*t*P2.y;
         pts.push({x,y});
       }
       return pts;
@@ -22,10 +22,10 @@ const GridManager = {
     const edges = [];
     for (let i=0; i<4; i++) {
       const j = (i+1)%4;
-      const P0 = vertices[i], P3 = vertices[j], M = midpoints[i];
-      const C1 = {x: M.x + alpha*(P0.x-M.x), y: M.y + alpha*(P0.y-M.y)};
-      const C2 = {x: M.x + alpha*(P3.x-M.x), y: M.y + alpha*(P3.y-M.y)};
-      edges.push(sampleBezier(P0, C1, C2, P3, 100));
+      const P0 = vertices[i];
+      const P2 = vertices[j];
+      const M  = midpoints[i];
+      edges.push(sampleQuadratic(P0, M, P2, 100));
     }
 
     // Named edges
