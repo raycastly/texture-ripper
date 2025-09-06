@@ -383,7 +383,7 @@ label {
 
 
 
-/* Add to your styles.css */
+/*================ SHORTCUTS =================*/
 .shortcut-hint {
     position: absolute;
     background: rgba(0, 0, 0, 0.8);
@@ -416,7 +416,50 @@ label {
 
 
 
-.drag-over {
-    outline: 2px dashed #2196F3;
-    background-color: rgba(33, 150, 243, 0.1);
+/*================ DRAG AND DROP =================*/
+.drag-drop-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    pointer-events: none;
+    justify-content: center;
+    align-items: center;
+    border: 3px dashed #2196F3;
+    border-radius: 16px; /* Add curved edges */
+}
+
+.drag-drop-overlay-content {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 300px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.drag-drop-overlay-content h3 {
+    margin: 0 0 10px 0;
+    color: #2196F3;
+    font-weight: 600;
+}
+
+.drag-drop-overlay-content p {
+    margin: 0;
+    color: #333;
+    font-size: 14px;
+}
+
+.drag-drop-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #2196F3;
+}
+
+.drag-drop-overlay {
+    animation: pulse 2s infinite;
 }

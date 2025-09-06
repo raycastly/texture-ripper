@@ -3,9 +3,39 @@ const DragDropManager = {
     init: (container, onFileDrop, options = {}) => {
         const {
             dragOverClass = 'drag-over',
-            showOverlay = false,
-            overlayId = 'dropZoneOverlay'
+            showOverlay = true,
+            overlayId = 'dragDropOverlay'
         } = options;
+
+        // Create overlay element if it doesn't exist
+        let overlay = document.getElementById(overlayId);
+        if (!overlay && showOverlay) {
+            overlay = document.createElement('div');
+            overlay.id = overlayId;
+            overlay.className = 'drag-drop-overlay';
+            overlay.innerHTML = `
+                <div class="drag-drop-overlay-content">
+                    <div class="drag-drop-icon">📁</div>
+                    <h3>Drop Image Here</h3>
+                    <p>Release to add image to the canvas</p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            
+            // Position the overlay to match the container
+            const updateOverlayPosition = () => {
+                const rect = container.getBoundingClientRect();
+                overlay.style.position = 'fixed';
+                overlay.style.top = rect.top + 'px';
+                overlay.style.left = rect.left + 'px';
+                overlay.style.width = rect.width + 'px';
+                overlay.style.height = rect.height + 'px';
+            };
+            
+            // Update position initially and on window resize
+            updateOverlayPosition();
+            window.addEventListener('resize', updateOverlayPosition);
+        }
 
         // Prevent default drag behaviors
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -28,17 +58,15 @@ const DragDropManager = {
 
         function highlight(e) {
             container.classList.add(dragOverClass);
-            if (showOverlay) {
-                const overlay = document.getElementById(overlayId);
-                if (overlay) overlay.style.display = 'flex';
+            if (showOverlay && overlay) {
+                overlay.style.display = 'flex';
             }
         }
 
         function unhighlight(e) {
             container.classList.remove(dragOverClass);
-            if (showOverlay) {
-                const overlay = document.getElementById(overlayId);
-                if (overlay) overlay.style.display = 'none';
+            if (showOverlay && overlay) {
+                overlay.style.display = 'none';
             }
         }
 
@@ -58,6 +86,9 @@ const DragDropManager = {
                     onFileDrop(imageFiles);
                 }
             }
+            
+            // Always unhighlight on drop
+            unhighlight(e);
         }
 
         // Return cleanup function
@@ -70,6 +101,11 @@ const DragDropManager = {
                 });
                 container.removeEventListener('drop', handleDrop, false);
                 container.classList.remove(dragOverClass);
+                
+                // Remove overlay if we created it
+                if (overlay && overlay.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
             }
         };
     },
