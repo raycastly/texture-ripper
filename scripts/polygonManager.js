@@ -156,6 +156,16 @@ const PolygonManager = {
                 // Update drag surface with curved edges
                 const updatedPoints = createCurvedDragSurface(vertices, midpoints);
                 PolygonManager.updateDragSurface(group, updatedPoints);
+
+                // Update reference circles
+                group.referencePoints.forEach((ref, idx) => {
+                    const v1 = vertices[idx];
+                    const v2 = vertices[(idx + 1) % vertices.length];
+                    ref.position({
+                        x: (v1.x + v2.x) / 2,
+                        y: (v1.y + v2.y) / 2
+                    });
+                });
             });
 
             // Prevent click events from bubbling to group
@@ -165,7 +175,32 @@ const PolygonManager = {
 
             group.add(vertex);
         });
-        
+
+        // Add reference midpoints (non-interactable, bigger marker)
+        const referencePoints = [];
+        vertices.forEach((point, i) => {
+            const nextIdx = (i + 1) % vertices.length;
+            const refX = (vertices[i].x + vertices[nextIdx].x) / 2;
+            const refY = (vertices[i].y + vertices[nextIdx].y) / 2;
+
+            const reference = new Konva.Circle({
+                x: refX,
+                y: refY,
+                radius: CONFIG.MIDPOINT.REFERENCE.RADIUS, // bigger than midpoint
+                fill: CONFIG.MIDPOINT.REFERENCE.FILL,
+                stroke: CONFIG.MIDPOINT.REFERENCE.STROKE,
+                strokeWidth: CONFIG.MIDPOINT.REFERENCE.STROKE_WIDTH,
+                name: 'reference',
+                listening: false  // makes it non-interactable
+            });
+
+            group.add(reference);
+            referencePoints.push(reference);
+        });
+
+        // store them so we can update later
+        group.referencePoints = referencePoints;
+
         // Add midpoints
         midpoints.forEach((point, i) => {
             const midpoint = new Konva.Circle({

@@ -12,11 +12,17 @@ const CONFIG = {
         STROKE_WIDTH: 1,
     },
     MIDPOINT: {
-        RADIUS: 3,
+        RADIUS: 2,
         FILL: null,
         RESPONSIVE_RADIUS: 10,
         STROKE: '#ff0',
         STROKE_WIDTH: 1,
+        REFERENCE: {
+            RADIUS: 4,
+            FILL: null,
+            STROKE: 'blue',
+            STROKE_WIDTH: 1
+        }
     },
     POLYGON: {
         SELECTED_STROKE: 'rgba(59,189,256,1)',
