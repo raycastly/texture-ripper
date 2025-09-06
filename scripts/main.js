@@ -33,6 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
         stageRight.draw(); // Redraw the stage
     });
 
+    // Auto Pack button
+    document.getElementById('autoPack').addEventListener('click', () => {
+        RightPanelManager.autoPackTextures(stageRight, true);
+    });
+
     // Export button
     document.getElementById('exportRight').addEventListener('click', () => {
         const exportWidth = parseInt(document.getElementById('rightWidth').value);

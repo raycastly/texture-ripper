@@ -284,5 +284,104 @@ const RightPanelManager = {
             oldBgRect.destroy();
             bgLayer.draw();
         }
+    },
+
+    autoPackTextures: (stage, autoScale = false, scaleLimit = 0.2) => {
+        const tiedRects = stage.tiedRects;
+        const bgRect = stage.bgRect;
+        const containerWidth = bgRect.width();
+        const containerHeight = bgRect.height();
+        const textures = Object.values(tiedRects);
+        if (textures.length === 0) return { packed: 0, skipped: 0 };
+
+        const getDims = (texture, rotation = 0, scaleFactor = 1) => {
+            const scaleX = (texture.scaleX() || 1) * scaleFactor;
+            const scaleY = (texture.scaleY() || 1) * scaleFactor;
+            const baseWidth = texture.width() * scaleX;
+            const baseHeight = texture.height() * scaleY;
+            if (rotation % 180 === 0) return { width: baseWidth, height: baseHeight };
+            return { width: baseHeight, height: baseWidth };
+        };
+
+        const textureData = textures.map(t => ({
+            texture: t,
+            rotations: [0, 90]
+        })).sort((a, b) => {
+            const dimA = getDims(a.texture);
+            const dimB = getDims(b.texture);
+            return Math.max(dimB.width, dimB.height) - Math.max(dimA.width, dimA.height);
+        });
+
+        let freeRects = [{ x: 0, y: 0, width: containerWidth, height: containerHeight }];
+        let packedCount = 0;
+        let skippedCount = 0;
+
+        textureData.forEach(data => {
+            const { texture, rotations } = data;
+            let placed = false;
+
+            for (let rot of rotations) {
+                let { width, height } = getDims(texture, rot);
+                
+                // Optional auto-scaling
+                let scaleFactor = 1;
+                if (autoScale) {
+                    const fits = freeRects.some(f => width <= f.width && height <= f.height);
+                    if (!fits) {
+                        scaleFactor = Math.min(
+                            ...freeRects.map(f => Math.min(f.width / width, f.height / height))
+                        );
+                        // Clamp scale factor to ±scaleLimit
+                        const minScale = 1 - scaleLimit;
+                        const maxScale = 1 + scaleLimit;
+                        scaleFactor = Math.max(minScale, Math.min(maxScale, scaleFactor));
+
+                        width *= scaleFactor;
+                        height *= scaleFactor;
+                    }
+                }
+
+                for (let i = 0; i < freeRects.length; i++) {
+                    const free = freeRects[i];
+                    if (width <= free.width && height <= free.height) {
+                        texture.position({ x: free.x, y: free.y });
+                        texture.rotation(rot);
+                        if (scaleFactor !== 1) texture.scale({ x: scaleFactor, y: scaleFactor });
+
+                        const newRects = [];
+                        if (free.width > width) {
+                            newRects.push({ x: free.x + width, y: free.y, width: free.width - width, height });
+                        }
+                        if (free.height > height) {
+                            newRects.push({ x: free.x, y: free.y + height, width: free.width, height: free.height - height });
+                        }
+
+                        freeRects.splice(i, 1);
+                        freeRects.push(...newRects);
+
+                        packedCount++;
+                        placed = true;
+                        break;
+                    }
+                }
+
+                if (placed) break;
+            }
+
+            if (!placed) {
+                console.warn(`Texture ${texture.id()} doesn't fit in container - skipping`);
+                skippedCount++;
+            }
+        });
+
+        stage.findOne('Transformer').nodes([]);
+        stage.draw();
+
+        if (skippedCount > 0) {
+            alert(`${skippedCount} texture(s) were skipped because they don't fit in the container. Consider increasing the container size.`);
+        }
+
+        console.log(`Packed ${packedCount} textures, ${skippedCount} skipped`);
+        return { packed: packedCount, skipped: skippedCount };
     }
 };

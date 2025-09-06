@@ -76,6 +76,7 @@ const CONFIG = {
 
         extractTextures: 'KeyD',
         exportAtlas: 'KeyF',
+        packTextures: 'KeyP',
 
         deleteSelected: 'KeyX',
     }

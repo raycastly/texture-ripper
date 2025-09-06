@@ -42,4 +42,10 @@ document.addEventListener('keydown', (e) => {
         document.getElementById('bgUploadLeft').click();
         e.preventDefault();
     }
+
+    // Pack textures
+    else if (e.code === CONFIG.SHORTCUTS.packTextures) {
+        document.getElementById('autoPack').click();
+        e.preventDefault();
+    }
 });
