@@ -111,7 +111,7 @@ const DragDropManager = {
     },
 
     // Helper function to handle image files
-    handleImageFiles: (files, stage, bgLayer, bgImages, imagesLocked, feedbackCallback) => {
+    handleImageFiles: (files, stage, bgLayer, bgImages, imagesLocked) => {
         files.forEach(file => {
             const reader = new FileReader();
             reader.onload = evt => {
@@ -132,9 +132,7 @@ const DragDropManager = {
                     bgImages.push(konvaImg);
                     bgLayer.batchDraw();
                     
-                    if (typeof feedbackCallback === 'function') {
-                        feedbackCallback('Image dropped successfully!');
-                    }
+                    FeedbackManager.show('Image dropped successfully!');
                 };
                 img.src = evt.target.result;
             };

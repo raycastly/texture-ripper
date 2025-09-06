@@ -197,16 +197,19 @@ const RightPanelManager = {
 
             // Flip X
             menu.appendChild(createMenuItem('Flip X', () => {
-                target.offsetX(target.width() / 2);
-                target.x(target.x() + target.width() / 2); // keep position
+                // Set offset to center if not already set
+                if (target.offsetX() !== target.width() / 2) {
+                    target.offsetX(target.width() / 2);
+                }
                 target.scaleX(-target.scaleX());
                 target.getLayer().batchDraw();
             }));
 
             // Flip Y
             menu.appendChild(createMenuItem('Flip Y', () => {
-                target.offsetY(target.height() / 2);
-                target.y(target.y() + target.height() / 2);
+                if (target.offsetY() !== target.height() / 2) {
+                    target.offsetY(target.height() / 2);
+                }
                 target.scaleY(-target.scaleY());
                 target.getLayer().batchDraw();
             }));
@@ -249,10 +252,10 @@ const RightPanelManager = {
             try {
                 const blob = await new Promise(resolve => tempCanvas.toBlob(resolve));
                 await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-                alert('Texture copied to clipboard!');
+                FeedbackManager.show('Texture copied to clipboard!');
             } catch (err) {
                 console.error('Failed to copy image: ', err);
-                alert('Failed to copy texture.');
+                FeedbackManager.show('Failed to copy texture.');
             }
         }
 

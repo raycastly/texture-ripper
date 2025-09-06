@@ -80,7 +80,7 @@ const LeftPanelManager = {
                             bgLayer.batchDraw();
                             
                             // Show feedback
-                            showPasteFeedback('Image pasted successfully!');
+                            FeedbackManager.show('Image pasted successfully!');
                         };
                         img.src = evt.target.result;
                     };
@@ -90,28 +90,9 @@ const LeftPanelManager = {
             }
             
             if (!imageFound) {
-                showPasteFeedback('No image found in clipboard');
+                FeedbackManager.show('No image found in clipboard');
             }
         });
-
-        // Function to show paste feedback
-        function showPasteFeedback(message) {
-            // Create or get feedback element
-            let feedbackEl = document.getElementById('paste-feedback');
-            if (!feedbackEl) {
-                feedbackEl = document.createElement('div');
-                feedbackEl.id = 'paste-feedback';
-                feedbackEl.className = 'paste-feedback';
-                document.body.appendChild(feedbackEl);
-            }
-            
-            feedbackEl.textContent = message;
-            feedbackEl.classList.add('show');
-            
-            setTimeout(() => {
-                feedbackEl.classList.remove('show');
-            }, 2000);
-        }
 
         // Drawing mode toggle button
         document.getElementById('toggleDrawingMode').addEventListener('click', () => {
@@ -214,8 +195,7 @@ const LeftPanelManager = {
                     stage,
                     bgLayer,
                     bgImages,
-                    imagesLocked,
-                    showPasteFeedback
+                    imagesLocked
                 );
             },
             {
