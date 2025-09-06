@@ -198,18 +198,15 @@ const ImageProcessing = {
         for (let i = 0; i < 4; i++) {
             const j = (i + 1) % 4;
             const P0 = srcVerts[i];
-            const P3 = srcVerts[j];
-            const M = srcMids[i];
-
-            const C1 = { x: M.x + alpha*(P0.x-M.x), y: M.y + alpha*(P0.y-M.y) };
-            const C2 = { x: M.x + alpha*(P3.x-M.x), y: M.y + alpha*(P3.y-M.y) };
+            const P2 = srcVerts[j];
+            const M  = srcMids[i];
 
             const pts = [];
             for (let k = 0; k <= numSamples; k++) {
                 const t = k / numSamples;
                 const mt = 1 - t;
-                const x = mt*mt*mt*P0.x + 3*mt*mt*t*C1.x + 3*mt*t*t*C2.x + t*t*t*P3.x;
-                const y = mt*mt*mt*P0.y + 3*mt*mt*t*C1.y + 3*mt*t*t*C2.y + t*t*t*P3.y;
+                const x = mt*mt*P0.x + 2*mt*t*M.x + t*t*P2.x;
+                const y = mt*mt*P0.y + 2*mt*t*M.y + t*t*P2.y;
                 pts.push({ x, y });
             }
             edges.push(pts);
