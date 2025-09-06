@@ -2,6 +2,8 @@
 const LeftPanelManager = {
     // Initialize the left panel
     init: (containerId, addBtnId, deleteBtnId, uploadId) => {
+        const dirtyPolygons = new Set();
+
         const container = document.getElementById(containerId);
         const stage = new Konva.Stage({ 
             container: containerId, 
@@ -110,7 +112,8 @@ const LeftPanelManager = {
                     (newPolygon) => {
                         // Set the newly created polygon as selected
                         selectedGroup = newPolygon;
-                    }
+                    },
+                    dirtyPolygons
                 );
             } else {
                 button.textContent = 'Drawing Mode';
@@ -144,17 +147,21 @@ const LeftPanelManager = {
         // Extract All button
         document.getElementById('extractAllLeft').addEventListener('click', () => {
             polygonLayer.find('.group').forEach(async group => {
+                if (!dirtyPolygons.has(group._id)) return; // skip unchanged polygons
+
                 const overlappingImgs = PolygonManager.getUnderlyingImages(group, stage);
                 if (!overlappingImgs.length) return;
 
-                // Use only the topmost image
                 const topmostImage = overlappingImgs[0];
                 const textureData = ImageProcessing.extractTexture(group, topmostImage);
-                
+
                 if (textureData && window.rightPanel) {
                     window.rightPanel.updateTexture(group._id, textureData);
                 }
             });
+
+            // Clear dirty set after extraction
+            dirtyPolygons.clear();
         });
 
         // Upload handler
@@ -206,7 +213,7 @@ const LeftPanelManager = {
 
         // Add polygon button
         document.getElementById(addBtnId).addEventListener('click', () => {
-            const newGroup = PolygonManager.createPolygonGroup(stage, polygonLayer);
+            const newGroup = PolygonManager.createPolygonGroup(stage, polygonLayer, null, dirtyPolygons);
             setSelectedPolygon(newGroup);
         });
 

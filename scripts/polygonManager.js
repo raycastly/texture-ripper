@@ -1,12 +1,14 @@
 // ==================== POLYGON MANAGEMENT ====================
 const PolygonManager = {
     // Unified polygon creation function
-    createPolygonGroup: (stage, layer, points = null) => {
+    createPolygonGroup: (stage, layer, points = null, dirtyPolygons = null) => {
         const group = new Konva.Group({ 
             draggable: true, 
             name: 'group',
             _id: Utils.generateId()
         });
+
+        if (group && group._id) dirtyPolygons.add(group._id);
         
         // Get vertices - either from provided points or create default rectangle
         let vertices;
@@ -82,6 +84,12 @@ const PolygonManager = {
         
         group.add(dragSurface);
         dragSurface.moveToBottom();
+        
+        group.on("dragmove", () => {
+            if (dirtyPolygons && group && group._id) {
+                dirtyPolygons.add(group._id);
+            }
+        });
 
         // Draw the curved polygon
         PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
@@ -130,6 +138,8 @@ const PolygonManager = {
             vertex.on('dragmove', () => {
                 // Update vertex position
                 vertices[i] = { x: vertex.x(), y: vertex.y() };
+
+                if (group && group._id) dirtyPolygons.add(group._id);
 
                 // Update label position when vertex moves
                 label.position({ x: vertex.x(), y: vertex.y() });
@@ -235,6 +245,9 @@ const PolygonManager = {
                 // Update midpoint position
                 midpoints[i].x = midpoint.x();
                 midpoints[i].y = midpoint.y();
+
+                // Mark polygon as dirty
+                if (group && group._id) dirtyPolygons.add(group._id);
                 
                 // Update polygon and grid
                 PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
@@ -343,7 +356,7 @@ const PolygonManager = {
         return intersectingImages.length > 0 ? [intersectingImages[intersectingImages.length - 1]] : [];
     },
 
-    initDrawingMode: (stage, polygonLayer, getDrawingMode, onPolygonCreated) => {
+    initDrawingMode: (stage, polygonLayer, getDrawingMode, onPolygonCreated, dirtyPolygons) => {
         const drawingGroup = new Konva.Group();
         polygonLayer.add(drawingGroup);
         
@@ -419,7 +432,7 @@ const PolygonManager = {
                 updatedPoints.push(reorderedPoints[3]);
                 updatedPoints.push(reorderedPoints[0]);
                 
-                const polygonGroup = PolygonManager.createPolygonGroup(stage, polygonLayer, reorderedPoints);
+                const polygonGroup = PolygonManager.createPolygonGroup(stage, polygonLayer, reorderedPoints, dirtyPolygons);
                 
                 // Clear temporary elements
                 clearTempElements();
