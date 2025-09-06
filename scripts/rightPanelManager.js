@@ -136,6 +136,126 @@ const RightPanelManager = {
             }
         });
 
+        stage.on('contextmenu', (e) => {
+            e.evt.preventDefault(); // prevent default browser context menu
+
+            // Only trigger on draggable images (extracted textures)
+            if (e.target && e.target.draggable() && e.target.getClassName() === 'Image') {
+                showContextMenu(e.evt.clientX, e.evt.clientY, e.target);
+            }
+        });
+
+        function showContextMenu(x, y, target) {
+            // Remove existing menu
+            const existingMenu = document.getElementById('konva-context-menu');
+            if (existingMenu) existingMenu.remove();
+
+            // Create menu container
+            const menu = document.createElement('div');
+            menu.id = 'konva-context-menu';
+            menu.style.position = 'absolute';
+            menu.style.top = y + 'px';
+            menu.style.left = x + 'px';
+            menu.style.background = '#f9f9f9';
+            menu.style.border = '1px solid #888';
+            menu.style.borderRadius = '4px';
+            menu.style.padding = '0';
+            menu.style.boxShadow = '0 2px 6px rgba(0,0,0,0.25)';
+            menu.style.zIndex = 1000;
+            menu.style.fontFamily = 'sans-serif';
+            menu.style.minWidth = '120px';
+            menu.style.color = '#000'; // ensure text color is black
+
+            // Helper function to create menu items
+            function createMenuItem(label, callback) {
+                const item = document.createElement('div');
+                item.innerText = label;
+                item.style.padding = '8px 12px';
+                item.style.cursor = 'pointer';
+                item.style.userSelect = 'none';
+                item.style.color = '#000';
+
+                item.addEventListener('mouseenter', () => {
+                    item.style.background = '#0078d4';
+                    item.style.color = '#fff';
+                });
+                item.addEventListener('mouseleave', () => {
+                    item.style.background = 'transparent';
+                    item.style.color = '#000';
+                });
+
+                item.addEventListener('click', () => {
+                    callback();
+                    menu.remove();
+                });
+
+                return item;
+            }
+
+            // Copy option
+            menu.appendChild(createMenuItem('Copy', () => copyTexture(target)));
+
+            // Flip X
+            menu.appendChild(createMenuItem('Flip X', () => {
+                target.offsetX(target.width() / 2);
+                target.x(target.x() + target.width() / 2); // keep position
+                target.scaleX(-target.scaleX());
+                target.getLayer().batchDraw();
+            }));
+
+            // Flip Y
+            menu.appendChild(createMenuItem('Flip Y', () => {
+                target.offsetY(target.height() / 2);
+                target.y(target.y() + target.height() / 2);
+                target.scaleY(-target.scaleY());
+                target.getLayer().batchDraw();
+            }));
+
+            document.body.appendChild(menu);
+
+            // Remove menu when clicking elsewhere
+            const removeMenu = () => {
+                menu.remove();
+                window.removeEventListener('click', removeMenu);
+            };
+            setTimeout(() => window.addEventListener('click', removeMenu), 0);
+        }
+
+        async function copyTexture(texture) {
+            const width = texture.width() * Math.abs(texture.scaleX());
+            const height = texture.height() * Math.abs(texture.scaleY());
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            const ctx = tempCanvas.getContext('2d');
+
+            ctx.save();
+
+            // Handle flip
+            ctx.translate(width / 2, height / 2);
+            ctx.scale(texture.scaleX() < 0 ? -1 : 1, texture.scaleY() < 0 ? -1 : 1);
+            ctx.rotate((texture.rotation() * Math.PI) / 180);
+            ctx.drawImage(
+                texture.image(),
+                -texture.width() / 2,
+                -texture.height() / 2,
+                texture.width(),
+                texture.height()
+            );
+
+            ctx.restore();
+
+            try {
+                const blob = await new Promise(resolve => tempCanvas.toBlob(resolve));
+                await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+                alert('Texture copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy image: ', err);
+                alert('Failed to copy texture.');
+            }
+        }
+
         // Initialize panning and zooming
         PanZoomManager.initPanning(stage);
         PanZoomManager.initZooming(stage);
