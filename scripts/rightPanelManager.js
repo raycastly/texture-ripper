@@ -197,9 +197,10 @@ const RightPanelManager = {
 
             // Flip X
             menu.appendChild(createMenuItem('Flip X', () => {
-                // Set offset to center if not already set
                 if (target.offsetX() !== target.width() / 2) {
+                    // Move node to keep center position consistent
                     target.offsetX(target.width() / 2);
+                    target.x(target.x() + target.width() / 2);
                 }
                 target.scaleX(-target.scaleX());
                 target.getLayer().batchDraw();
@@ -209,6 +210,7 @@ const RightPanelManager = {
             menu.appendChild(createMenuItem('Flip Y', () => {
                 if (target.offsetY() !== target.height() / 2) {
                     target.offsetY(target.height() / 2);
+                    target.y(target.y() + target.height() / 2);
                 }
                 target.scaleY(-target.scaleY());
                 target.getLayer().batchDraw();
