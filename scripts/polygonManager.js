@@ -313,7 +313,7 @@ const PolygonManager = {
             lineCap: 'round',
             lineJoin: 'round',
             closed: true,
-            dash: [5, 5]
+            dash: CONFIG.POLYGON.DASH,
         });
         
         group.add(polygon);

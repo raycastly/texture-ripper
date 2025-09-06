@@ -1,8 +1,9 @@
 // ==================== CONSTANTS AND CONFIGURATION ====================
 const CONFIG = {
     GRID: {
-        STROKE: 'rgba(49,179,247,1)',
-        STROKE_WIDTH: 1
+        STROKE: 'rgba(10,80,127,.75)',
+        STROKE_WIDTH: 1,
+        DASH: [5,5]
     },
     VERTEX: {
         RADIUS: 2,
@@ -29,6 +30,7 @@ const CONFIG = {
         SELECTED_STROKE_WIDTH: 1,
         STROKE: 'rgba(10,80,127,1)',
         STROKE_WIDTH: 1,
+        DASH: [5,5],
         CLOSED: true
     },
     SELECTION: {

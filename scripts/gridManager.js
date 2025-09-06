@@ -74,6 +74,7 @@ const GridManager = {
         points: pts,
         stroke: CONFIG.GRID.STROKE,
         strokeWidth: CONFIG.GRID.STROKE_WIDTH,
+        dash: [5, 5],
         name: 'grid'
       }));
     }
@@ -89,6 +90,7 @@ const GridManager = {
         points: pts,
         stroke: CONFIG.GRID.STROKE,
         strokeWidth: CONFIG.GRID.STROKE_WIDTH,
+        dash: [5, 5],
         name: 'grid'
       }));
     }
