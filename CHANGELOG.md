@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.2](https://github.com/raycastly/texture-ripper/compare/v1.4.1...v1.4.2) (2025-09-07)
+
+
+### Bug Fixes
+
+* made the report issue and propose feature buttons open up links in browser inside electron ([c29aa50](https://github.com/raycastly/texture-ripper/commit/c29aa50e5d02f6c7e334fc83cd4364329d9ea7e5))
+* update UI aligned to right side of toolbar ([320ea05](https://github.com/raycastly/texture-ripper/commit/320ea05da8b04bf5948d660a5fcac5bc9b1bc2e7))
+
 ## [1.4.1](https://github.com/raycastly/texture-ripper/compare/v1.4.0...v1.4.1) (2025-09-07)
 
 
