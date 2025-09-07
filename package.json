@@ -1,10 +1,37 @@
 {
+  "name": "texture-ripper",
+  "version": "1.0.0",
+  "description": "A tool to extract and manage textures",
+  "author": "Maksim Jovovic - Raycastly",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "build": {
+    "appId": "com.raycastly.textureripper",
+    "productName": "Texture Ripper",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "installerIcon": "assets/installer.ico"
+    }
+  },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.5",
     "@semantic-release/release-notes-generator": "^14.1.0",
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.12",
     "semantic-release": "^24.2.7"
   }
 }

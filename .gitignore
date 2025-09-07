@@ -12,3 +12,18 @@ Thumbs.db
 
 # Environment files
 .env
+
+# Build output
+/dist/
+/out/
+/release/
+
+# Electron Builder cache
+/node_modules/electron-builder-cache/
+/node_modules/electron-builder-binaries/
+
+# VSCode settings
+.vscode/
+
+# MacOS files
+*.app
