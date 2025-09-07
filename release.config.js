@@ -21,8 +21,7 @@ module.exports = {
       {
         assets: [
           'CHANGELOG.md',
-          'version.json', // Will be updated by our manual step
-          'package.json'  // Updated by semantic-release/npm
+          'package.json'  // Only commit package.json
         ],
         message: 'chore(release): ${nextRelease.version} [skip ci]'
       }

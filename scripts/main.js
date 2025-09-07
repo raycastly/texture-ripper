@@ -109,12 +109,16 @@ document.addEventListener('DOMContentLoaded', () => {
         RightPanelManager.toggleTransparency(stageRight, isTransparent);
     });
 
-    // Update version number
-    fetch('./version.json')
+    // Update version number directly from package.json
+    fetch('./package.json')
         .then(r => r.json())
         .then(data => {
             const versionText = document.getElementById('version-text');
             versionText.textContent = `v${data.version}`;
+        })
+        .catch(error => {
+            console.log('Could not load version from package.json, using default');
+            document.getElementById('version-text').textContent = 'v1.0.0';
         });
         
     // Copy version to clipboard

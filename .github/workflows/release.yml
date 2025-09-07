@@ -31,13 +31,10 @@ jobs:
       - run: npm run build:win
 
       # 5. Run Semantic Release + Update version.json
-      - name: Run Semantic Release and Update Version
+      - name: Run Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npx semantic-release
-          # Update version.json AFTER semantic-release updates package.json
-          node scripts/update-version.js
+        run: npx semantic-release
 
       # 6. Deploy GitHub Pages
       - name: Deploy GitHub Pages
