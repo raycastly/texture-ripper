@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/raycastly/texture-ripper/compare/v1.3.2...v1.3.3) (2025-09-07)
+
+
+### Bug Fixes
+
+* the version.json was not updating, added to workflow ([f364a78](https://github.com/raycastly/texture-ripper/commit/f364a788568567eeb036f3dd05e0816b6ed3d1be))
+
 ## [1.3.2](https://github.com/raycastly/texture-ripper/compare/v1.3.1...v1.3.2) (2025-09-07)
 
 
