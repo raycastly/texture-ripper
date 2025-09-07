@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.1.0](https://github.com/raycastly/texture-ripper/compare/v1.0.0...v1.1.0) (2025-09-07)
+
+
+### Features
+
+* add auto-update with electron-updater ([a026031](https://github.com/raycastly/texture-ripper/commit/a0260314f8bcae19e98db739c57631a430121714))
+
 # 1.0.0 (2025-09-07)
 
 
