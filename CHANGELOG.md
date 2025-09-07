@@ -1,5 +1,17 @@
 # Changelog
 
+# [1.3.0](https://github.com/raycastly/texture-ripper/compare/v1.2.0...v1.3.0) (2025-09-07)
+
+
+### Bug Fixes
+
+* update workflow, removed the conditions ([0cc061c](https://github.com/raycastly/texture-ripper/commit/0cc061ce6e1345dd3f2be41b07b1f525c3a375bf))
+
+
+### Features
+
+* update workflow and release config to trigger build ([69c53db](https://github.com/raycastly/texture-ripper/commit/69c53db7ef83e1c8c5a612de41cca9b4c1dd2ba8))
+
 # [1.2.0](https://github.com/raycastly/texture-ripper/compare/v1.1.0...v1.2.0) (2025-09-07)
 
 
