@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.2](https://github.com/raycastly/texture-ripper/compare/v1.3.1...v1.3.2) (2025-09-07)
+
+
+### Bug Fixes
+
+* added prebuild script, removed unnecessary packages ([db0dacd](https://github.com/raycastly/texture-ripper/commit/db0dacd89ea86fa06010991f2dcf4b8a2b1c688f))
+* fixed version numbers not updating ([eca43b6](https://github.com/raycastly/texture-ripper/commit/eca43b63dbaadb244228be017b2aa36e9a9a3e3c))
+* installed @semantic-release/exec ([82c00a2](https://github.com/raycastly/texture-ripper/commit/82c00a246843dc61157dba309b843a0990472eb9))
+
 ## [1.3.1](https://github.com/raycastly/texture-ripper/compare/v1.3.0...v1.3.1) (2025-09-07)
 
 
