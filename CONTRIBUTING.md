@@ -29,7 +29,7 @@ This document summarizes how you can help improve the project.
 ## Pull Requests
 - Keep PRs focused: one change or fix per PR.  
 - Make sure your code builds and runs without errors.  
-- Write clear commit messages (e.g. `Fix crash when exporting PNG` or `Add batch export option`).  
+- Write [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) (e.g. `fix: crash when exporting PNG` or `feat: add batch export option`).
 - Update documentation or examples if your changes affect usage.  
 - Small improvements (typo fixes, refactoring, tests) are welcome too.  
 
