@@ -2,6 +2,8 @@ name: Release
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 on:
   push:
@@ -31,3 +33,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+      - name: Deploy GitHub Pages
+        if: success()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          enable_jekyll: false
+          force_orphan: true
