@@ -178,21 +178,19 @@ if (isElectron()) {
     // Update status handling
     ipcRenderer.on('update-available', (event, info) => {
         console.log('Update available:', info);
-        const statusEl = document.getElementById('update-status');
         const statusText = document.getElementById('update-status-text');
         statusText.textContent = `⬇️ Downloading v${info.version}...`;
-        statusEl.style.display = 'block';
+        statusText.style.display = 'inline';
     });
 
     ipcRenderer.on('update-downloaded', (event, info) => {
         console.log('Update downloaded:', info);
-        const statusEl = document.getElementById('update-status');
         const statusText = document.getElementById('update-status-text');
         const restartBtn = document.getElementById('restart-btn');
         
         statusText.textContent = `✅ Update v${info.version} ready!`;
         restartBtn.style.display = 'inline-block';
-        statusEl.style.display = 'block';
+        statusText.style.display = 'inline';
         
         restartBtn.onclick = () => {
             ipcRenderer.invoke('restart-and-install');
@@ -209,24 +207,22 @@ if (isElectron()) {
 
     ipcRenderer.on('update-error', (event, error) => {
         console.log('Update error:', error);
-        const statusEl = document.getElementById('update-status');
         const statusText = document.getElementById('update-status-text');
         
         // Don't show error for "no update available"
         if (!error.includes('No published versions') && !error.includes('404')) {
             statusText.textContent = '❌ Update failed';
-            statusEl.style.display = 'block';
-            setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+            statusText.style.display = 'inline';
+            setTimeout(() => { statusText.style.display = 'none'; }, 5000);
         }
     });
 
     ipcRenderer.on('update-not-available', (event, info) => {
         console.log('No updates available:', info);
-        const statusEl = document.getElementById('update-status');
         const statusText = document.getElementById('update-status-text');
         statusText.textContent = '✅ You have the latest version!';
-        statusEl.style.display = 'block';
-        setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+        statusText.style.display = 'inline';
+        setTimeout(() => { statusText.style.display = 'none'; }, 3000);
     });
 
     // Manual check button (Electron only)
@@ -236,20 +232,17 @@ if (isElectron()) {
     });
 
 } else {
-    // We're in browser - hide update-related UI and get version from package.json
+    // We're in browser - hide update-related UI
     console.log('Running in browser - disabling auto-updater');
     
-    // Hide update check button
+    // Hide update buttons
     const checkUpdatesBtn = document.getElementById('check-updates');
-    if (checkUpdatesBtn) {
-        checkUpdatesBtn.style.display = 'none'; // ← This line hides it in browser
-    }
+    const restartBtn = document.getElementById('restart-btn');
+    const statusText = document.getElementById('update-status-text');
     
-    // Hide update status UI
-    const updateStatus = document.getElementById('update-status');
-    if (updateStatus) {
-        updateStatus.style.display = 'none';
-    }
+    if (checkUpdatesBtn) checkUpdatesBtn.style.display = 'none';
+    if (restartBtn) restartBtn.style.display = 'none';
+    if (statusText) statusText.style.display = 'none';
     
     // Get version from package.json for browser
     fallbackToPackageJsonVersion();

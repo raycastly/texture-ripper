@@ -50,12 +50,9 @@
             <div class="canvas-container" id="canvasRightContainer"></div>
             <div class="toolbar d-flex gap-2 align-items-center">
                 <button id="copyVersion" class="btn btn-sm btn-dark"><span id="version-text" title="Click to copy version">Loading version...</span></button>
-                <button id="check-updates" class="btn btn-sm btn-info">Check for Updates</button>
-                <!-- Update Status Indicator -->
-                <div id="update-status" style="position: fixed; bottom: 10px; right: 10px; background: rgba(30, 33, 56, 0.9); color: white; padding: 8px 12px; border-radius: 12px; font-size: 12px; display: none; z-index: 1000; backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.1);">
-                    <span id="update-status-text"></span>
-                    <button id="restart-btn" style="margin-left: 10px; display: none;" class="btn btn-sm btn-success">Restart to Update</button>
-                </div>
+                <button id="check-updates" class="btn btn-sm btn-dark">Check for Updates</button>
+                <span id="update-status-text" style="margin: 0 10px; font-size: 12px;"></span> <!-- ADD THIS -->
+                <button id="restart-btn" style="display: none;" class="btn btn-sm btn-success">Restart to Update</button>
                 <button id="requestFeature" class="btn btn-sm btn-success">Request Feature</button>
                 <button id="reportIssue" class="btn btn-sm btn-danger">Report Issue</button>
             </div>
