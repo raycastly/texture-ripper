@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/raycastly/texture-ripper/compare/v1.3.0...v1.3.1) (2025-09-07)
+
+
+### Bug Fixes
+
+* added a favicon to the tab ([2bd625c](https://github.com/raycastly/texture-ripper/commit/2bd625c1d44ca793bf44bca76fcc52da8914c34a))
+
 # [1.3.0](https://github.com/raycastly/texture-ripper/compare/v1.2.0...v1.3.0) (2025-09-07)
 
 
