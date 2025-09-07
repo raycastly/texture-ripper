@@ -15,8 +15,17 @@
       "buildResources": "assets",
       "output": "dist"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "raycastly",
+        "repo": "texture-ripper"
+      }
+    ],
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "assets/icon.ico"
     },
     "nsis": {
@@ -33,5 +42,8 @@
     "electron": "^38.0.0",
     "electron-builder": "^26.0.12",
     "semantic-release": "^24.2.7"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
   }
 }

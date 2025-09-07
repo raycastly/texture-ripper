@@ -1,22 +1,38 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
+const { app, BrowserWindow, dialog } = require('electron');
+const { autoUpdater } = require('electron-updater');
+
+let mainWindow;
 
 function createWindow() {
-  const win = new BrowserWindow({
-    width: 1200,   // initial width
-    height: 800,   // initial height
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
+  mainWindow = new BrowserWindow({
+    width: 1280,
+    height: 800,
+    webPreferences: { nodeIntegration: true }
   });
+  mainWindow.maximize(); // starts maximized
+  mainWindow.loadFile('index.html');
 
-  win.loadFile('index.html');
-  win.maximize(); // start maximized
+  // Check for updates
+  autoUpdater.checkForUpdatesAndNotify();
 }
 
-app.whenReady().then(createWindow);
+app.on('ready', createWindow);
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+autoUpdater.on('update-available', () => {
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Update Available',
+    message: 'A new version is available. Downloading now...'
+  });
+});
+
+autoUpdater.on('update-downloaded', () => {
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Update Ready',
+    message: 'Install and restart now?',
+    buttons: ['Yes', 'Later']
+  }).then(result => {
+    if (result.response === 0) autoUpdater.quitAndInstall();
+  });
 });
