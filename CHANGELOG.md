@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.4.0](https://github.com/raycastly/texture-ripper/compare/v1.3.4...v1.4.0) (2025-09-07)
+
+
+### Features
+
+* auto update feature in .exe version ([1c9ca3c](https://github.com/raycastly/texture-ripper/commit/1c9ca3c9d74179d8e6ed1650100260caab255640))
+
 ## [1.3.4](https://github.com/raycastly/texture-ripper/compare/v1.3.3...v1.3.4) (2025-09-07)
 
 

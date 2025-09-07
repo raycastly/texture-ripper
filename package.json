@@ -1,6 +1,6 @@
 {
   "name": "texture-ripper",
-  "version": "1.3.4",
+  "version": "1.4.0",
   "description": "A tool to extract and manage textures",
   "author": "Maksim Jovovic - Raycastly",
   "main": "main.js",
@@ -28,11 +28,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
