@@ -248,6 +248,27 @@ if (isElectron()) {
     fallbackToPackageJsonVersion();
 }
 
+
+
+// Add this to your browser/Electron detection code
+if (isElectron()) {
+    // We're in Electron - hide download button
+    const downloadBtn = document.getElementById('download-desktop');
+    if (downloadBtn) {
+        downloadBtn.style.display = 'none';
+    }
+} else {
+    // We're in browser - show download button
+    const downloadBtn = document.getElementById('download-desktop');
+    if (downloadBtn) {
+        downloadBtn.style.display = 'inline-block';
+        downloadBtn.onclick = () => {
+            window.open('https://github.com/raycastly/texture-ripper/releases/latest', '_blank');
+        };
+    }
+}
+
+
 // Fallback to package.json version (for browser)
 function fallbackToPackageJsonVersion() {
     fetch('./package.json')
