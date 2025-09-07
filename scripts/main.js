@@ -131,12 +131,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Open report issue page
     document.getElementById('reportIssue').addEventListener('click', () => {
-        window.open('https://github.com/raycastly/texture-ripper/issues/new?template=bug_report.yml', '_blank');
+        openExternalURL('https://github.com/raycastly/texture-ripper/issues/new?template=bug_report.yml');
     });
 
     // Open request feature page
     document.getElementById('requestFeature').addEventListener('click', () => {
-        window.open('https://github.com/raycastly/texture-ripper/issues/new?template=feature_request.yml', '_blank');
+        openExternalURL('https://github.com/raycastly/texture-ripper/issues/new?template=feature_request.yml');
     });
 });
 
@@ -260,4 +260,16 @@ function fallbackToPackageJsonVersion() {
             console.log('Could not load version from package.json, using default');
             document.getElementById('version-text').textContent = 'v1.0.0';
         });
+}
+
+// Handle both Electron and browser environments
+function openExternalURL(url) {
+    if (isElectron()) {
+        // We're in Electron - use shell.openExternal
+        const { shell } = require('electron');
+        shell.openExternal(url);
+    } else {
+        // We're in browser - use window.open
+        window.open(url, '_blank');
+    }
 }
