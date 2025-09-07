@@ -28,9 +28,12 @@ jobs:
       - run: npm ci
 
       # 4. Build Windows app
-      - run: npm run build:win
+      - name: Build Windows app
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build:win
 
-      # 5. Run Semantic Release + Update version.json
+      # 5. Run Semantic Release
       - name: Run Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

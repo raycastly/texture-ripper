@@ -5,7 +5,7 @@
   "author": "Maksim Jovovic - Raycastly",
   "main": "main.js",
   "scripts": {
-    "build:win": "electron-builder --win --x64 --publish never"
+    "build:win": "electron-builder --win --x64 --publish onTagOrDraft"
   },
   "build": {
     "appId": "com.raycastly.textureripper",
@@ -18,22 +18,29 @@
       {
         "provider": "github",
         "owner": "raycastly",
-        "repo": "texture-ripper"
+        "repo": "texture-ripper",
+        "releaseType": "release"
       }
     ],
     "win": {
       "icon": "assets/icon.ico",
-      "artifactName": "Texture-Ripper.zip",
+      "artifactName": "Texture-Ripper-${version}.${ext}",
       "target": [
-        "nsis",
-        "zip"
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64"]
+        }
       ]
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "assets/installer.ico",
-      "artifactName": "Texture Ripper Setup.exe"
+      "artifactName": "Texture-Ripper-Setup-${version}.${ext}"
     }
   },
   "devDependencies": {

@@ -139,3 +139,132 @@ document.addEventListener('DOMContentLoaded', () => {
         window.open('https://github.com/raycastly/texture-ripper/issues/new?template=feature_request.yml', '_blank');
     });
 });
+
+
+// ===== AUTO-UPDATER UI INTEGRATION (Electron only) =====
+// Check if we're running in Electron
+const isElectron = () => {
+    // Renderer process
+    if (typeof window !== 'undefined' && typeof window.process === 'object' && window.process.type === 'renderer') {
+        return true;
+    }
+    
+    // Main process
+    if (typeof process !== 'undefined' && typeof process.versions === 'object' && !!process.versions.electron) {
+        return true;
+    }
+    
+    // Detect the user agent when the `nodeIntegration` option is enabled
+    if (typeof navigator === 'object' && typeof navigator.userAgent === 'string' && navigator.userAgent.indexOf('Electron') >= 0) {
+        return true;
+    }
+    
+    return false;
+};
+
+if (isElectron()) {
+    // We're in Electron - enable auto-updater
+    const { ipcRenderer } = require('electron');
+
+    // Get and display version
+    ipcRenderer.invoke('get-app-version').then(version => {
+        console.log('App version:', version);
+        document.getElementById('version-text').textContent = `v${version}`;
+    }).catch(error => {
+        console.log('Could not get version from Electron:', error);
+        fallbackToPackageJsonVersion();
+    });
+
+    // Update status handling
+    ipcRenderer.on('update-available', (event, info) => {
+        console.log('Update available:', info);
+        const statusEl = document.getElementById('update-status');
+        const statusText = document.getElementById('update-status-text');
+        statusText.textContent = `⬇️ Downloading v${info.version}...`;
+        statusEl.style.display = 'block';
+    });
+
+    ipcRenderer.on('update-downloaded', (event, info) => {
+        console.log('Update downloaded:', info);
+        const statusEl = document.getElementById('update-status');
+        const statusText = document.getElementById('update-status-text');
+        const restartBtn = document.getElementById('restart-btn');
+        
+        statusText.textContent = `✅ Update v${info.version} ready!`;
+        restartBtn.style.display = 'inline-block';
+        statusEl.style.display = 'block';
+        
+        restartBtn.onclick = () => {
+            ipcRenderer.invoke('restart-and-install');
+        };
+    });
+
+    ipcRenderer.on('download-progress', (event, progress) => {
+        console.log('Download progress:', progress.percent);
+        const statusText = document.getElementById('update-status-text');
+        if (statusText.textContent.includes('Downloading')) {
+            statusText.textContent = `⬇️ Downloading: ${Math.round(progress.percent)}%`;
+        }
+    });
+
+    ipcRenderer.on('update-error', (event, error) => {
+        console.log('Update error:', error);
+        const statusEl = document.getElementById('update-status');
+        const statusText = document.getElementById('update-status-text');
+        
+        // Don't show error for "no update available"
+        if (!error.includes('No published versions') && !error.includes('404')) {
+            statusText.textContent = '❌ Update failed';
+            statusEl.style.display = 'block';
+            setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+        }
+    });
+
+    ipcRenderer.on('update-not-available', (event, info) => {
+        console.log('No updates available:', info);
+        const statusEl = document.getElementById('update-status');
+        const statusText = document.getElementById('update-status-text');
+        statusText.textContent = '✅ You have the latest version!';
+        statusEl.style.display = 'block';
+        setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+    });
+
+    // Manual check button (Electron only)
+    document.getElementById('check-updates').addEventListener('click', () => {
+        console.log('Manual update check');
+        ipcRenderer.invoke('check-for-updates');
+    });
+
+} else {
+    // We're in browser - hide update-related UI and get version from package.json
+    console.log('Running in browser - disabling auto-updater');
+    
+    // Hide update check button
+    const checkUpdatesBtn = document.getElementById('check-updates');
+    if (checkUpdatesBtn) {
+        checkUpdatesBtn.style.display = 'none'; // ← This line hides it in browser
+    }
+    
+    // Hide update status UI
+    const updateStatus = document.getElementById('update-status');
+    if (updateStatus) {
+        updateStatus.style.display = 'none';
+    }
+    
+    // Get version from package.json for browser
+    fallbackToPackageJsonVersion();
+}
+
+// Fallback to package.json version (for browser)
+function fallbackToPackageJsonVersion() {
+    fetch('./package.json')
+        .then(r => r.json())
+        .then(data => {
+            const versionText = document.getElementById('version-text');
+            versionText.textContent = `v${data.version}`;
+        })
+        .catch(error => {
+            console.log('Could not load version from package.json, using default');
+            document.getElementById('version-text').textContent = 'v1.0.0';
+        });
+}
