@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.5.0](https://github.com/raycastly/texture-ripper/compare/v1.4.2...v1.5.0) (2025-09-07)
+
+
+### Features
+
+* add download button for desktop app in browser version ([936d206](https://github.com/raycastly/texture-ripper/commit/936d2060e5403e21989b4811ead29d6350aac7a9))
+
 ## [1.4.2](https://github.com/raycastly/texture-ripper/compare/v1.4.1...v1.4.2) (2025-09-07)
 
 
