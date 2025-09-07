@@ -10,11 +10,11 @@ module.exports = {
         changelogTitle: '# Changelog'
       }
     ],
-    '@semantic-release/npm',
+    // Only update package.json, don't publish to npm
     [
-      '@semantic-release/exec',
+      '@semantic-release/npm',
       {
-        prepareCmd: 'node -e "const fs=require(\'fs\');const pkg=require(\'./package.json\');fs.writeFileSync(\'version.json\', JSON.stringify({version:pkg.version},null,2))"'
+        npmPublish: false
       }
     ],
     [
@@ -22,8 +22,8 @@ module.exports = {
       {
         assets: [
           'CHANGELOG.md',
-          'version.json',
-          'package.json'
+          'version.json', // Updated by our script
+          'package.json'  // Updated by semantic-release/npm
         ],
         message: 'chore(release): ${nextRelease.version} [skip ci]'
       }
