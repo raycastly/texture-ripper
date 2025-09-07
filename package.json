@@ -24,19 +24,12 @@
       }
     ],
     "win": {
+      "icon": "assets/icon.ico",
+      "artifactName": "Texture-Ripper.zip",
       "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64"],
-          "artifactName": "Texture Ripper Setup.exe"
-        },
-        {
-          "target": "zip",
-          "arch": ["x64"],
-          "artifactName": "Texture-Ripper.zip"
-        }
-      ],
-      "icon": "assets/icon.ico"
+        "nsis",
+        "zip"
+      ]
     },
     "nsis": {
       "oneClick": false,
