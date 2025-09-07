@@ -1,6 +1,6 @@
 {
   "name": "texture-ripper",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "A tool to extract and manage textures",
   "author": "Maksim Jovovic - Raycastly",
   "main": "main.js",
