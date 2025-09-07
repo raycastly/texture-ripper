@@ -1,9 +1,9 @@
-name: Release
+name: Release and Build
 
 permissions:
   contents: write    # needed to push tags and commits
-  pages: write       # if you deploy to GitHub Pages
-  id-token: write    # optional
+  pages: write       # needed to deploy GitHub Pages
+  id-token: write
 
 on:
   push:
@@ -11,22 +11,60 @@ on:
       - master
 
 jobs:
-  release:
+  release-build:
     runs-on: ubuntu-latest
+
     steps:
+      # 1. Checkout the repo
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
+      # 2. Setup Node.js
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
 
+      # 4. Run Semantic Release
       - name: Run Semantic Release
+        id: semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+      # 5. Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        if: steps.semantic-release.outputs.nextRelease != ''  # only if a release happened
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./  # root contains index.html
+
+      # 6. Build Electron App for Windows
+      - name: Build Windows App
+        if: steps.semantic-release.outputs.nextRelease != ''  # only if a release happened
+        run: npm run build
+
+      # 7. Upload Windows build to the GitHub release
+      - name: Upload Windows Installer
+        if: steps.semantic-release.outputs.nextRelease != ''
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.semantic-release.outputs.release_upload_url }}
+          asset_path: dist/Texture\ Ripper\ Setup.exe
+          asset_name: Texture-Ripper-Setup.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload ZIP
+        if: steps.semantic-release.outputs.nextRelease != ''
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.semantic-release.outputs.release_upload_url }}
+          asset_path: dist/Texture-Ripper-win-unpacked.zip
+          asset_name: Texture-Ripper.zip
+          asset_content_type: application/zip
