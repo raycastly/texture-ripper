@@ -30,11 +30,14 @@ jobs:
       # 4. Build Windows app
       - run: npm run build:win
 
-      # 5. Run Semantic Release (which will handle the GitHub release + asset upload)
-      - name: Run Semantic Release
+      # 5. Run Semantic Release + Update version.json
+      - name: Run Semantic Release and Update Version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+        run: |
+          npx semantic-release
+          # Update version.json AFTER semantic-release updates package.json
+          node scripts/update-version.js
 
       # 6. Deploy GitHub Pages
       - name: Deploy GitHub Pages

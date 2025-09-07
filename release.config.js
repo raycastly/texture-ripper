@@ -10,7 +10,6 @@ module.exports = {
         changelogTitle: '# Changelog'
       }
     ],
-    // Only update package.json, don't publish to npm
     [
       '@semantic-release/npm',
       {
@@ -22,7 +21,7 @@ module.exports = {
       {
         assets: [
           'CHANGELOG.md',
-          'version.json', // Updated by our script
+          'version.json', // Will be updated by our manual step
           'package.json'  // Updated by semantic-release/npm
         ],
         message: 'chore(release): ${nextRelease.version} [skip ci]'

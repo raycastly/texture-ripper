@@ -5,9 +5,6 @@
   "author": "Maksim Jovovic - Raycastly",
   "main": "main.js",
   "scripts": {
-    "prebuild": "node scripts/update-version.js",
-    "prebuild:win": "node scripts/update-version.js",
-    "prerelease": "node scripts/update-version.js",
     "build:win": "electron-builder --win --x64 --publish never"
   },
   "build": {
