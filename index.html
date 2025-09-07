@@ -47,11 +47,22 @@
                 <button id="exportRight" class="btn btn-sm btn-success button-with-shortcut" data-shortcut="F">Export Atlas</button>
             </div>
             <div class="canvas-container" id="canvasRightContainer"></div>
-            <div class="thumbs-container" id="thumbsContainer"></div>
+            <div class="thumbs-container" id="thumbsContainer">
+                <div id="version-display">Loading version...</div>
+
+            </div>
         </div>
     </div>
 
     <!-- Bootstrap JS -->
+    <script>
+    fetch('./version.json')
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('version-display').textContent = `v${data.version}`;
+      });
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   	<script src="https://cdn.jsdelivr.net/npm/konva@8.4.3/konva.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
