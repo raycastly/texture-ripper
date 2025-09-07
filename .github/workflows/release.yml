@@ -43,14 +43,14 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./   # adjust if your index.html is elsewhere
 
-      # 6. Get latest release tag via GitHub API
+      # 6. Get latest release tag via GitHub CLI
       - name: Get latest release
         id: get_latest_release
-        run: |
-          release=$(gh release list --repo $GITHUB_REPOSITORY --limit 1 --json tagName --jq '.[0].tagName')
-          echo "latest_tag=$release" >> $GITHUB_OUTPUT
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          latest_tag=$(gh release list --repo $GITHUB_REPOSITORY --limit 1 --json tagName --jq '.[0].tagName')
+          echo "latest_tag=$latest_tag" >> $GITHUB_OUTPUT
 
   windows-build:
     runs-on: windows-latest
@@ -74,30 +74,22 @@ jobs:
         if: needs.release-and-pages.outputs.latest_tag != ''
         run: npm run build:win
 
-      # 5. Get latest release ID (PowerShell)
-      - name: Get latest release ID
-        if: needs.release-and-pages.outputs.latest_tag != ''
-        shell: pwsh
-        run: |
-          $release_id = gh release view ${{ needs.release-and-pages.outputs.latest_tag }} --repo $env:GITHUB_REPOSITORY --json id --jq '.id'
-          Write-Output "latest_release_id=$release_id" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-
-      # 6. Upload Windows Installer
+      # 5. Upload Windows Installer
       - name: Upload Windows Installer
         if: needs.release-and-pages.outputs.latest_tag != ''
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.get_latest_release_id.outputs.latest_release_id }}
-          asset_path: dist/Texture\ Ripper\ Setup.exe
+          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.release-and-pages.outputs.latest_tag }}
+          asset_path: dist/Texture Ripper Setup.exe
           asset_name: Texture-Ripper-Setup.exe
           asset_content_type: application/octet-stream
 
-      # 7. Upload Windows ZIP
+      # 6. Upload Windows ZIP
       - name: Upload Windows ZIP
         if: needs.release-and-pages.outputs.latest_tag != ''
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.get_latest_release_id.outputs.latest_release_id }}
+          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.release-and-pages.outputs.latest_tag }}
           asset_path: dist/Texture-Ripper.zip
           asset_name: Texture-Ripper.zip
           asset_content_type: application/zip
