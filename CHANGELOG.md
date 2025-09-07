@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/raycastly/texture-ripper/compare/v1.5.0...v1.5.1) (2025-09-07)
+
+
+### Bug Fixes
+
+* workflow fix, version was always one version behind ([79699ac](https://github.com/raycastly/texture-ripper/commit/79699ac65c0a59f968108da8a28e79a70b73335b))
+
 # [1.5.0](https://github.com/raycastly/texture-ripper/compare/v1.4.2...v1.5.0) (2025-09-07)
 
 
