@@ -41,9 +41,9 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./   # adjust if your index.html is elsewhere
+          publish_dir: ./   # adjust if your static site files are elsewhere
 
-      # 6. Get latest release tag via GitHub API
+      # 6. Get latest release tag
       - name: Get latest release
         id: get_latest_release
         run: |
@@ -69,26 +69,27 @@ jobs:
       # 3. Install dependencies
       - run: npm ci
 
-      # 4. Build Windows app only if a release exists
+      # 4. Build Windows App (only if a release exists)
       - name: Build Windows App
         if: needs.release-and-pages.outputs.latest_tag != ''
         run: npm run build:win
 
       # 5. Upload Windows Installer
       - name: Upload Windows Installer
+        if: needs.release-and-pages.outputs.latest_tag != ''
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.release-and-pages.outputs.latest_tag }}
+          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.release-and-pages.outputs.latest_tag }}
           asset_path: dist/Texture Ripper Setup.exe
           asset_name: Texture-Ripper-Setup.exe
           asset_content_type: application/octet-stream
 
       # 6. Upload Windows ZIP
       - name: Upload Windows ZIP
+        if: needs.release-and-pages.outputs.latest_tag != ''
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.release-and-pages.outputs.latest_tag }}
+          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.release-and-pages.outputs.latest_tag }}
           asset_path: dist/Texture-Ripper.zip
           asset_name: Texture-Ripper.zip
           asset_content_type: application/zip
-
