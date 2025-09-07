@@ -1,8 +1,8 @@
 name: Release and Build
 
 permissions:
-  contents: write    # needed to push tags and commits
-  pages: write       # needed to deploy GitHub Pages
+  contents: write
+  pages: write
   id-token: write
 
 on:
@@ -13,9 +13,6 @@ on:
 jobs:
   release-and-pages:
     runs-on: ubuntu-latest
-    outputs:
-      nextReleaseVersion: ${{ steps.semantic-release.outputs.nextRelease.version }}
-      releaseUploadUrl: ${{ steps.semantic-release.outputs.release_upload_url }}
     steps:
       # 1. Checkout
       - uses: actions/checkout@v3
@@ -33,19 +30,28 @@ jobs:
       # 4. Run Semantic Release
       - name: Run Semantic Release
         id: semantic-release
-        uses: cycjimmy/semantic-release-action@v2
-        with:
-          branch: master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx semantic-release || echo "No release created"
 
-      # 5. Deploy to GitHub Pages (only if a release happened)
+      # 5. Deploy GitHub Pages if release exists
       - name: Deploy GitHub Pages
-        if: steps.semantic-release.outputs.nextRelease.version != ''
+        if: success()  # will run even if no release, optional
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./   # adjust if your static site files are elsewhere
+          publish_dir: ./   # adjust if index.html is elsewhere
+
+      # 6. Set output: latest release tag
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0)
+          echo "latest_tag=$latest_tag" >> $GITHUB_OUTPUT
+
+    outputs:
+      latestTag: ${{ steps.get_tag.outputs.latest_tag }}
 
   windows-build:
     runs-on: windows-latest
@@ -64,26 +70,27 @@ jobs:
       # 3. Install dependencies
       - run: npm ci
 
-      # 4. Build Windows app
+      # 4. Build Windows app only if a release tag exists
       - name: Build Windows App
-        run: npm run build:win   # make sure "build:win" script exists in package.json
+        if: needs.release-and-pages.outputs.latestTag != ''
+        run: npm run build:win
 
-      # 5. Upload Windows installer (only if a release happened)
+      # 5. Upload Windows Installer
       - name: Upload Windows Installer
-        if: needs.release-and-pages.outputs.nextReleaseVersion != ''
+        if: needs.release-and-pages.outputs.latestTag != ''
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.release-and-pages.outputs.releaseUploadUrl }}
+          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.release-and-pages.outputs.latestTag }}
           asset_path: dist/Texture\ Ripper\ Setup.exe
           asset_name: Texture-Ripper-Setup.exe
           asset_content_type: application/octet-stream
 
-      # 6. Upload ZIP
+      # 6. Upload Windows ZIP
       - name: Upload Windows ZIP
-        if: needs.release-and-pages.outputs.nextReleaseVersion != ''
+        if: needs.release-and-pages.outputs.latestTag != ''
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.release-and-pages.outputs.releaseUploadUrl }}
+          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.release-and-pages.outputs.latestTag }}
           asset_path: dist/Texture-Ripper-win-unpacked.zip
           asset_name: Texture-Ripper.zip
           asset_content_type: application/zip
