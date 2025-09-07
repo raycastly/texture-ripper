@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/raycastly/texture-ripper/compare/v1.4.0...v1.4.1) (2025-09-07)
+
+
+### Bug Fixes
+
+* added restart to update indicator ([f0013d8](https://github.com/raycastly/texture-ripper/commit/f0013d88d818a7f4dca551859e2c98e4e50f5eee))
+* fixed the auto update UI ([fb49b4f](https://github.com/raycastly/texture-ripper/commit/fb49b4f25bc79f8989f313b0ad72272a4a0d889e))
+
 # [1.4.0](https://github.com/raycastly/texture-ripper/compare/v1.3.4...v1.4.0) (2025-09-07)
 
 
