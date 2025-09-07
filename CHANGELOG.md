@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.2.0](https://github.com/raycastly/texture-ripper/compare/v1.1.0...v1.2.0) (2025-09-07)
+
+
+### Features
+
+* added request feature, report issue buttons and version number information ([614a049](https://github.com/raycastly/texture-ripper/commit/614a049aa90066684949834456537be2f32f5dc5))
+
 # [1.1.0](https://github.com/raycastly/texture-ripper/compare/v1.0.0...v1.1.0) (2025-09-07)
 
 
