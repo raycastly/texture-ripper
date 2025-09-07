@@ -1,0 +1,519 @@
+/* Global */
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #0b0d19;
+    color: #fffffe;
+    padding: 12px;
+    box-sizing: border-box;
+    background-image: radial-gradient(circle at 15% 50%, #121428, #0b0d19 80%);
+}
+
+/* Split container */
+.split {
+    height: 100%;
+    display: flex;
+    gap: 16px;
+}
+
+/* Panels - Claymorphism Style */
+.panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-radius: 24px;
+    overflow: hidden;
+    background: rgba(18, 20, 40, 0.7);
+    backdrop-filter: blur(10px);
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2),
+        inset 0 -4px 5px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Toolbars - Claymorphism Style */
+.toolbar {
+    background: rgba(30, 33, 56, 0.7);
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    box-shadow: 
+        0 4px 10px rgba(0, 0, 0, 0.2),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Canvas container - Claymorphism Style */
+.canvas-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(15, 17, 32, 0.5);
+    position: relative;
+    margin: 12px;
+    border-radius: 16px;
+    backdrop-filter: blur(5px);
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 -2px 4px rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Thumbnails container - Claymorphism Style */
+.thumbs-container {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0.8rem;
+    gap: 0.8rem;
+    background-color: rgba(15, 17, 32, 0.5);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    overflow-x: auto;
+    backdrop-filter: blur(5px);
+    box-shadow: 
+        inset 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Scrollbar for thumbnails */
+.thumbs-container::-webkit-scrollbar {
+    height: 8px;
+    border-radius: 4px;
+}
+.thumbs-container::-webkit-scrollbar-thumb {
+    background-color: rgba(55, 184, 251, 0.5);
+    border-radius: 4px;
+}
+.thumbs-container::-webkit-scrollbar-track {
+    background: rgba(18, 20, 40, 0.3);
+    border-radius: 4px;
+}
+
+/* Inputs - Claymorphism Style */
+input[type="number"], input[type="file"], input[type="checkbox"] {
+    border-radius: 12px;
+    border: none;
+    background: rgba(18, 20, 40, 0.6);
+    color: #fffffe;
+    padding: 0.4rem 0.8rem;
+    transition: all 0.2s ease;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+input[type="number"]:focus, input[type="file"]:focus {
+    outline: none;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 0 0 2px #37b8fb;
+}
+
+/* Form control overrides for claymorphism */
+.form-control {
+    background: rgba(18, 20, 40, 0.6);
+    border: none;
+    border-radius: 12px;
+    color: #fffffe;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-control:focus {
+    background: rgba(18, 20, 40, 0.8);
+    color: #fffffe;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 0 0 2px #37b8fb;
+}
+
+.form-control-sm {
+    border-radius: 10px;
+    padding: 0.3rem 0.7rem;
+}
+
+/* Checkbox styling */
+.form-check-input {
+    width: 1.1em;
+    height: 1.1em;
+    margin-top: 0.2em;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.form-check-input:checked {
+    background-color: #37b8fb;
+    border-color: #37b8fb;
+}
+
+.form-check-input:focus {
+    box-shadow: 
+        0 0 0 2px #37b8fb,
+        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Label styling */
+label {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Paste feedback */
+.paste-feedback {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(11, 13, 25, 0.9);
+    color: #fffffe;
+    padding: 12px 24px;
+    border-radius: 12px;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    backdrop-filter: blur(5px);
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.paste-feedback.show {
+    opacity: 1;
+}
+
+.instruction {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* Custom utility classes */
+.ms-2 {
+    margin-left: 0.5rem !important;
+}
+
+.gap-2 {
+    gap: 0.5rem !important;
+}
+
+.d-flex {
+    display: flex !important;
+}
+
+.align-items-center {
+    align-items: center !important;
+}
+
+/* ===== BUTTON STYLES WITH ICONS ===== */
+/* Button Styles with Icons */
+.btn {
+    position: relative;
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.15),
+        inset 0 2px 2px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    overflow: visible;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.1rem;
+    height: 1.1rem;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    box-shadow: 
+        0 5px 10px rgba(0, 0, 0, 0.2),
+        inset 0 2px 2px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(1px);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.15),
+        inset 0 2px 2px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-sm {
+    padding: 0.3rem 0.7rem 0.3rem 2.2rem;
+    font-size: 0.8rem;
+}
+
+.btn-sm::before {
+    left: 0.7rem;
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Specific Button Icons */
+#toggleDrawingMode::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' fill='%2337b8fb'%3E%3Cpath d='M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z'/%3E%3C/svg%3E");
+}
+
+#lockImagesLeft::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2314fba7' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M12 0a4 4 0 0 1 4 4v2.5h-1V4a3 3 0 1 0-6 0v2h.5A2.5 2.5 0 0 1 12 8.5v5A2.5 2.5 0 0 1 9.5 16h-7A2.5 2.5 0 0 1 0 13.5v-5A2.5 2.5 0 0 1 2.5 6H8V4a4 4 0 0 1 4-4'/%3E%3C/svg%3E");
+}
+
+#lockImagesLeft.locked::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2314fba7' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8 0a4 4 0 0 1 4 4v2.05a2.5 2.5 0 0 1 2 2.45v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4m0 1a3 3 0 0 0-3 3v2h6V4a3 3 0 0 0-3-3'/%3E%3C/svg%3E");
+}
+
+#addRectLeft::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2337b8fb'%3E%3Cpath d='M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z'/%3E%3C/svg%3E");
+}
+
+#deleteObjLeft::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ec124e'%3E%3Cpath d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z'/%3E%3C/svg%3E");
+}
+
+#extractAllLeft::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2314fba7' viewBox='0 0 16 16'%3E%3Cpath d='M4.502 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3'/%3E%3Cpath d='M14.002 13a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2V5A2 2 0 0 1 2 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-1.998 2M14 2H4a1 1 0 0 0-1 1h9.002a2 2 0 0 1 2 2v7A1 1 0 0 0 15 11V3a1 1 0 0 0-1-1M2.002 4a1 1 0 0 0-1 1v8l2.646-2.354a.5.5 0 0 1 .63-.062l2.66 1.773 3.71-3.71a.5.5 0 0 1 .577-.094l1.777 1.947V5a1 1 0 0 0-1-1z'/%3E%3C/svg%3E");
+}
+
+#resizeRight::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' fill='%2337b8fb'%3E%3Cpath d='M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707m4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707'/%3E%3C/svg%3E");
+}
+
+#autoPack::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-grid-1x2-fill' viewBox='0 0 16 16'%3E%3Cpath d='M0 1a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1zm9 0a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1zm0 9a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1z'/%3E%3C/svg%3E");
+}
+
+#exportRight::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2314fba7'%3E%3Cpath d='M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z'/%3E%3C/svg%3E");
+}
+
+#download-desktop::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2337b8fb' class='bi bi-cloud-arrow-down-fill' viewBox='0 0 16 16'%3E%3Cpath d='M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2m2.354 6.854-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 9.293V5.5a.5.5 0 0 1 1 0v3.793l1.146-1.147a.5.5 0 0 1 .708.708'/%3E%3C/svg%3E");
+}
+
+#copyVersion::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-git' viewBox='0 0 16 16'%3E%3Cpath d='M15.698 7.287 8.712.302a1.03 1.03 0 0 0-1.457 0l-1.45 1.45 1.84 1.84a1.223 1.223 0 0 1 1.55 1.56l1.773 1.774a1.224 1.224 0 0 1 1.267 2.025 1.226 1.226 0 0 1-2.002-1.334L8.58 5.963v4.353a1.226 1.226 0 1 1-1.008-.036V5.887a1.226 1.226 0 0 1-.666-1.608L5.093 2.465l-4.79 4.79a1.03 1.03 0 0 0 0 1.457l6.986 6.986a1.03 1.03 0 0 0 1.457 0l6.953-6.953a1.03 1.03 0 0 0 0-1.457'/%3E%3C/svg%3E");
+}
+
+#check-updates::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-arrow-repeat' viewBox='0 0 16 16'%3E%3Cpath d='M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41m-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9'/%3E%3Cpath fill-rule='evenodd' d='M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5 5 0 0 0 8 3M3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9z'/%3E%3C/svg%3E");
+}
+
+#restart-btn::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-cloud-arrow-down-fill' viewBox='0 0 16 16'%3E%3Cpath d='M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2m2.354 6.854-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 9.293V5.5a.5.5 0 0 1 1 0v3.793l1.146-1.147a.5.5 0 0 1 .708.708'/%3E%3C/svg%3E");
+}
+
+#reportIssue::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ec124e' class='bi bi-bug-fill' viewBox='0 0 16 16'%3E%3Cpath d='M4.978.855a.5.5 0 1 0-.956.29l.41 1.352A5 5 0 0 0 3 6h10a5 5 0 0 0-1.432-3.503l.41-1.352a.5.5 0 1 0-.956-.29l-.291.956A5 5 0 0 0 8 1a5 5 0 0 0-2.731.811l-.29-.956z'/%3E%3Cpath d='M13 6v1H8.5v8.975A5 5 0 0 0 13 11h.5a.5.5 0 0 1 .5.5v.5a.5.5 0 1 0 1 0v-.5a1.5 1.5 0 0 0-1.5-1.5H13V9h1.5a.5.5 0 0 0 0-1H13V7h.5A1.5 1.5 0 0 0 15 5.5V5a.5.5 0 0 0-1 0v.5a.5.5 0 0 1-.5.5zm-5.5 9.975V7H3V6h-.5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 0-1 0v.5A1.5 1.5 0 0 0 2.5 7H3v1H1.5a.5.5 0 0 0 0 1H3v1h-.5A1.5 1.5 0 0 0 1 11.5v.5a.5.5 0 1 0 1 0v-.5a.5.5 0 0 1 .5-.5H3a5 5 0 0 0 4.5 4.975'/%3E%3C/svg%3E");
+}
+
+#requestFeature::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2314fba7' class='bi bi-lightbulb-fill' viewBox='0 0 16 16'%3E%3Cpath d='M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13h-5a.5.5 0 0 1-.46-.302l-.761-1.77a2 2 0 0 0-.453-.618A5.98 5.98 0 0 1 2 6m3 8.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1l-.224.447a1 1 0 0 1-.894.553H6.618a1 1 0 0 1-.894-.553L5.5 15a.5.5 0 0 1-.5-.5'/%3E%3C/svg%3E");
+}
+
+#uploadLeftBtn::before {
+    content: '';
+    position: absolute;
+    left: 0.7rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2314fba7' viewBox='0 0 16 16'%3E%3Cpath d='M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2m2.354 5.146a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0z'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: left center;
+}
+
+#uploadLeftBtn::before {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+
+/* Button Colors */
+.btn-primary {
+    background: rgba(55, 184, 251, 0.15);
+    color: #37b8fb;
+    border: 1px solid rgba(55, 184, 251, 0.2);
+}
+
+.btn-danger {
+    background: rgba(236, 18, 78, 0.15);
+    color: #ec124e;
+    border: 1px solid rgba(236, 18, 78, 0.2);
+}
+
+.btn-success {
+    background: rgba(20, 251, 167, 0.15);
+    color: #14fba7;
+    border: 1px solid rgba(20, 251, 167, 0.2);
+}
+
+/* Active States */
+#toggleDrawingMode.drawing-active {
+    background: rgba(236, 18, 78, 0.15);
+    color: #ec124e;
+    border: 1px solid rgba(236, 18, 78, 0.2);
+}
+
+#toggleDrawingMode.drawing-active::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' fill='%23ec124e'%3E%3Cpath d='M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z'/%3E%3C/svg%3E");
+}
+
+/* Subtle pulse animation for active drawing mode */
+@keyframes subtle-pulse {
+    0% { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), inset 0 2px 2px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.1); }
+    50% { box-shadow: 0 4px 10px rgba(236, 18, 78, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.1); }
+    100% { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), inset 0 2px 2px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.1); }
+}
+
+#toggleDrawingMode.drawing-active {
+    animation: subtle-pulse 3s infinite;
+}
+
+/* Style for bezier control handles */
+.konva-circle[fill="rgba(255,0,0,0.7)"] {
+    cursor: nwse-resize;
+}
+
+.konva-circle[fill="rgba(0,0,255,0.7)"] {
+    cursor: nesw-resize;
+}
+
+/* Style for midpoint control handles */
+.konva-circle[fill="#ff0"] {
+    cursor: move;
+}
+
+
+
+
+
+/*================ SHORTCUTS =================*/
+.shortcut-hint {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+    transition: opacity 0.3s;
+}
+
+.button-with-shortcut {
+    position: relative;
+}
+
+.button-with-shortcut::after {
+    content: attr(data-shortcut);
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #007bff;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+
+
+
+/*================ DRAG AND DROP =================*/
+.drag-drop-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    pointer-events: none;
+    justify-content: center;
+    align-items: center;
+    border: 3px dashed #2196F3;
+    border-radius: 16px; /* Add curved edges */
+}
+
+.drag-drop-overlay-content {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 300px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.drag-drop-overlay-content h3 {
+    margin: 0 0 10px 0;
+    color: #2196F3;
+    font-weight: 600;
+}
+
+.drag-drop-overlay-content p {
+    margin: 0;
+    color: #333;
+    font-size: 14px;
+}
+
+.drag-drop-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #2196F3;
+}
+
+.drag-drop-overlay {
+    animation: pulse 2s infinite;
+}
+
+
+
+
+
+#version-display {
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background: rgba(30, 33, 56, 0.7);
+    color: #37b8fb;
+    text-align: center;
+    box-shadow: 
+        4px 4px 10px rgba(0,0,0,0.3),
+        -4px -4px 10px rgba(255,255,255,0.1),
+        inset 0 2px 4px rgba(255,255,255,0.05),
+        inset 0 -2px 4px rgba(0,0,0,0.2);
+    backdrop-filter: blur(5px);
+}
+
+#version-display button {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 8px;
+}

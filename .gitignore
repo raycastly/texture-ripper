@@ -1,0 +1,29 @@
+# Node.js dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+
+# Build output
+/dist/
+/out/
+/release/
+
+# Electron Builder cache
+/node_modules/electron-builder-cache/
+/node_modules/electron-builder-binaries/
+
+# VSCode settings
+.vscode/
+
+# MacOS files
+*.app
