@@ -30,25 +30,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 4. Run Semantic Release using GitHub Action
+      # 4. Run Semantic Release
       - name: Run Semantic Release
         id: semantic-release
-        uses: cycjimmy/semantic-release-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
 
-      # 5. Deploy to GitHub Pages (only if a release happened)
+      # 5. Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
-        if: steps.semantic-release.outputs.nextRelease != ''
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./   # adjust if your static site files are elsewhere
+          publish_dir: ./  # root contains index.html
 
-      # 6. Build Electron App for Windows (only if a release happened)
+      # 6. Build Electron App for Windows
       - name: Build Windows App
-        if: steps.semantic-release.outputs.nextRelease != ''
         run: npm run build
 
-      # 7. Upload Windows installer to GitHub release
+      # 7. Upload Windows build to the GitHub release
       - name: Upload Windows Installer
         if: steps.semantic-release.outputs.nextRelease != ''
         uses: actions/upload-release-asset@v1
@@ -58,7 +58,6 @@ jobs:
           asset_name: Texture-Ripper-Setup.exe
           asset_content_type: application/octet-stream
 
-      # 8. Upload ZIP to GitHub release
       - name: Upload ZIP
         if: steps.semantic-release.outputs.nextRelease != ''
         uses: actions/upload-release-asset@v1
