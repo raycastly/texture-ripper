@@ -79,8 +79,8 @@ jobs:
         if: needs.release-and-pages.outputs.latest_tag != ''
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.release-and-pages.outputs.latest_tag }}
-          asset_path: dist/Texture Ripper Setup.exe
+          upload_url: ${{ github.api_url }}/repos/${{ github.repository }}/releases/tags/${{ needs.release-and-pages.outputs.latest_tag }}
+          asset_path: "dist/Texture Ripper Setup.exe"
           asset_name: Texture-Ripper-Setup.exe
           asset_content_type: application/octet-stream
 
@@ -89,7 +89,7 @@ jobs:
         if: needs.release-and-pages.outputs.latest_tag != ''
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.release-and-pages.outputs.latest_tag }}
-          asset_path: dist/Texture-Ripper.zip
+          upload_url: ${{ github.api_url }}/repos/${{ github.repository }}/releases/tags/${{ needs.release-and-pages.outputs.latest_tag }}
+          asset_path: "dist/Texture-Ripper.zip"
           asset_name: Texture-Ripper.zip
           asset_content_type: application/zip
