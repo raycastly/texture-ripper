@@ -34,8 +34,6 @@ jobs:
       - name: Run Semantic Release
         id: semantic-release
         uses: cycjimmy/semantic-release-action@v2
-        with:
-          extra_args: ""   # you can pass additional CLI args if needed
 
       # 5. Deploy to GitHub Pages (only if a release happened)
       - name: Deploy to GitHub Pages
