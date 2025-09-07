@@ -108,4 +108,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const isTransparent = e.target.checked;
         RightPanelManager.toggleTransparency(stageRight, isTransparent);
     });
+
+    // Update version number
+    fetch('./version.json')
+        .then(r => r.json())
+        .then(data => {
+            const versionText = document.getElementById('version-text');
+            versionText.textContent = `v${data.version}`;
+        });
+        
+    // Copy version to clipboard
+    document.getElementById('copyVersion').addEventListener('click', () => {
+        const version = document.getElementById('version-text').textContent;
+        navigator.clipboard.writeText(version).then(() => {
+            FeedbackManager.show(`Version number copied to clipboard!`);
+        });
+    });
+
+    // Open report issue page
+    document.getElementById('reportIssue').addEventListener('click', () => {
+        window.open('https://github.com/raycastly/texture-ripper/issues/new?template=bug_report.yml', '_blank');
+    });
+
+    // Open request feature page
+    document.getElementById('requestFeature').addEventListener('click', () => {
+        window.open('https://github.com/raycastly/texture-ripper/issues/new?template=feature_request.yml', '_blank');
+    });
 });
