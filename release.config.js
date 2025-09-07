@@ -10,10 +10,21 @@ module.exports = {
         changelogTitle: '# Changelog'
       }
     ],
+    '@semantic-release/npm',
+    [
+      '@semantic-release/exec',
+      {
+        prepareCmd: 'node -e "const fs=require(\'fs\');const pkg=require(\'./package.json\');fs.writeFileSync(\'version.json\', JSON.stringify({version:pkg.version},null,2))"'
+      }
+    ],
     [
       '@semantic-release/git',
       {
-        assets: ['CHANGELOG.md', 'version.json', 'package.json'],
+        assets: [
+          'CHANGELOG.md',
+          'version.json',
+          'package.json'
+        ],
         message: 'chore(release): ${nextRelease.version} [skip ci]'
       }
     ],
