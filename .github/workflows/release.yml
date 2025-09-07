@@ -1,9 +1,7 @@
-name: Release and Build
+name: Release
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 on:
   push:
@@ -14,34 +12,22 @@ jobs:
   release:
     runs-on: windows-latest
     steps:
-      # 1. Checkout
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # 2. Setup Node
-      - uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: '20'
+          cache: 'npm'
 
-      # 3. Install dependencies
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-      # 4. Build Windows app
-      - name: Build Windows app
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build:win
-
-      # 5. Run Semantic Release
       - name: Run Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
-
-      # 6. Deploy GitHub Pages
-      - name: Deploy GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./

@@ -17,6 +17,12 @@ module.exports = {
       }
     ],
     [
+      '@semantic-release/exec',
+      {
+        prepareCmd: 'npm run build:win'
+      }
+    ],
+    [
       '@semantic-release/git',
       {
         assets: [
