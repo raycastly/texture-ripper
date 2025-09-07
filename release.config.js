@@ -1,22 +1,36 @@
 module.exports = {
   branches: ['master'],
   plugins: [
-    '@semantic-release/commit-analyzer',         // step 1: figure out version bump
-    '@semantic-release/release-notes-generator', // step 2: generate notes
+    '@semantic-release/commit-analyzer',
+    '@semantic-release/release-notes-generator',
     [
-      '@semantic-release/changelog',             // step 3: write notes into CHANGELOG.md
+      '@semantic-release/changelog',
       {
         changelogFile: 'CHANGELOG.md',
         changelogTitle: '# Changelog'
       }
     ],
     [
-      '@semantic-release/git',                   // step 4: commit changelog + version.json
+      '@semantic-release/git',
       {
         assets: ['CHANGELOG.md', 'version.json', 'package.json'],
         message: 'chore(release): ${nextRelease.version} [skip ci]'
       }
     ],
-    '@semantic-release/github'                   // step 5: create GitHub release with notes
+    [
+      '@semantic-release/github',
+      {
+        assets: [
+          {
+            path: 'dist/Texture Ripper Setup.exe',
+            label: 'Windows Installer (Texture-Ripper-Setup.exe)'
+          },
+          {
+            path: 'dist/Texture-Ripper.zip',
+            label: 'Windows Portable (Texture-Ripper.zip)'
+          }
+        ]
+      }
+    ]
   ]
 };
