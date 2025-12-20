@@ -153,6 +153,29 @@ const RightPanelManager = {
             }
         });
 
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                deleteSelectedObjects();
+            }
+        });
+
+        function deleteSelectedObjects() {
+            const selectedTextures = tr.nodes();
+            if (selectedTextures.length > 0) {
+                selectedTextures.forEach(texture => {
+                    texture.destroy();
+                    groupId = Object.keys(tiedRects).find(key => tiedRects[key] === texture);
+                    console.log('groupId ' + groupId);
+                    window.rightPanel.removeTexture(groupId); // kinda weird
+                    window.leftPanel.deleteGroup(groupId);
+                });
+
+                tr.nodes([]); // clear transformer
+                bgLayer.draw();
+            }
+        }
+
+
         function showContextMenu(x, y, target) {
             // Remove existing menu
             const existingMenu = document.getElementById('konva-context-menu');

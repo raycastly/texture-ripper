@@ -374,7 +374,15 @@ const LeftPanelManager = {
                 tr.nodes([]);
                 bgLayer.batchDraw();
                 polygonLayer.batchDraw();
-            }
+            },
+            deleteGroup: (groupId) => {
+                polygonLayer.find('.group').forEach(async group => {
+                    if (group._id == groupId) {
+                        group.destroy();
+                        polygonLayer.draw();
+                    }
+                });
+            },
         };
 
         return stage;
