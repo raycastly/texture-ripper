@@ -2,7 +2,6 @@
 const RightPanelManager = {
     // Initialize the right panel
     init: (containerId) => {
-        console.log("right panel");
         const container = document.getElementById(containerId);
         const stagePixelWidth = parseInt(document.getElementById('rightWidth').value);
         const stagePixelHeight = parseInt(document.getElementById('rightHeight').value);
