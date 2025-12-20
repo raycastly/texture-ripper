@@ -2,6 +2,7 @@
 const RightPanelManager = {
     // Initialize the right panel
     init: (containerId) => {
+        console.log("right panel");
         const container = document.getElementById(containerId);
         const stagePixelWidth = parseInt(document.getElementById('rightWidth').value);
         const stagePixelHeight = parseInt(document.getElementById('rightHeight').value);
@@ -10,7 +11,7 @@ const RightPanelManager = {
         const bgLayer = new Konva.Layer();
         const uiLayer = new Konva.Layer();
         const imageLayer = new Konva.Layer({ name: 'imageLayer' });
-
+;
         const stage = new Konva.Stage({
             container: containerId,
             width: container.clientWidth,
@@ -96,6 +97,13 @@ const RightPanelManager = {
 
         // Click selection
         stage.on('click tap', (e) => {
+            // Unselect any rectangles in the left window
+            if (window.leftPanel) {
+                window.leftPanel.unselectAll();
+            }
+
+            tr.nodes([]); // clear transformer
+
             // Don't process clicks if we were selecting with rectangle
             if (selectionRectangle.visible() && selectionRectangle.width() > 5 && selectionRectangle.height() > 5) {
                 selectionRectangle.visible(false);

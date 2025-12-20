@@ -358,6 +358,25 @@ const LeftPanelManager = {
         PanZoomManager.initPanning(stage);
         PanZoomManager.initZooming(stage);
 
+        // Creating API for unselecting all elements
+        window.leftPanel = {
+            unselectAll: () => {
+                // Reset previous selection visual for polygons
+                if (selectedGroup) {
+                    const polygon = selectedGroup.findOne('.polygon');
+                    if (polygon) {
+                        polygon.stroke(CONFIG.POLYGON.STROKE);
+                        polygon.strokeWidth(CONFIG.POLYGON.STROKE_WIDTH);
+                    }
+                }
+                selectedGroup = null;
+
+                tr.nodes([]);
+                bgLayer.batchDraw();
+                polygonLayer.batchDraw();
+            }
+        };
+
         return stage;
     }
 };
