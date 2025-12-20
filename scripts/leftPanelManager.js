@@ -3,6 +3,7 @@ const LeftPanelManager = {
     // Initialize the left panel
     init: (containerId, addBtnId, deleteBtnId, uploadId) => {
         const dirtyPolygons = new Set();
+        const polygonGroups = {};
 
         const container = document.getElementById(containerId);
         const stage = new Konva.Stage({ 
@@ -215,6 +216,7 @@ const LeftPanelManager = {
         document.getElementById(addBtnId).addEventListener('click', () => {
             const newGroup = PolygonManager.createPolygonGroup(stage, polygonLayer, null, dirtyPolygons);
             setSelectedPolygon(newGroup);
+            polygonGroups[newGroup._id] = newGroup;
         });
 
         // Delete button
@@ -265,6 +267,9 @@ const LeftPanelManager = {
             // Case 1: polygon selected
             if (selectedGroup) {
                 if (window.rightPanel) window.rightPanel.removeTexture(selectedGroup._id);
+                const group = polygonGroups[selectedGroup._id];
+                if (group)
+                    delete polygonGroups[groupId];
                 selectedGroup.destroy();
                 selectedGroup = null;
                 polygonLayer.draw();
@@ -358,7 +363,7 @@ const LeftPanelManager = {
         PanZoomManager.initPanning(stage);
         PanZoomManager.initZooming(stage);
 
-        // Creating API for unselecting all elements
+        // Creating API for left panel for use by right panel
         window.leftPanel = {
             unselectAll: () => {
                 // Reset previous selection visual for polygons
@@ -376,12 +381,12 @@ const LeftPanelManager = {
                 polygonLayer.batchDraw();
             },
             deleteGroup: (groupId) => {
-                polygonLayer.find('.group').forEach(async group => {
-                    if (group._id == groupId) {
-                        group.destroy();
-                        polygonLayer.draw();
-                    }
-                });
+                const group = polygonGroups[groupId];
+                if (group) {
+                    delete polygonGroups[groupId];
+                    group.destroy();
+                    polygonLayer.draw();
+                }
             },
         };
 

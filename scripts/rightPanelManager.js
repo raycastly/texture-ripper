@@ -165,7 +165,6 @@ const RightPanelManager = {
                 selectedTextures.forEach(texture => {
                     texture.destroy();
                     groupId = Object.keys(tiedRects).find(key => tiedRects[key] === texture);
-                    console.log('groupId ' + groupId);
                     window.rightPanel.removeTexture(groupId); // kinda weird
                     window.leftPanel.deleteGroup(groupId);
                 });
