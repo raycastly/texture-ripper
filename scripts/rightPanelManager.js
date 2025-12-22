@@ -51,7 +51,7 @@ const RightPanelManager = {
 
         // Transformer for selection
         const tr = new Konva.Transformer({
-            keepRatio: false,
+            keepRatio: true,
             rotateEnabled: true,
             rotationSnaps: [0, 90, 180, 270],
             rotationSnapTolerance: 5,
