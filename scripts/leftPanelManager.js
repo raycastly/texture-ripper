@@ -309,6 +309,10 @@ const LeftPanelManager = {
         stage.on('click', (e) => {
             // Don't process clicks if we're in drawing mode
             if (drawingMode) return;
+
+            // Unselect everything in the right panel
+            if (window.rightPanel)
+                window.rightPanel.unselectAll();
             
             // Reset previous selection visual for polygons
             if (selectedGroup) {

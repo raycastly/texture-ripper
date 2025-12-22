@@ -435,6 +435,11 @@ const RightPanelManager = {
                     stage.bgRect.fill(CONFIG.BACKGROUND.FILL);
                     stage.bgLayer.draw();
                 }
+            },
+
+            unselectAll: () => {
+                tr.nodes([]);
+                console.log("Right panel unselect all");
             }
         };
 
