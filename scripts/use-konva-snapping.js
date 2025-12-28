@@ -158,9 +158,9 @@ const useKonvaSnapping = (params) => {
         const { snapRange } = defaultParams;
 
         let { horizontal, vertical } = getSnappingPoints(e);
-        if(!e.currentTarget.keepRatio() || (e.currentTarget.keepRatio() && !!!oppositeAnchors[e.currentTarget._movingAnchorName])){
+        const keepRatio = !e.evt.shiftKey ? e.currentTarget.keepRatio() : ! e.currentTarget.keepRatio();
+        if(!keepRatio || (keepRatio && !!!oppositeAnchors[e.currentTarget._movingAnchorName])){
             e.currentTarget.anchorDragBoundFunc((oldAbsPos, newAbsPos, event) => {
-                //console.log(e.target)
        
                 Layer.find(".guid-line").forEach((line) => line.destroy());
                         let bounds = { x: newAbsPos.x, y: newAbsPos.y };

@@ -8,7 +8,8 @@ const PolygonManager = {
             _id: Utils.generateId()
         });
 
-        if (group && group._id) dirtyPolygons.add(group._id);
+        if (group && group._id)
+            dirtyPolygons.add(group._id);
         
         // Get vertices - either from provided points or create default rectangle
         let vertices;
