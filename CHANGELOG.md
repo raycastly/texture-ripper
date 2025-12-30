@@ -1,5 +1,14 @@
 # Changelog
 
+# [1.6.0](https://github.com/raycastly/texture-ripper/compare/v1.5.2...v1.6.0) (2025-12-30)
+
+
+### Features
+
+* added logic to detect shift to invert keep aspect ratio for use-konva-snapping.js ([70ba28e](https://github.com/raycastly/texture-ripper/commit/70ba28e92553322a8526d9b261cff9c2ac9eb184))
+* by default the corner scaling will keep aspect ratio ([2ff9442](https://github.com/raycastly/texture-ripper/commit/2ff94425a6c32ed0c4c7f2188c0d50a082922896))
+* upgrade Konva version in CDN so that shift works to invert aspect when scaling transformers ([8f5467a](https://github.com/raycastly/texture-ripper/commit/8f5467a8df8abfb5432b2569604d0c856d6c8ab0))
+
 ## [1.5.2](https://github.com/raycastly/texture-ripper/compare/v1.5.1...v1.5.2) (2025-09-07)
 
 
