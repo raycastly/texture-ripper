@@ -1,0 +1,119 @@
+# Changelog
+
+# [1.6.0](https://github.com/raycastly/texture-ripper/compare/v1.5.2...v1.6.0) (2025-12-30)
+
+
+### Features
+
+* added logic to detect shift to invert keep aspect ratio for use-konva-snapping.js ([70ba28e](https://github.com/raycastly/texture-ripper/commit/70ba28e92553322a8526d9b261cff9c2ac9eb184))
+* by default the corner scaling will keep aspect ratio ([2ff9442](https://github.com/raycastly/texture-ripper/commit/2ff94425a6c32ed0c4c7f2188c0d50a082922896))
+* upgrade Konva version in CDN so that shift works to invert aspect when scaling transformers ([8f5467a](https://github.com/raycastly/texture-ripper/commit/8f5467a8df8abfb5432b2569604d0c856d6c8ab0))
+
+## [1.5.2](https://github.com/raycastly/texture-ripper/compare/v1.5.1...v1.5.2) (2025-09-07)
+
+
+### Bug Fixes
+
+* updated the workflow to release github pages as well (final workflow update I swear) ([99ad97f](https://github.com/raycastly/texture-ripper/commit/99ad97f553d6dda2903fc5218ff560fcb50db2ea))
+
+## [1.5.1](https://github.com/raycastly/texture-ripper/compare/v1.5.0...v1.5.1) (2025-09-07)
+
+
+### Bug Fixes
+
+* workflow fix, version was always one version behind ([79699ac](https://github.com/raycastly/texture-ripper/commit/79699ac65c0a59f968108da8a28e79a70b73335b))
+
+# [1.5.0](https://github.com/raycastly/texture-ripper/compare/v1.4.2...v1.5.0) (2025-09-07)
+
+
+### Features
+
+* add download button for desktop app in browser version ([936d206](https://github.com/raycastly/texture-ripper/commit/936d2060e5403e21989b4811ead29d6350aac7a9))
+
+## [1.4.2](https://github.com/raycastly/texture-ripper/compare/v1.4.1...v1.4.2) (2025-09-07)
+
+
+### Bug Fixes
+
+* made the report issue and propose feature buttons open up links in browser inside electron ([c29aa50](https://github.com/raycastly/texture-ripper/commit/c29aa50e5d02f6c7e334fc83cd4364329d9ea7e5))
+* update UI aligned to right side of toolbar ([320ea05](https://github.com/raycastly/texture-ripper/commit/320ea05da8b04bf5948d660a5fcac5bc9b1bc2e7))
+
+## [1.4.1](https://github.com/raycastly/texture-ripper/compare/v1.4.0...v1.4.1) (2025-09-07)
+
+
+### Bug Fixes
+
+* added restart to update indicator ([f0013d8](https://github.com/raycastly/texture-ripper/commit/f0013d88d818a7f4dca551859e2c98e4e50f5eee))
+* fixed the auto update UI ([fb49b4f](https://github.com/raycastly/texture-ripper/commit/fb49b4f25bc79f8989f313b0ad72272a4a0d889e))
+
+# [1.4.0](https://github.com/raycastly/texture-ripper/compare/v1.3.4...v1.4.0) (2025-09-07)
+
+
+### Features
+
+* auto update feature in .exe version ([1c9ca3c](https://github.com/raycastly/texture-ripper/commit/1c9ca3c9d74179d8e6ed1650100260caab255640))
+
+## [1.3.4](https://github.com/raycastly/texture-ripper/compare/v1.3.3...v1.3.4) (2025-09-07)
+
+
+### Bug Fixes
+
+* version number not updating again ([4ce81df](https://github.com/raycastly/texture-ripper/commit/4ce81df937bb4bbfaf3099360462ad31a11e2543))
+
+## [1.3.3](https://github.com/raycastly/texture-ripper/compare/v1.3.2...v1.3.3) (2025-09-07)
+
+
+### Bug Fixes
+
+* the version.json was not updating, added to workflow ([f364a78](https://github.com/raycastly/texture-ripper/commit/f364a788568567eeb036f3dd05e0816b6ed3d1be))
+
+## [1.3.2](https://github.com/raycastly/texture-ripper/compare/v1.3.1...v1.3.2) (2025-09-07)
+
+
+### Bug Fixes
+
+* added prebuild script, removed unnecessary packages ([db0dacd](https://github.com/raycastly/texture-ripper/commit/db0dacd89ea86fa06010991f2dcf4b8a2b1c688f))
+* fixed version numbers not updating ([eca43b6](https://github.com/raycastly/texture-ripper/commit/eca43b63dbaadb244228be017b2aa36e9a9a3e3c))
+* installed @semantic-release/exec ([82c00a2](https://github.com/raycastly/texture-ripper/commit/82c00a246843dc61157dba309b843a0990472eb9))
+
+## [1.3.1](https://github.com/raycastly/texture-ripper/compare/v1.3.0...v1.3.1) (2025-09-07)
+
+
+### Bug Fixes
+
+* added a favicon to the tab ([2bd625c](https://github.com/raycastly/texture-ripper/commit/2bd625c1d44ca793bf44bca76fcc52da8914c34a))
+
+# [1.3.0](https://github.com/raycastly/texture-ripper/compare/v1.2.0...v1.3.0) (2025-09-07)
+
+
+### Bug Fixes
+
+* update workflow, removed the conditions ([0cc061c](https://github.com/raycastly/texture-ripper/commit/0cc061ce6e1345dd3f2be41b07b1f525c3a375bf))
+
+
+### Features
+
+* update workflow and release config to trigger build ([69c53db](https://github.com/raycastly/texture-ripper/commit/69c53db7ef83e1c8c5a612de41cca9b4c1dd2ba8))
+
+# [1.2.0](https://github.com/raycastly/texture-ripper/compare/v1.1.0...v1.2.0) (2025-09-07)
+
+
+### Features
+
+* added request feature, report issue buttons and version number information ([614a049](https://github.com/raycastly/texture-ripper/commit/614a049aa90066684949834456537be2f32f5dc5))
+
+# [1.1.0](https://github.com/raycastly/texture-ripper/compare/v1.0.0...v1.1.0) (2025-09-07)
+
+
+### Features
+
+* add auto-update with electron-updater ([a026031](https://github.com/raycastly/texture-ripper/commit/a0260314f8bcae19e98db739c57631a430121714))
+
+# 1.0.0 (2025-09-07)
+
+
+### Bug Fixes
+
+* changed node version from 18 to 20 ([44f4a49](https://github.com/raycastly/texture-ripper/commit/44f4a497438581d35c55f0a4a96d6b2454fcfec5))
+* changed the branch from main to master in configurations ([f000568](https://github.com/raycastly/texture-ripper/commit/f000568434ba0669f1538c10e6d76d37e113fc16))
+* right panel version toolbar UI fixed ([70ae2b1](https://github.com/raycastly/texture-ripper/commit/70ae2b15d0135cb2044f97bd28d4e0c2a7aed8f9))

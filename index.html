@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raycastly Texture Ripper</title>
+    <link rel="icon" type="image/x-icon" href="./assets/icon.ico">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.2/dist/slate/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="./css/better-ui.css">
+</head>
+<body>
+    <div class="split">
+        <!-- Left Panel -->
+        <div class="panel">
+            <div class="toolbar d-flex gap-2 align-items-center">
+            	<label id="uploadLeftBtn" class="btn btn-sm btn-success button-with-shortcut" data-shortcut="Q" for="bgUploadLeft">
+                  Upload source image(s)
+                </label>
+                <input type="file" id="bgUploadLeft" accept="image/*" style="display:none;">
+
+                <button id="lockImagesLeft" class="btn btn-sm btn-success button-with-shortcut" data-shortcut="W">Lock Images</button>
+                <div class="instruction">
+                    Tip: You can also paste images from clipboard (Ctrl+V)
+                </div>
+            </div>
+            <div class="canvas-container" id="canvasLeftContainer"></div>
+            <div class="toolbar d-flex gap-2 align-items-center">
+                <button id="toggleDrawingMode" class="btn btn-sm btn-primary button-with-shortcut" data-shortcut="A">Drawing Mode</button>
+                <button id="addRectLeft" class="btn btn-sm btn-primary button-with-shortcut" data-shortcut="S">Add Rectangle</button>
+                <button id="deleteObjLeft" class="btn btn-sm btn-danger button-with-shortcut" data-shortcut="X">Delete Selected</button>
+                <div style="flex: 1"></div>
+                <button id="extractAllLeft" class="btn btn-sm btn-success button-with-shortcut" data-shortcut="D">Extract All</button>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="panel">
+            <div class="toolbar d-flex gap-2 align-items-center">
+                <label>Width: <input type="number" id="rightWidth" value="512" style="width:80px;"></label>
+                <label>Height: <input type="number" id="rightHeight" value="512" style="width:80px;"></label>
+                <button id="resizeRight" class="btn btn-sm btn-primary">Set Size</button>
+                <label class="ms-2">
+				  <input type="checkbox" id="exportTransparent" /> Transparent Background
+				</label>
+                <div style="flex: 1"></div>
+                <button id="autoPack" class="btn btn-sm btn-info button-with-shortcut" data-shortcut="P">Auto Pack (WIP)</button>
+                <button id="exportRight" class="btn btn-sm btn-success button-with-shortcut" data-shortcut="F">Export Atlas</button>
+            </div>
+            <div class="canvas-container" id="canvasRightContainer"></div>
+
+            <div class="toolbar d-flex gap-2 align-items-center">
+                <button id="copyVersion" class="btn btn-sm btn-dark"><span id="version-text" title="Click to copy version">Loading version...</span></button>
+                <button id="requestFeature" class="btn btn-sm btn-success">Request Feature</button>
+                <button id="reportIssue" class="btn btn-sm btn-danger">Report Issue</button>
+                <div style="flex: 1"></div>
+                <button id="download-desktop" class="btn btn-sm btn-primary" style="display: none;">Download Desktop App</button>
+                <button id="check-updates" class="btn btn-sm btn-dark">Check for Updates</button>
+                <span id="update-status-text" style="margin: 0 10px; font-size: 12px;"></span>
+                <button id="restart-btn" style="display: none;" class="btn btn-sm btn-success">Restart to Update</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  	<script src="https://cdn.jsdelivr.net/npm/konva@10.0.12/konva.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+    
+    <script src="scripts/jquery.min.js"></script>
+    <script src="scripts/use-konva-snapping.js"></script>
+    <script src="scripts/config.js"></script>
+    <script src="scripts/feedbackManager.js"></script>
+    <script src="scripts/shortcutsManager.js"></script>
+    <script src="scripts/utils.js"></script>
+    <script src="scripts/homography.js"></script>
+    <script src="scripts/gridManager.js"></script>
+    <script src="scripts/checkerboardManager.js"></script>
+    <script src="scripts/polygonManager.js"></script>
+    <script src="scripts/panZoomManager.js"></script>
+    <script src="scripts/selectionManager.js"></script>
+    <script src="scripts/dragAndDropManager.js"></script>
+    <script src="scripts/leftPanelManager.js"></script>
+    <script src="scripts/rightPanelManager.js"></script>
+    <script src="scripts/main.js"></script>
+</body>
+</html>
