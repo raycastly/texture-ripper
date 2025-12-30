@@ -10,7 +10,7 @@ const RightPanelManager = {
         const bgLayer = new Konva.Layer();
         const uiLayer = new Konva.Layer();
         const imageLayer = new Konva.Layer({ name: 'imageLayer' });
-
+;
         const stage = new Konva.Stage({
             container: containerId,
             width: container.clientWidth,
@@ -97,6 +97,13 @@ const RightPanelManager = {
 
         // Click selection
         stage.on('click tap', (e) => {
+            // Unselect any rectangles in the left window
+            if (window.leftPanel) {
+                window.leftPanel.unselectAll();
+            }
+
+            tr.nodes([]); // clear transformer
+
             // Don't process clicks if we were selecting with rectangle
             if (selectionRectangle.visible() && selectionRectangle.width() > 5 && selectionRectangle.height() > 5) {
                 selectionRectangle.visible(false);
@@ -145,6 +152,28 @@ const RightPanelManager = {
                 showContextMenu(e.evt.clientX, e.evt.clientY, e.target);
             }
         });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                deleteSelectedObjects();
+            }
+        });
+
+        function deleteSelectedObjects() {
+            const selectedTextures = tr.nodes();
+            if (selectedTextures.length > 0) {
+                selectedTextures.forEach(texture => {
+                    texture.destroy();
+                    groupId = Object.keys(tiedRects).find(key => tiedRects[key] === texture);
+                    window.rightPanel.removeTexture(groupId); // kinda weird
+                    window.leftPanel.deleteGroup(groupId);
+                });
+
+                tr.nodes([]); // clear transformer
+                bgLayer.draw();
+            }
+        }
+
 
         function showContextMenu(x, y, target) {
             // Remove existing menu
@@ -407,6 +436,11 @@ const RightPanelManager = {
                     stage.bgRect.fill(CONFIG.BACKGROUND.FILL);
                     stage.bgLayer.draw();
                 }
+            },
+
+            unselectAll: () => {
+                tr.nodes([]);
+                console.log("Right panel unselect all");
             }
         };
 
