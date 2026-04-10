@@ -25,6 +25,27 @@ const LeftPanelManager = {
         let drawingMode = false;
         let drawingModeHandlers = null;
 
+        let linkRectsToImages = false;
+
+        document.getElementById('linkRectsToImages').addEventListener('change', (e) => {
+            linkRectsToImages = e.target.checked;
+        });
+
+        function getOverlappingGroups(konvaImg) {
+            const imgBox = konvaImg.getClientRect();
+            const groups = [];
+            polygonLayer.find('.group').forEach(group => {
+                const groupBox = group.getClientRect();
+                if (imgBox.x + imgBox.width > groupBox.x &&
+                    imgBox.x < groupBox.x + groupBox.width &&
+                    imgBox.y + imgBox.height > groupBox.y &&
+                    imgBox.y < groupBox.y + groupBox.height) {
+                    groups.push(group);
+                }
+            });
+            return groups;
+        }
+
         // Lock/Unlock Images button
         const lockBtn = document.getElementById('lockImagesLeft');
         lockBtn.addEventListener('click', () => {
@@ -299,6 +320,49 @@ const LeftPanelManager = {
             ]
         });
         uiLayer.add(tr);
+
+        let imgDragStartPos = null;
+        let imgDragLastPos = null;
+        let imgLinkedGroups = [];
+        let imgLinkedGroupStartPositions = [];
+
+        stage.on('dragstart', (e) => {
+            if (!(e.target instanceof Konva.Image)) return;
+            const img = e.target;
+            imgDragStartPos = { x: img.x(), y: img.y() };
+            imgDragLastPos = { x: img.x(), y: img.y() };
+            if (linkRectsToImages) {
+                imgLinkedGroups = getOverlappingGroups(img);
+                imgLinkedGroupStartPositions = imgLinkedGroups.map(g => ({
+                    group: g, x: g.x(), y: g.y()
+                }));
+            } else {
+                imgLinkedGroups = [];
+                imgLinkedGroupStartPositions = [];
+            }
+        });
+
+        stage.on('dragmove', (e) => {
+            if (!(e.target instanceof Konva.Image)) return;
+            if (!linkRectsToImages || imgLinkedGroups.length === 0 || !imgDragLastPos) return;
+            const img = e.target;
+            const dx = img.x() - imgDragLastPos.x;
+            const dy = img.y() - imgDragLastPos.y;
+            imgLinkedGroups.forEach(group => {
+                group.x(group.x() + dx);
+                group.y(group.y() + dy);
+            });
+            imgDragLastPos = { x: img.x(), y: img.y() };
+            polygonLayer.batchDraw();
+        });
+
+        stage.on('dragend', (e) => {
+            if (!(e.target instanceof Konva.Image)) return;
+            imgDragStartPos = null;
+            imgDragLastPos = null;
+            imgLinkedGroups = [];
+            imgLinkedGroupStartPositions = [];
+        });
 
         // Click to select background image or polygon
         stage.on('click', (e) => {
