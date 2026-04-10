@@ -38,6 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
         RightPanelManager.autoPackTextures(stageRight, false);
     });
 
+    document.getElementById('autoPackLeft').addEventListener('click', () => {
+        if (window.leftPanel) window.leftPanel.autoPackImages();
+    });
+
     // Export button
     document.getElementById('exportRight').addEventListener('click', () => {
         const exportWidth = parseInt(document.getElementById('rightWidth').value);
