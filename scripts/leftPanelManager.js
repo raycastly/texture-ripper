@@ -610,7 +610,7 @@ const LeftPanelManager = {
 
             getState: () => {
                 const images = bgImages.map(img => ({
-                    dataURL: SaveManager.imageToDataURL(img),
+                    dataURL: SaveManager.imageToDataURL(img, 'image/jpeg', 0.92),
                     x: img.x(),
                     y: img.y(),
                     width: img.width(),

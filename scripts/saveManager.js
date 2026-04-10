@@ -1,17 +1,17 @@
 // ==================== SAVE/LOAD MANAGER ====================
 const SaveManager = {
-    imageToDataURL(konvaImg) {
+    imageToDataURL(konvaImg, format = 'image/png', quality = 0.92) {
         const canvas = document.createElement('canvas');
         const htmlImg = konvaImg.image();
         canvas.width = htmlImg.naturalWidth || htmlImg.width;
         canvas.height = htmlImg.naturalHeight || htmlImg.height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(htmlImg, 0, 0);
-        return canvas.toDataURL('image/png');
+        return canvas.toDataURL(format, quality);
     },
 
-    save(stageLeft, stageRight) {
-        const state = {
+    _buildState(stageLeft, stageRight) {
+        return {
             version: 1,
             atlas: {
                 width: parseInt(document.getElementById('rightWidth').value),
@@ -21,13 +21,33 @@ const SaveManager = {
             leftPanel: window.leftPanel ? window.leftPanel.getState() : { images: [], polygons: [] },
             rightPanel: window.rightPanel && window.rightPanel.getState ? window.rightPanel.getState() : { textures: [] }
         };
-        const json = JSON.stringify(state);
+    },
+
+    save(stageLeft, stageRight) {
         if (isElectron()) {
             const { ipcRenderer } = require('electron');
-            ipcRenderer.invoke('save-project', json).then(saved => {
-                if (saved) FeedbackManager.show('Project saved!');
+            const fs = require('fs');
+            ipcRenderer.invoke('save-project-dialog').then(filePath => {
+                if (filePath) {
+                    FeedbackManager.showSpinner('Saving project...');
+                    // Defer to let the spinner render before heavy sync work
+                    setTimeout(() => {
+                        try {
+                            const state = this._buildState(stageLeft, stageRight);
+                            const json = JSON.stringify(state);
+                            fs.writeFileSync(filePath, json, 'utf8');
+                            FeedbackManager.hideSpinner();
+                            FeedbackManager.show('Project saved!');
+                        } catch (err) {
+                            FeedbackManager.hideSpinner();
+                            FeedbackManager.show('Failed to save project', { bgColor: 'rgba(180,0,0,0.85)' });
+                            console.error('Save error:', err);
+                        }
+                    }, 50);
+                }
             });
         } else {
+            const json = JSON.stringify(this._buildState(stageLeft, stageRight));
             const blob = new Blob([json], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -39,20 +59,44 @@ const SaveManager = {
 
     load(stageLeft, stageRight) {
         const self = this;
-        function handleData(json) {
-            try { self.deserialize(JSON.parse(json), stageLeft, stageRight); }
-            catch (e) { FeedbackManager.show('Failed to load project'); console.error('Load error:', e); }
-        }
         if (isElectron()) {
             const { ipcRenderer } = require('electron');
-            ipcRenderer.invoke('open-project').then(data => { if (data) handleData(data); });
+            const fs = require('fs');
+            ipcRenderer.invoke('open-project-dialog').then(filePath => {
+                if (filePath) {
+                    FeedbackManager.showSpinner('Loading project...');
+                    setTimeout(() => {
+                        try {
+                            const json = fs.readFileSync(filePath, 'utf8');
+                            self.deserialize(JSON.parse(json), stageLeft, stageRight);
+                            FeedbackManager.hideSpinner();
+                            FeedbackManager.show('Project loaded!');
+                        } catch (e) {
+                            FeedbackManager.hideSpinner();
+                            FeedbackManager.show('Failed to load project', { bgColor: 'rgba(180,0,0,0.85)' });
+                            console.error('Load error:', e);
+                        }
+                    }, 50);
+                }
+            });
         } else {
             const input = document.createElement('input');
             input.type = 'file'; input.accept = '.trp,.json';
             input.onchange = (e) => {
                 const file = e.target.files[0]; if (!file) return;
+                FeedbackManager.showSpinner('Loading project...');
                 const reader = new FileReader();
-                reader.onload = (evt) => handleData(evt.target.result);
+                reader.onload = (evt) => {
+                    try {
+                        self.deserialize(JSON.parse(evt.target.result), stageLeft, stageRight);
+                        FeedbackManager.hideSpinner();
+                        FeedbackManager.show('Project loaded!');
+                    } catch (e) {
+                        FeedbackManager.hideSpinner();
+                        FeedbackManager.show('Failed to load project', { bgColor: 'rgba(180,0,0,0.85)' });
+                        console.error('Load error:', e);
+                    }
+                };
                 reader.readAsText(file);
             };
             input.click();
@@ -69,6 +113,5 @@ const SaveManager = {
         RightPanelManager.toggleTransparency(stageRight, state.atlas.transparent);
         if (window.leftPanel && window.leftPanel.loadState) window.leftPanel.loadState(state.leftPanel);
         if (window.rightPanel && window.rightPanel.loadState) window.rightPanel.loadState(state.rightPanel);
-        FeedbackManager.show('Project loaded!');
     }
 };

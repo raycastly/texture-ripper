@@ -124,22 +124,21 @@ ipcMain.handle('get-app-version', () => {
   return app.getVersion();
 });
 
-ipcMain.handle('save-project', async (event, jsonData) => {
+ipcMain.handle('save-project-dialog', async () => {
   const { filePath } = await dialog.showSaveDialog(mainWindow, {
     title: 'Save Project', defaultPath: 'project.trp',
     filters: [{ name: 'Texture Ripper Project', extensions: ['trp'] }]
   });
-  if (filePath) { fs.writeFileSync(filePath, jsonData, 'utf8'); return true; }
-  return false;
+  return filePath || null;
 });
 
-ipcMain.handle('open-project', async () => {
+ipcMain.handle('open-project-dialog', async () => {
   const { filePaths } = await dialog.showOpenDialog(mainWindow, {
     title: 'Open Project',
     filters: [{ name: 'Texture Ripper Project', extensions: ['trp'] }],
     properties: ['openFile']
   });
-  if (filePaths && filePaths.length > 0) return fs.readFileSync(filePaths[0], 'utf8');
+  if (filePaths && filePaths.length > 0) return filePaths[0];
   return null;
 });
 

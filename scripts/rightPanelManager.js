@@ -524,16 +524,19 @@ const RightPanelManager = {
                 });
                 imageLayer.batchDraw();
 
+                console.log(`Loading ${state.textures ? state.textures.length : 0} textures`);
                 if (state.textures) {
-                    state.textures.forEach(texData => {
+                    state.textures.forEach((texData, i) => {
+                        console.log(`Texture ${i}: groupId=${texData.groupId}, hasDataURL=${!!texData.dataURL}, dataURLLen=${texData.dataURL ? texData.dataURL.length : 0}, w=${texData.width}, h=${texData.height}`);
                         const img = new Image();
                         img.onload = () => {
+                            console.log(`Texture ${i} image loaded: ${img.naturalWidth}x${img.naturalHeight}`);
                             const konvaImg = new Konva.Image({
                                 x: texData.x,
                                 y: texData.y,
                                 image: img,
-                                width: texData.width,
-                                height: texData.height,
+                                width: texData.width || img.naturalWidth,
+                                height: texData.height || img.naturalHeight,
                                 scaleX: texData.scaleX || 1,
                                 scaleY: texData.scaleY || 1,
                                 rotation: texData.rotation || 0,
@@ -547,6 +550,9 @@ const RightPanelManager = {
                             imageLayer.add(konvaImg);
                             tiedRects[texData.groupId] = konvaImg;
                             imageLayer.batchDraw();
+                        };
+                        img.onerror = (err) => {
+                            console.error(`Texture ${i} failed to load:`, err);
                         };
                         img.src = texData.dataURL;
                     });
