@@ -1,5 +1,21 @@
 document.addEventListener('keydown', (e) => {
 
+    // Undo/Redo
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+        if (e.shiftKey) {
+            UndoManager.redo();
+        } else {
+            UndoManager.undo();
+        }
+        e.preventDefault();
+        return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyY') {
+        UndoManager.redo();
+        e.preventDefault();
+        return;
+    }
+
     // Drawing mode toggle
     if (e.code === CONFIG.SHORTCUTS.toggleDrawingMode) {
         document.getElementById('toggleDrawingMode').click();

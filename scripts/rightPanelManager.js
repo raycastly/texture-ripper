@@ -34,7 +34,7 @@ const RightPanelManager = {
             listening: false,
             name: 'bgRect'
         });
-        
+
         bgLayer.add(bgRect);
         stage.bgRect = bgRect;
 
@@ -76,7 +76,56 @@ const RightPanelManager = {
         // Transformer events (for resizing/rotating)
         tr.on('transform', snapping.handleResizing);
         tr.on('transformend', snapping.handleResizeEnd);
-        
+
+        // Transformer undo/redo
+        let trStartState = null;
+        tr.on('transformstart', () => {
+            const nodes = tr.nodes();
+            trStartState = nodes.map(node => ({
+                node, x: node.x(), y: node.y(),
+                scaleX: node.scaleX(), scaleY: node.scaleY(),
+                rotation: node.rotation(),
+                width: node.width(), height: node.height(),
+                offsetX: node.offsetX(), offsetY: node.offsetY()
+            }));
+        });
+        tr.on('transformend', () => {
+            if (!trStartState) return;
+            const beforeStates = trStartState;
+            const afterStates = beforeStates.map(s => ({
+                node: s.node, x: s.node.x(), y: s.node.y(),
+                scaleX: s.node.scaleX(), scaleY: s.node.scaleY(),
+                rotation: s.node.rotation(),
+                width: s.node.width(), height: s.node.height(),
+                offsetX: s.node.offsetX(), offsetY: s.node.offsetY()
+            }));
+            trStartState = null;
+            UndoManager.push({
+                undo: () => {
+                    beforeStates.forEach(s => {
+                        s.node.position({ x: s.x, y: s.y });
+                        s.node.scale({ x: s.scaleX, y: s.scaleY });
+                        s.node.rotation(s.rotation);
+                        s.node.size({ width: s.width, height: s.height });
+                        s.node.offset({ x: s.offsetX, y: s.offsetY });
+                    });
+                    tr.forceUpdate();
+                    stage.batchDraw();
+                },
+                redo: () => {
+                    afterStates.forEach(s => {
+                        s.node.position({ x: s.x, y: s.y });
+                        s.node.scale({ x: s.scaleX, y: s.scaleY });
+                        s.node.rotation(s.rotation);
+                        s.node.size({ width: s.width, height: s.height });
+                        s.node.offset({ x: s.offsetX, y: s.offsetY });
+                    });
+                    tr.forceUpdate();
+                    stage.batchDraw();
+                }
+            });
+        });
+
         uiLayer.add(tr);
 
         // Selection rectangle
@@ -85,7 +134,7 @@ const RightPanelManager = {
             visible: false,
             listening: false // don't interfere with other mouse events
         });
-        
+
         uiLayer.add(selectionRectangle);
 
         // Initialize tiedRects object
@@ -198,23 +247,58 @@ const RightPanelManager = {
 
             // Flip X
             menu.appendChild(createMenuItem('Flip X', () => {
+                const before = {
+                    x: target.x(), offsetX: target.offsetX(), scaleX: target.scaleX()
+                };
                 if (target.offsetX() !== target.width() / 2) {
-                    // Move node to keep center position consistent
                     target.offsetX(target.width() / 2);
                     target.x(target.x() + target.width() / 2);
                 }
                 target.scaleX(-target.scaleX());
                 target.getLayer().batchDraw();
+                const after = {
+                    x: target.x(), offsetX: target.offsetX(), scaleX: target.scaleX()
+                };
+                UndoManager.push({
+                    undo: () => {
+                        target.x(before.x); target.offsetX(before.offsetX);
+                        target.scaleX(before.scaleX);
+                        target.getLayer().batchDraw();
+                    },
+                    redo: () => {
+                        target.x(after.x); target.offsetX(after.offsetX);
+                        target.scaleX(after.scaleX);
+                        target.getLayer().batchDraw();
+                    }
+                });
             }));
 
             // Flip Y
             menu.appendChild(createMenuItem('Flip Y', () => {
+                const before = {
+                    y: target.y(), offsetY: target.offsetY(), scaleY: target.scaleY()
+                };
                 if (target.offsetY() !== target.height() / 2) {
                     target.offsetY(target.height() / 2);
                     target.y(target.y() + target.height() / 2);
                 }
                 target.scaleY(-target.scaleY());
                 target.getLayer().batchDraw();
+                const after = {
+                    y: target.y(), offsetY: target.offsetY(), scaleY: target.scaleY()
+                };
+                UndoManager.push({
+                    undo: () => {
+                        target.y(before.y); target.offsetY(before.offsetY);
+                        target.scaleY(before.scaleY);
+                        target.getLayer().batchDraw();
+                    },
+                    redo: () => {
+                        target.y(after.y); target.offsetY(after.offsetY);
+                        target.scaleY(after.scaleY);
+                        target.getLayer().batchDraw();
+                    }
+                });
             }));
 
             document.body.appendChild(menu);
@@ -230,50 +314,50 @@ const RightPanelManager = {
         async function copyTexture(texture) {
             // Get the absolute transformation matrix
             const transform = texture.getAbsoluteTransform().copy();
-            
+
             // Get the bounding box of the transformed texture
             const rect = texture.getClientRect();
             const width = Math.ceil(rect.width);
             const height = Math.ceil(rect.height);
-            
+
             // Create a temporary canvas
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = width;
             tempCanvas.height = height;
             const ctx = tempCanvas.getContext('2d');
-            
+
             // Apply the inverse translation to position the texture correctly
             ctx.translate(-rect.x, -rect.y);
-            
+
             // Apply the Konva transformation matrix
             const matrix = transform.getMatrix();
             ctx.transform(
-                matrix[0], matrix[1], 
-                matrix[2], matrix[3], 
+                matrix[0], matrix[1],
+                matrix[2], matrix[3],
                 matrix[4], matrix[5]
             );
-            
+
             // Draw the original image with proper dimensions
             ctx.drawImage(
-                texture.image(), 
-                0, 0, 
+                texture.image(),
+                0, 0,
                 texture.width(), texture.height()
             );
-            
+
             try {
                 // Get the image data from the canvas
                 const imageData = ctx.getImageData(0, 0, width, height);
-                
+
                 // Create a new canvas with just the relevant pixels (remove transparent padding)
                 const contentRect = getContentBoundingBox(imageData);
-                
+
                 if (contentRect.width > 0 && contentRect.height > 0) {
                     // Create final canvas with only the content
                     const finalCanvas = document.createElement('canvas');
                     finalCanvas.width = contentRect.width;
                     finalCanvas.height = contentRect.height;
                     const finalCtx = finalCanvas.getContext('2d');
-                    
+
                     // Copy only the relevant pixels
                     finalCtx.putImageData(
                         imageData,
@@ -281,7 +365,7 @@ const RightPanelManager = {
                         contentRect.x, contentRect.y,
                         contentRect.width, contentRect.height
                     );
-                    
+
                     // Convert to blob and copy to clipboard
                     const blob = await new Promise(resolve => finalCanvas.toBlob(resolve, 'image/png'));
                     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
@@ -300,12 +384,12 @@ const RightPanelManager = {
             const data = imageData.data;
             const width = imageData.width;
             const height = imageData.height;
-            
+
             let minX = width;
             let minY = height;
             let maxX = 0;
             let maxY = 0;
-            
+
             // Find the bounds of non-transparent pixels
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
@@ -318,7 +402,7 @@ const RightPanelManager = {
                     }
                 }
             }
-            
+
             // Return the bounding box (add 1 to max to include the edge pixel)
             return {
                 x: minX,
@@ -350,15 +434,40 @@ const RightPanelManager = {
 
                         konvaImg.on('dragmove', snapping.handleDragging);
                         konvaImg.on('dragend', snapping.handleDragEnd);
-                        
+
+                        // Drag undo for extracted textures
+                        let dragStartPos = null;
+                        konvaImg.on('dragstart', () => {
+                            dragStartPos = { x: konvaImg.x(), y: konvaImg.y() };
+                        });
+                        konvaImg.on('dragend', () => {
+                            if (!dragStartPos) return;
+                            const start = { ...dragStartPos };
+                            const end = { x: konvaImg.x(), y: konvaImg.y() };
+                            dragStartPos = null;
+                            if (start.x === end.x && start.y === end.y) return;
+                            UndoManager.push({
+                                undo: () => {
+                                    konvaImg.position(start);
+                                    tr.forceUpdate();
+                                    stage.batchDraw();
+                                },
+                                redo: () => {
+                                    konvaImg.position(end);
+                                    tr.forceUpdate();
+                                    stage.batchDraw();
+                                }
+                            });
+                        });
+
                         imageLayer.add(konvaImg);
                         tiedRects[groupId] = konvaImg;
                     }
                 };
-                
+
                 img.src = textureData;
             },
-            
+
             removeTexture: (groupId) => {
                 if (tiedRects[groupId]) {
                     tiedRects[groupId].destroy();
@@ -367,23 +476,42 @@ const RightPanelManager = {
                 }
             },
 
+            detachTexture: (groupId) => {
+                const node = tiedRects[groupId];
+                if (node) {
+                    node.remove();
+                    delete tiedRects[groupId];
+                    imageLayer.draw();
+                    return node;
+                }
+                return null;
+            },
+
+            restoreTexture: (groupId, node) => {
+                if (node) {
+                    imageLayer.add(node);
+                    tiedRects[groupId] = node;
+                    imageLayer.draw();
+                }
+            },
+
             updateBackground: () => {
                 const width = parseInt(document.getElementById('rightWidth').value);
                 const height = parseInt(document.getElementById('rightHeight').value);
-                
+
                 if (stage.isTransparentBackground) {
                     const checkerboardPattern = CheckerboardManager.createCheckerboard(
-                        width, 
-                        height, 
+                        width,
+                        height,
                         CONFIG.CHECKERBOARD.CELL_SIZE
                     );
-                    
+
                     // Create a new image and wait for it to load
                     const checkerboardImg = new Image();
                     checkerboardImg.onload = () => {
                         // Remove old background
                         stage.bgRect.destroy();
-                        
+
                         // Create new checkerboard background
                         const newBgRect = new Konva.Image({
                             x: 0,
@@ -394,7 +522,7 @@ const RightPanelManager = {
                             listening: false,
                             name: 'bgRect'
                         });
-                        
+
                         stage.bgLayer.add(newBgRect);
                         stage.bgRect = newBgRect;
                         stage.bgLayer.draw();
@@ -416,30 +544,30 @@ const RightPanelManager = {
     // Toggle between solid color and checkerboard background
     toggleTransparency: (stage, isTransparent) => {
         stage.isTransparentBackground = isTransparent;
-        
+
         // Use the stored reference to bgLayer
         const bgLayer = stage.bgLayer;
         if (!bgLayer) {
             console.error('Background layer not found');
             return;
         }
-        
+
         const width = stage.bgRect.width();
         const height = stage.bgRect.height();
-        
+
         if (isTransparent) {
             const checkerboardPattern = CheckerboardManager.createCheckerboard(
-                width, 
-                height, 
+                width,
+                height,
                 CONFIG.CHECKERBOARD.CELL_SIZE
             );
-            
+
             // Create a new image and wait for it to load
             const checkerboardImg = new Image();
             checkerboardImg.onload = () => {
                 // Remove old background
                 const oldBgRect = stage.bgRect;
-                
+
                 // Create new checkerboard background
                 const newBgRect = new Konva.Image({
                     x: 0,
@@ -450,7 +578,7 @@ const RightPanelManager = {
                     listening: false,
                     name: 'bgRect'
                 });
-                
+
                 bgLayer.add(newBgRect);
                 stage.bgRect = newBgRect;
                 oldBgRect.destroy();
@@ -460,7 +588,7 @@ const RightPanelManager = {
         } else {
             // Switch back to solid color
             const oldBgRect = stage.bgRect;
-            
+
             const newBgRect = new Konva.Rect({
                 x: 0,
                 y: 0,
@@ -470,7 +598,7 @@ const RightPanelManager = {
                 listening: false,
                 name: 'bgRect'
             });
-            
+
             bgLayer.add(newBgRect);
             stage.bgRect = newBgRect;
             oldBgRect.destroy();
@@ -485,6 +613,14 @@ const RightPanelManager = {
         const containerHeight = bgRect.height();
         const textures = Object.values(tiedRects);
         if (textures.length === 0) return { packed: 0, skipped: 0 };
+
+        // Snapshot before state for undo
+        const beforeState = textures.map(t => ({
+            texture: t,
+            x: t.x(), y: t.y(),
+            scaleX: t.scaleX(), scaleY: t.scaleY(),
+            rotation: t.rotation()
+        }));
 
         const getDims = (texture, rotation = 0, scaleFactor = 1) => {
             const scaleX = (texture.scaleX() || 1) * scaleFactor;
@@ -514,7 +650,7 @@ const RightPanelManager = {
 
             for (let rot of rotations) {
                 let { width, height } = getDims(texture, rot);
-                
+
                 // Optional auto-scaling
                 let scaleFactor = 1;
                 if (autoScale) {
@@ -572,6 +708,34 @@ const RightPanelManager = {
         if (skippedCount > 0) {
             alert(`${skippedCount} texture(s) were skipped because they don't fit in the container. Consider increasing the container size.`);
         }
+
+        // Push undo for auto-pack
+        const afterState = textures.map(t => ({
+            texture: t,
+            x: t.x(), y: t.y(),
+            scaleX: t.scaleX(), scaleY: t.scaleY(),
+            rotation: t.rotation()
+        }));
+        UndoManager.push({
+            undo: () => {
+                beforeState.forEach(s => {
+                    s.texture.position({ x: s.x, y: s.y });
+                    s.texture.scale({ x: s.scaleX, y: s.scaleY });
+                    s.texture.rotation(s.rotation);
+                });
+                stage.findOne('Transformer').nodes([]);
+                stage.draw();
+            },
+            redo: () => {
+                afterState.forEach(s => {
+                    s.texture.position({ x: s.x, y: s.y });
+                    s.texture.scale({ x: s.scaleX, y: s.scaleY });
+                    s.texture.rotation(s.rotation);
+                });
+                stage.findOne('Transformer').nodes([]);
+                stage.draw();
+            }
+        });
 
         console.log(`Packed ${packedCount} textures, ${skippedCount} skipped`);
         return { packed: packedCount, skipped: skippedCount };
