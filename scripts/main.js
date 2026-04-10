@@ -61,6 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.leftPanel) UndoManager.redo();
     });
 
+    // Save/Load project functions
+    window.saveProject = () => SaveManager.save(stageLeft, stageRight);
+    window.loadProject = () => SaveManager.load(stageLeft, stageRight);
+
     // Export button
     document.getElementById('exportRight').addEventListener('click', () => {
         const exportWidth = parseInt(document.getElementById('rightWidth').value);
@@ -161,6 +165,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('requestFeature').addEventListener('click', () => {
         openExternalURL('https://github.com/raycastly/texture-ripper/issues/new?template=feature_request.yml');
     });
+
+    // Listen for Electron menu events (File > Save/Open)
+    if (isElectron()) {
+        const { ipcRenderer } = require('electron');
+        ipcRenderer.on('menu-save-project', () => window.saveProject());
+        ipcRenderer.on('menu-open-project', () => window.loadProject());
+    }
 });
 
 

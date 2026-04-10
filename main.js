@@ -1,4 +1,5 @@
-const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, Menu } = require('electron');
+const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 
@@ -16,6 +17,22 @@ function createWindow() {
   
   mainWindow.maximize();
   mainWindow.loadFile('index.html');
+
+  const menuTemplate = [
+    {
+      label: 'File',
+      submenu: [
+        { label: 'Save Project', accelerator: 'CmdOrCtrl+S', click: () => mainWindow.webContents.send('menu-save-project') },
+        { label: 'Open Project', accelerator: 'CmdOrCtrl+O', click: () => mainWindow.webContents.send('menu-open-project') },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    },
+    { role: 'editMenu' },
+    { role: 'viewMenu' },
+    { role: 'windowMenu' }
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
 
   // Check for updates after window is ready
   mainWindow.webContents.once('did-finish-load', () => {
@@ -105,6 +122,25 @@ ipcMain.handle('restart-and-install', () => {
 
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
+});
+
+ipcMain.handle('save-project', async (event, jsonData) => {
+  const { filePath } = await dialog.showSaveDialog(mainWindow, {
+    title: 'Save Project', defaultPath: 'project.trp',
+    filters: [{ name: 'Texture Ripper Project', extensions: ['trp'] }]
+  });
+  if (filePath) { fs.writeFileSync(filePath, jsonData, 'utf8'); return true; }
+  return false;
+});
+
+ipcMain.handle('open-project', async () => {
+  const { filePaths } = await dialog.showOpenDialog(mainWindow, {
+    title: 'Open Project',
+    filters: [{ name: 'Texture Ripper Project', extensions: ['trp'] }],
+    properties: ['openFile']
+  });
+  if (filePaths && filePaths.length > 0) return fs.readFileSync(filePaths[0], 'utf8');
+  return null;
 });
 
 app.on('ready', createWindow);

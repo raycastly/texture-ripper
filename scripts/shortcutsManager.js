@@ -16,6 +16,18 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
+    // Save/Load project
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
+        e.preventDefault();
+        if (window.saveProject) window.saveProject();
+        return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyO') {
+        e.preventDefault();
+        if (window.loadProject) window.loadProject();
+        return;
+    }
+
     // Drawing mode toggle
     if (e.code === CONFIG.SHORTCUTS.toggleDrawingMode) {
         document.getElementById('toggleDrawingMode').click();

@@ -495,6 +495,64 @@ const RightPanelManager = {
                 }
             },
 
+            getState: () => {
+                const textures = [];
+                Object.keys(tiedRects).forEach(groupId => {
+                    const img = tiedRects[groupId];
+                    if (img) {
+                        textures.push({
+                            groupId: groupId,
+                            dataURL: SaveManager.imageToDataURL(img),
+                            x: img.x(),
+                            y: img.y(),
+                            width: img.width(),
+                            height: img.height(),
+                            scaleX: img.scaleX(),
+                            scaleY: img.scaleY(),
+                            rotation: img.rotation()
+                        });
+                    }
+                });
+                return { textures };
+            },
+
+            loadState: (state) => {
+                // Clear existing textures
+                Object.keys(tiedRects).forEach(id => {
+                    if (tiedRects[id]) tiedRects[id].destroy();
+                    delete tiedRects[id];
+                });
+                imageLayer.batchDraw();
+
+                if (state.textures) {
+                    state.textures.forEach(texData => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const konvaImg = new Konva.Image({
+                                x: texData.x,
+                                y: texData.y,
+                                image: img,
+                                width: texData.width,
+                                height: texData.height,
+                                scaleX: texData.scaleX || 1,
+                                scaleY: texData.scaleY || 1,
+                                rotation: texData.rotation || 0,
+                                id: `rect_${texData.groupId}`,
+                                draggable: true
+                            });
+
+                            konvaImg.on('dragmove', snapping.handleDragging);
+                            konvaImg.on('dragend', snapping.handleDragEnd);
+
+                            imageLayer.add(konvaImg);
+                            tiedRects[texData.groupId] = konvaImg;
+                            imageLayer.batchDraw();
+                        };
+                        img.src = texData.dataURL;
+                    });
+                }
+            },
+
             updateBackground: () => {
                 const width = parseInt(document.getElementById('rightWidth').value);
                 const height = parseInt(document.getElementById('rightHeight').value);

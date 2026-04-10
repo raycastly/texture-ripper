@@ -517,6 +517,7 @@ const LeftPanelManager = {
         PanZoomManager.initPanning(stage);
         PanZoomManager.initZooming(stage);
 
+        // Save/Load API
         window.leftPanel = {
             autoPackImages: () => {
                 if (bgImages.length === 0) return;
@@ -605,6 +606,105 @@ const LeftPanelManager = {
 
                 bgLayer.batchDraw();
                 FeedbackManager.show('Arranged ' + bgImages.length + ' image(s)');
+            },
+
+            getState: () => {
+                const images = bgImages.map(img => ({
+                    dataURL: SaveManager.imageToDataURL(img),
+                    x: img.x(),
+                    y: img.y(),
+                    width: img.width(),
+                    height: img.height(),
+                    scaleX: img.scaleX(),
+                    scaleY: img.scaleY(),
+                    rotation: img.rotation()
+                }));
+
+                const polygons = [];
+                polygonLayer.find('.group').forEach(group => {
+                    const verts = group.vertices.map(v => ({ x: v.x, y: v.y }));
+                    const mids = group.midpoints.map(m => ({ x: m.x, y: m.y, locked: m.locked }));
+                    polygons.push({
+                        id: group._id,
+                        x: group.x(),
+                        y: group.y(),
+                        vertices: verts,
+                        midpoints: mids
+                    });
+                });
+
+                return { images, polygons };
+            },
+
+            loadState: (state) => {
+                // Clear existing
+                bgImages.forEach(img => img.destroy());
+                bgImages.length = 0;
+                polygonLayer.find('.group').forEach(g => g.destroy());
+                bgLayer.batchDraw();
+                polygonLayer.batchDraw();
+
+                // Restore images
+                if (state.images) {
+                    state.images.forEach(imgData => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const konvaImg = new Konva.Image({
+                                x: imgData.x,
+                                y: imgData.y,
+                                image: img,
+                                width: imgData.width,
+                                height: imgData.height,
+                                scaleX: imgData.scaleX || 1,
+                                scaleY: imgData.scaleY || 1,
+                                rotation: imgData.rotation || 0,
+                                draggable: !imagesLocked
+                            });
+                            bgLayer.add(konvaImg);
+                            bgImages.push(konvaImg);
+                            bgLayer.batchDraw();
+                        };
+                        img.src = imgData.dataURL;
+                    });
+                }
+
+                // Restore polygons
+                if (state.polygons) {
+                    state.polygons.forEach(polyData => {
+                        const group = PolygonManager.createPolygonGroup(
+                            stage, polygonLayer, polyData.vertices, dirtyPolygons, true
+                        );
+                        group.position({ x: polyData.x || 0, y: polyData.y || 0 });
+
+                        // Restore midpoints
+                        if (polyData.midpoints) {
+                            polyData.midpoints.forEach((m, i) => {
+                                if (group.midpoints[i]) {
+                                    group.midpoints[i].x = m.x;
+                                    group.midpoints[i].y = m.y;
+                                    group.midpoints[i].locked = m.locked || false;
+                                }
+                            });
+                            // Update visual midpoint positions
+                            group.find('.midpoint').forEach((mp, i) => {
+                                if (group.midpoints[i]) {
+                                    mp.position({ x: group.midpoints[i].x, y: group.midpoints[i].y });
+                                }
+                            });
+                            // Redraw polygon and grid with restored midpoints
+                            PolygonManager.drawCurvedPolygon(group, group.vertices, group.midpoints);
+                            GridManager.drawGrid(group, group.vertices, group.midpoints);
+                            const updatedPoints = PolygonManager.computeDragSurfacePoints(group.vertices, group.midpoints);
+                            PolygonManager.updateDragSurface(group, updatedPoints);
+                        }
+
+                        // Reassign ID if saved
+                        if (polyData.id) group._id = polyData.id;
+
+                        dirtyPolygons.add(group._id);
+                    });
+                    polygonLayer.batchDraw();
+                }
             }
         };
 
