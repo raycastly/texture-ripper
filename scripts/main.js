@@ -35,7 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto Pack button
     document.getElementById('autoPack').addEventListener('click', () => {
-        RightPanelManager.autoPackTextures(stageRight, false);
+        const padding = parseInt(document.getElementById('imagesPadding').value);
+        RightPanelManager.autoPackTextures(stageRight, false, undefined, padding);
     });
 
     // Export button

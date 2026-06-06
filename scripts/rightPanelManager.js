@@ -478,7 +478,7 @@ const RightPanelManager = {
         }
     },
 
-    autoPackTextures: (stage, autoScale = false, scaleLimit = 0.2) => {
+    autoPackTextures: (stage, autoScale = false, scaleLimit = 0.2, padding) => {
         const tiedRects = stage.tiedRects;
         const bgRect = stage.bgRect;
         const containerWidth = bgRect.width();
@@ -489,8 +489,8 @@ const RightPanelManager = {
         const getDims = (texture, rotation = 0, scaleFactor = 1) => {
             const scaleX = (texture.scaleX() || 1) * scaleFactor;
             const scaleY = (texture.scaleY() || 1) * scaleFactor;
-            const baseWidth = texture.width() * scaleX;
-            const baseHeight = texture.height() * scaleY;
+            const baseWidth = texture.width() * scaleX + (padding / 2) ;
+            const baseHeight = texture.height() * scaleY + (padding / 2);
             if (rotation % 180 === 0) return { width: baseWidth, height: baseHeight };
             return { width: baseHeight, height: baseWidth };
         };
@@ -504,7 +504,7 @@ const RightPanelManager = {
             return Math.max(dimB.width, dimB.height) - Math.max(dimA.width, dimA.height);
         });
 
-        let freeRects = [{ x: 0, y: 0, width: containerWidth, height: containerHeight }];
+        let freeRects = [{ x: padding / 2, y: padding / 2, width: containerWidth - padding / 2, height: containerHeight - padding / 2 }];
         let packedCount = 0;
         let skippedCount = 0;
 
