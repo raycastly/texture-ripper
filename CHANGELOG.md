@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.9.0](https://github.com/raycastly/texture-ripper/compare/v1.8.0...v1.9.0) (2026-07-10)
+
+
+### Features
+
+* Minor UI Improvements ([6d77408](https://github.com/raycastly/texture-ripper/commit/6d7740896de02e9739e5855ce66a75cec1e6e1ca))
+
 # [1.8.0](https://github.com/raycastly/texture-ripper/compare/v1.7.0...v1.8.0) (2026-07-10)
 
 
