@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.7.0](https://github.com/raycastly/texture-ripper/compare/v1.6.0...v1.7.0) (2026-07-10)
+
+
+### Features
+
+* pan with shift and lmb/trackpad ([c53901d](https://github.com/raycastly/texture-ripper/commit/c53901db2a634a8751a8c9661de57e0cd84a7b74))
+
 # [1.6.0](https://github.com/raycastly/texture-ripper/compare/v1.5.2...v1.6.0) (2025-12-30)
 
 
