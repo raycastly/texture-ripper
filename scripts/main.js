@@ -1,37 +1,47 @@
 // ==================== INITIALIZATION ====================
+
+const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
 // Initialize panels when the document is ready
 document.addEventListener('DOMContentLoaded', () => {
     let drawingMode = false;
     let currentPolygon = null;
     let placedPoints = [];
-    
+
     const stageLeft = LeftPanelManager.init(
-        'canvasLeftContainer', 
-        'addRectLeft', 
-        'deleteObjLeft', 
+        'canvasLeftContainer',
+        'addRectLeft',
+        'deleteObjLeft',
         'bgUploadLeft'
     );
-    
+
     const stageRight = RightPanelManager.init('canvasRightContainer');
 
-    // Set Size button
-    document.getElementById('resizeRight').addEventListener('click', () => {
-        const newWidth = parseInt(document.getElementById('rightWidth').value);
-        const newHeight = parseInt(document.getElementById('rightHeight').value);
+    let resizeTimer;
 
-        if (isNaN(newWidth) || isNaN(newHeight) || newWidth <= 0 || newHeight <= 0) return;
+    function updateRightSize() {
+        clearTimeout(resizeTimer);
 
-        // Resize bgRect only
-        stageRight.bgRect.width(newWidth);
-        stageRight.bgRect.height(newHeight);
+        resizeTimer = setTimeout(() => {
+            const newWidth = parseInt(rightWidth.value);
+            const newHeight = parseInt(rightHeight.value);
 
-        // Update background
-        if (window.rightPanel && window.rightPanel.updateBackground) {
-            window.rightPanel.updateBackground();
-        }
+            if (isNaN(newWidth) || isNaN(newHeight) || newWidth <= 0 || newHeight <= 0) return;
 
-        stageRight.draw(); // Redraw the stage
-    });
+            stageRight.bgRect.width(newWidth);
+            stageRight.bgRect.height(newHeight);
+
+            if (window.rightPanel?.updateBackground) {
+                window.rightPanel.updateBackground();
+            }
+
+            stageRight.draw();
+        }, 100);
+    }
+
+    rightWidth.addEventListener('input', updateRightSize);
+    rightHeight.addEventListener('input', updateRightSize);
 
     // Auto Pack button
     document.getElementById('autoPack').addEventListener('click', () => {
@@ -67,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Store original background visibility
         const originalBgVisibility = stageRight.bgRect.visible();
-        
+
         // For transparent export, hide the background
         // For non-transparent export, ensure background is visible
         if (transparent) {
@@ -121,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Could not load version from package.json, using default');
             document.getElementById('version-text').textContent = 'v1.0.0';
         });
-        
+
     // Copy version to clipboard
     document.getElementById('copyVersion').addEventListener('click', () => {
         const version = document.getElementById('version-text').textContent;
@@ -149,17 +159,17 @@ const isElectron = () => {
     if (typeof window !== 'undefined' && typeof window.process === 'object' && window.process.type === 'renderer') {
         return true;
     }
-    
+
     // Main process
     if (typeof process !== 'undefined' && typeof process.versions === 'object' && !!process.versions.electron) {
         return true;
     }
-    
+
     // Detect the user agent when the `nodeIntegration` option is enabled
     if (typeof navigator === 'object' && typeof navigator.userAgent === 'string' && navigator.userAgent.indexOf('Electron') >= 0) {
         return true;
     }
-    
+
     return false;
 };
 
@@ -188,11 +198,11 @@ if (isElectron()) {
         console.log('Update downloaded:', info);
         const statusText = document.getElementById('update-status-text');
         const restartBtn = document.getElementById('restart-btn');
-        
+
         statusText.textContent = `✅ Update v${info.version} ready!`;
         restartBtn.style.display = 'inline-block';
         statusText.style.display = 'inline';
-        
+
         restartBtn.onclick = () => {
             ipcRenderer.invoke('restart-and-install');
         };
@@ -209,7 +219,7 @@ if (isElectron()) {
     ipcRenderer.on('update-error', (event, error) => {
         console.log('Update error:', error);
         const statusText = document.getElementById('update-status-text');
-        
+
         // Don't show error for "no update available"
         if (!error.includes('No published versions') && !error.includes('404')) {
             statusText.textContent = '❌ Update failed';
@@ -235,16 +245,16 @@ if (isElectron()) {
 } else {
     // We're in browser - hide update-related UI
     console.log('Running in browser - disabling auto-updater');
-    
+
     // Hide update buttons
     const checkUpdatesBtn = document.getElementById('check-updates');
     const restartBtn = document.getElementById('restart-btn');
     const statusText = document.getElementById('update-status-text');
-    
+
     if (checkUpdatesBtn) checkUpdatesBtn.style.display = 'none';
     if (restartBtn) restartBtn.style.display = 'none';
     if (statusText) statusText.style.display = 'none';
-    
+
     // Get version from package.json for browser
     fallbackToPackageJsonVersion();
 }
