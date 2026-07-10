@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.8.0](https://github.com/raycastly/texture-ripper/compare/v1.7.0...v1.8.0) (2026-07-10)
+
+
+### Features
+
+* add padding/margin option to AutoPack ([bd0d5af](https://github.com/raycastly/texture-ripper/commit/bd0d5af591e5b85b8e6d6049e8f211c55653e546))
+
 # [1.7.0](https://github.com/raycastly/texture-ripper/compare/v1.6.0...v1.7.0) (2026-07-10)
 
 
