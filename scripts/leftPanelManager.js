@@ -3,6 +3,7 @@ const LeftPanelManager = {
     // Initialize the left panel
     init: (containerId, addBtnId, deleteBtnId, uploadId) => {
         const dirtyPolygons = new Set();
+        const polygonGroups = {};
 
         const container = document.getElementById(containerId);
         const stage = new Konva.Stage({ 
@@ -215,6 +216,7 @@ const LeftPanelManager = {
         document.getElementById(addBtnId).addEventListener('click', () => {
             const newGroup = PolygonManager.createPolygonGroup(stage, polygonLayer, null, dirtyPolygons);
             setSelectedPolygon(newGroup);
+            polygonGroups[newGroup._id] = newGroup;
         });
 
         // Delete button
@@ -265,6 +267,9 @@ const LeftPanelManager = {
             // Case 1: polygon selected
             if (selectedGroup) {
                 if (window.rightPanel) window.rightPanel.removeTexture(selectedGroup._id);
+                const group = polygonGroups[selectedGroup._id];
+                if (group)
+                    delete polygonGroups[groupId];
                 selectedGroup.destroy();
                 selectedGroup = null;
                 polygonLayer.draw();
@@ -304,6 +309,10 @@ const LeftPanelManager = {
         stage.on('click', (e) => {
             // Don't process clicks if we're in drawing mode
             if (drawingMode) return;
+
+            // Unselect everything in the right panel
+            if (window.rightPanel)
+                window.rightPanel.unselectAll();
             
             // Reset previous selection visual for polygons
             if (selectedGroup) {
@@ -357,6 +366,33 @@ const LeftPanelManager = {
         // Initialize panning and zooming
         PanZoomManager.initPanning(stage);
         PanZoomManager.initZooming(stage);
+
+        // Creating API for left panel for use by right panel
+        window.leftPanel = {
+            unselectAll: () => {
+                // Reset previous selection visual for polygons
+                if (selectedGroup) {
+                    const polygon = selectedGroup.findOne('.polygon');
+                    if (polygon) {
+                        polygon.stroke(CONFIG.POLYGON.STROKE);
+                        polygon.strokeWidth(CONFIG.POLYGON.STROKE_WIDTH);
+                    }
+                }
+                selectedGroup = null;
+
+                tr.nodes([]);
+                bgLayer.batchDraw();
+                polygonLayer.batchDraw();
+            },
+            deleteGroup: (groupId) => {
+                const group = polygonGroups[groupId];
+                if (group) {
+                    delete polygonGroups[groupId];
+                    group.destroy();
+                    polygonLayer.draw();
+                }
+            },
+        };
 
         return stage;
     }
