@@ -7,7 +7,7 @@ const PanZoomManager = {
         let lastPos = { x: 0, y: 0 };
 
         stage.on("mousedown", (e) => {
-            if (e.evt.button === 1) { // Middle click
+            if (e.evt.button === 1 || (e.evt.button === 0 && e.evt.shiftKey)) { // Middle  click or shift + left click
                 PanZoomManager.isPanning = true;
                 lastPos = stage.getPointerPosition();
                 e.evt.preventDefault();
