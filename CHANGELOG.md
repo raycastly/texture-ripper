@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.10.0](https://github.com/raycastly/texture-ripper/compare/v1.9.0...v1.10.0) (2026-07-11)
+
+
+### Features
+
+* add auto-pack for left panel source images ([#24](https://github.com/raycastly/texture-ripper/issues/24)) ([784fa0c](https://github.com/raycastly/texture-ripper/commit/784fa0c073ab6e7abbb04738610f28a353627fc1))
+
 # [1.9.0](https://github.com/raycastly/texture-ripper/compare/v1.8.0...v1.9.0) (2026-07-10)
 
 
