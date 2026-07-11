@@ -527,6 +527,12 @@ const LeftPanelManager = {
                     height: img.height() * Math.abs(img.scaleY())
                 });
 
+                const before = bgImages.map(img => ({
+                    img,
+                    x: img.x(),
+                    y: img.y()
+                }));
+
                 const sorted = [...bgImages].sort((a, b) => {
                     return getDims(b).height - getDims(a).height;
                 });
@@ -570,6 +576,32 @@ const LeftPanelManager = {
                 );
                 stage.scale({ x: scale, y: scale });
                 stage.position({ x: padding * scale, y: padding * scale });
+
+                const after = bgImages.map(img => ({
+                    img,
+                    x: img.x(),
+                    y: img.y()
+                }));
+
+                UndoManager.push({
+                    undo: () => {
+                        before.forEach(({ img, x, y }) => {
+                            img.position({ x, y });
+                        });
+
+                        tr.nodes([]);
+                        bgLayer.batchDraw();
+                    },
+
+                    redo: () => {
+                        after.forEach(({ img, x, y }) => {
+                            img.position({ x, y });
+                        });
+
+                        tr.nodes([]);
+                        bgLayer.batchDraw();
+                    }
+                });
 
                 bgLayer.batchDraw();
                 FeedbackManager.show('Arranged ' + bgImages.length + ' image(s)');
