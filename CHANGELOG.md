@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.11.0](https://github.com/raycastly/texture-ripper/compare/v1.10.0...v1.11.0) (2026-07-11)
+
+
+### Features
+
+* add undo/redo system (Ctrl+Z/Y) ([#22](https://github.com/raycastly/texture-ripper/issues/22)) ([ee36a3f](https://github.com/raycastly/texture-ripper/commit/ee36a3fad5acff002b6fd007f2fe13516905f920))
+
 # [1.10.0](https://github.com/raycastly/texture-ripper/compare/v1.9.0...v1.10.0) (2026-07-11)
 
 
