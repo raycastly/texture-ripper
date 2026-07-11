@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l scripts/*.js css/*.css)",
+      "Bash(npm install:*)",
+      "Bash(uvx blender-mcp:*)",
+      "Bash(uvx --version)",
+      "Bash(pip show:*)",
+      "Bash(uvx --from blender-mcp python -c \"import blender_mcp; print\\(blender_mcp.__file__\\)\")",
+      "Bash(uvx --from blender-mcp python -c ':*)",
+      "Bash(where uvx:*)",
+      "mcp__blender__execute_blender_code",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:projects.blender.org)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/blender/blender/main/source/blender/editors/uvedit/uvedit_select.cc\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)"
+    ]
+  }
+}

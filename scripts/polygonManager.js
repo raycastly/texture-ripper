@@ -1,32 +1,33 @@
 // ==================== POLYGON MANAGEMENT ====================
 const PolygonManager = {
     // Unified polygon creation function
-    createPolygonGroup: (stage, layer, points = null, dirtyPolygons = null) => {
-        const group = new Konva.Group({ 
-            draggable: true, 
+    createPolygonGroup: (stage, layer, points = null, dirtyPolygons = null, skipReorder = false) => {
+        const group = new Konva.Group({
+            draggable: true,
             name: 'group',
             _id: Utils.generateId()
         });
 
         if (group && group._id)
             dirtyPolygons.add(group._id);
-        
+
         // Get vertices - either from provided points or create default rectangle
         let vertices;
         if (points && points.length === 4) {
             // REORDER vertices to ensure consistent order for both polygon types
-            vertices = Utils.reorderPolygonVertices(points);
+            // Skip reorder when restoring from undo (vertices already in correct order)
+            vertices = skipReorder ? points.map(p => ({ x: p.x, y: p.y })) : Utils.reorderPolygonVertices(points);
         } else {
             // Create default rectangle centered on stage
             const stageCenterX = stage.width() / 2;
             const stageCenterY = stage.height() / 2;
-            
+
             // Convert stage center to absolute coordinates
             const absoluteCenter = {
                 x: (stageCenterX - stage.x()) / stage.scaleX(),
                 y: (stageCenterY - stage.y()) / stage.scaleY()
             };
-            
+
             // Create rectangle centered on the stage
             const rectSize = 100;
             vertices = [
@@ -36,7 +37,7 @@ const PolygonManager = {
                 { x: absoluteCenter.x + rectSize/2, y: absoluteCenter.y - rectSize/2 }  // Top-right (4)
             ];
         }
-        
+
         // Create midpoints for each edge
         const midpoints = [];
         for (let i = 0; i < vertices.length; i++) {
@@ -48,32 +49,7 @@ const PolygonManager = {
             });
         }
 
-        // Create a more accurate drag surface that follows the curved edges
-        const createCurvedDragSurface = (vertices, midpoints) => {
-            const points = [];
-
-            for (let i = 0; i < vertices.length; i++) {
-                const nextIdx = (i + 1) % vertices.length;
-                const P0 = vertices[i];
-                const P2 = vertices[nextIdx];
-                const M  = midpoints[i]; // single control point
-
-                const numSamples = 10; // resolution
-                for (let j = 0; j <= numSamples; j++) {
-                    const t = j / numSamples;
-                    const mt = 1 - t;
-
-                    const x = mt*mt*P0.x + 2*mt*t*M.x + t*t*P2.x;
-                    const y = mt*mt*P0.y + 2*mt*t*M.y + t*t*P2.y;
-
-                    points.push(x, y);
-                }
-            }
-
-            return points;
-        };
-
-        const dragSurfacePoints = createCurvedDragSurface(vertices, midpoints);
+        const dragSurfacePoints = PolygonManager.computeDragSurfacePoints(vertices, midpoints);
         const dragSurface = new Konva.Line({
             points: dragSurfacePoints,
             closed: true,
@@ -82,14 +58,39 @@ const PolygonManager = {
             name: 'drag-surface',
             listening: true // Ensure it listens to events
         });
-        
+
         group.add(dragSurface);
         dragSurface.moveToBottom();
-        
+
         group.on("dragmove", () => {
             if (dirtyPolygons && group && group._id) {
                 dirtyPolygons.add(group._id);
             }
+        });
+
+        // Group drag undo
+        let groupDragStart = null;
+        group.on('dragstart', () => {
+            groupDragStart = { x: group.x(), y: group.y() };
+        });
+        group.on('dragend', () => {
+            if (!groupDragStart) return;
+            const startPos = { ...groupDragStart };
+            const endPos = { x: group.x(), y: group.y() };
+            groupDragStart = null;
+            if (startPos.x === endPos.x && startPos.y === endPos.y) return;
+            UndoManager.push({
+                undo: () => {
+                    group.position(startPos);
+                    if (dirtyPolygons && group._id) dirtyPolygons.add(group._id);
+                    if (group.getLayer()) group.getLayer().batchDraw();
+                },
+                redo: () => {
+                    group.position(endPos);
+                    if (dirtyPolygons && group._id) dirtyPolygons.add(group._id);
+                    if (group.getLayer()) group.getLayer().batchDraw();
+                }
+            });
         });
 
         // Draw the curved polygon
@@ -136,6 +137,28 @@ const PolygonManager = {
                 name: 'vertex-label'
             });
 
+            // Vertex drag undo
+            let vertexDragStartState = null;
+            vertex.on('dragstart', () => {
+                vertexDragStartState = PolygonManager.snapshotPolygonState(group);
+            });
+            vertex.on('dragend', () => {
+                if (!vertexDragStartState) return;
+                const before = vertexDragStartState;
+                const after = PolygonManager.snapshotPolygonState(group);
+                vertexDragStartState = null;
+                UndoManager.push({
+                    undo: () => {
+                        PolygonManager.restorePolygonState(group, before);
+                        if (dirtyPolygons && group._id) dirtyPolygons.add(group._id);
+                    },
+                    redo: () => {
+                        PolygonManager.restorePolygonState(group, after);
+                        if (dirtyPolygons && group._id) dirtyPolygons.add(group._id);
+                    }
+                });
+            });
+
             vertex.on('dragmove', () => {
                 // Update vertex position
                 vertices[i] = { x: vertex.x(), y: vertex.y() };
@@ -144,11 +167,11 @@ const PolygonManager = {
 
                 // Update label position when vertex moves
                 label.position({ x: vertex.x(), y: vertex.y() });
-                
+
                 // Update adjacent midpoints to maintain relative position
                 const prevIdx = (i + vertices.length - 1) % vertices.length;
                 const nextIdx = (i + 1) % vertices.length;
-                
+
                 // Update previous edge midpoint if not locked
                 if (!midpoints[prevIdx].locked) {
                     midpoints[prevIdx].x = (vertices[prevIdx].x + vertices[i].x) / 2;
@@ -160,18 +183,18 @@ const PolygonManager = {
                     midpoints[i].x = (vertices[i].x + vertices[nextIdx].x) / 2;
                     midpoints[i].y = (vertices[i].y + vertices[nextIdx].y) / 2;
                 }
-                
+
                 // Update polygon and grid
                 PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
                 GridManager.drawGrid(group, vertices, midpoints);
-                
+
                 // Update midpoint visual positions
                 group.find('.midpoint').forEach((midpoint, idx) => {
                     midpoint.position(midpoints[idx]);
                 });
-                
+
                 // Update drag surface with curved edges
-                const updatedPoints = createCurvedDragSurface(vertices, midpoints);
+                const updatedPoints = PolygonManager.computeDragSurfacePoints(vertices, midpoints);
                 PolygonManager.updateDragSurface(group, updatedPoints);
 
                 // Update reference circles
@@ -238,7 +261,29 @@ const PolygonManager = {
                     context.fillStrokeShape(this);
                 }
             });
-            
+
+            // Midpoint drag undo
+            let midpointDragStartState = null;
+            midpoint.on('dragstart', () => {
+                midpointDragStartState = PolygonManager.snapshotPolygonState(group);
+            });
+            midpoint.on('dragend', () => {
+                if (!midpointDragStartState) return;
+                const before = midpointDragStartState;
+                const after = PolygonManager.snapshotPolygonState(group);
+                midpointDragStartState = null;
+                UndoManager.push({
+                    undo: () => {
+                        PolygonManager.restorePolygonState(group, before);
+                        if (dirtyPolygons && group._id) dirtyPolygons.add(group._id);
+                    },
+                    redo: () => {
+                        PolygonManager.restorePolygonState(group, after);
+                        if (dirtyPolygons && group._id) dirtyPolygons.add(group._id);
+                    }
+                });
+            });
+
             midpoint.on('dragmove', () => {
                 // If this is the first manual drag, lock it
                 if (!midpoints[i].locked) midpoints[i].locked = true;
@@ -249,31 +294,31 @@ const PolygonManager = {
 
                 // Mark polygon as dirty
                 if (group && group._id) dirtyPolygons.add(group._id);
-                
+
                 // Update polygon and grid
                 PolygonManager.drawCurvedPolygon(group, vertices, midpoints);
                 GridManager.drawGrid(group, vertices, midpoints);
-                
+
                 // Update drag surface with curved edges
-                const updatedPoints = createCurvedDragSurface(vertices, midpoints);
+                const updatedPoints = PolygonManager.computeDragSurfacePoints(vertices, midpoints);
                 PolygonManager.updateDragSurface(group, updatedPoints);
             });
-            
+
             // Prevent click events from bubbling to group
             midpoint.on('click', (e) => {
                 e.cancelBubble = true;
             });
-            
+
             group.add(midpoint);
         });
 
         GridManager.drawGrid(group, vertices, midpoints);
-        
+
         // Add to layer if provided
         if (layer) {
             layer.add(group);
         }
-        
+
         return group;
     },
 
@@ -325,6 +370,76 @@ const PolygonManager = {
         group.add(polygon);
     },
 
+    // Compute curved drag surface points (quadratic Bezier sampling)
+    computeDragSurfacePoints: (vertices, midpoints) => {
+        const points = [];
+        for (let i = 0; i < vertices.length; i++) {
+            const nextIdx = (i + 1) % vertices.length;
+            const P0 = vertices[i];
+            const P2 = vertices[nextIdx];
+            const M  = midpoints[i];
+            const numSamples = 10;
+            for (let j = 0; j <= numSamples; j++) {
+                const t = j / numSamples;
+                const mt = 1 - t;
+                const x = mt*mt*P0.x + 2*mt*t*M.x + t*t*P2.x;
+                const y = mt*mt*P0.y + 2*mt*t*M.y + t*t*P2.y;
+                points.push(x, y);
+            }
+        }
+        return points;
+    },
+
+    // Snapshot polygon state for undo/redo
+    snapshotPolygonState: (group) => {
+        return {
+            groupX: group.x(),
+            groupY: group.y(),
+            vertices: group.vertices.map(v => ({ x: v.x, y: v.y })),
+            midpoints: group.midpoints.map(m => ({ x: m.x, y: m.y, locked: m.locked }))
+        };
+    },
+
+    // Restore polygon state from snapshot
+    restorePolygonState: (group, state) => {
+        group.x(state.groupX);
+        group.y(state.groupY);
+
+        for (let i = 0; i < state.vertices.length; i++) {
+            group.vertices[i].x = state.vertices[i].x;
+            group.vertices[i].y = state.vertices[i].y;
+        }
+        for (let i = 0; i < state.midpoints.length; i++) {
+            group.midpoints[i].x = state.midpoints[i].x;
+            group.midpoints[i].y = state.midpoints[i].y;
+            group.midpoints[i].locked = state.midpoints[i].locked;
+        }
+
+        group.find('.vertex').forEach((v, i) => {
+            v.position({ x: group.vertices[i].x, y: group.vertices[i].y });
+        });
+        group.find('.vertex-label').forEach((l, i) => {
+            l.position({ x: group.vertices[i].x, y: group.vertices[i].y });
+        });
+        group.find('.midpoint').forEach((m, i) => {
+            m.position({ x: group.midpoints[i].x, y: group.midpoints[i].y });
+        });
+
+        group.referencePoints.forEach((ref, i) => {
+            const v1 = group.vertices[i];
+            const v2 = group.vertices[(i + 1) % group.vertices.length];
+            ref.position({ x: (v1.x + v2.x) / 2, y: (v1.y + v2.y) / 2 });
+        });
+
+        PolygonManager.drawCurvedPolygon(group, group.vertices, group.midpoints);
+        GridManager.drawGrid(group, group.vertices, group.midpoints);
+
+        const pts = PolygonManager.computeDragSurfacePoints(group.vertices, group.midpoints);
+        PolygonManager.updateDragSurface(group, pts);
+
+        if (group.getLayer()) group.getLayer().batchDraw();
+    },
+
     // Helper to update drag surface
     updateDragSurface: (group, points) => {
         const dragSurface = group.findOne('.drag-surface');
@@ -360,18 +475,18 @@ const PolygonManager = {
     initDrawingMode: (stage, polygonLayer, getDrawingMode, onPolygonCreated, dirtyPolygons) => {
         const drawingGroup = new Konva.Group();
         polygonLayer.add(drawingGroup);
-        
+
         let tempPoints = [];
         let tempLines = [];
         let tempVertices = [];
-        
+
         function clearTempElements() {
             tempLines.forEach(line => line.destroy());
             tempVertices.forEach(vertex => vertex.destroy());
             tempLines = [];
             tempVertices = [];
         }
-        
+
         function createDrawingVertex(x, y, isTemp = false) {
             const vertex = new Konva.Circle({
                 x, y,
@@ -390,7 +505,7 @@ const PolygonManager = {
                     context.fillStrokeShape(this);
                 }
             });
-            
+
             vertex.on('dragmove', () => {
                 if (isTemp) {
                     // Update the last temporary point position
@@ -400,10 +515,10 @@ const PolygonManager = {
                     }
                 }
             });
-            
+
             return vertex;
         }
-        
+
         function updateTempLine() {
             if (tempLines.length > 0 && tempPoints.length >= 2) {
                 const lastLine = tempLines[tempLines.length - 1];
@@ -414,12 +529,12 @@ const PolygonManager = {
                 lastLine.points(points);
             }
         }
-        
+
         function completePolygon() {
             if (tempPoints.length === 4) {
                 // REORDER vertices to match regular polygon order
                 const reorderedPoints = Utils.reorderPolygonVertices(tempPoints);
-                
+
                 // Create new edges between the reordered points
                 const updatedPoints = [];
                 for (let i = 0; i < 4; i++) {
@@ -432,17 +547,17 @@ const PolygonManager = {
                 // Connect last point back to first
                 updatedPoints.push(reorderedPoints[3]);
                 updatedPoints.push(reorderedPoints[0]);
-                
+
                 const polygonGroup = PolygonManager.createPolygonGroup(stage, polygonLayer, reorderedPoints, dirtyPolygons);
-                
+
                 // Clear temporary elements
                 clearTempElements();
                 tempPoints = [];
-                
+
                 if (typeof onPolygonCreated === 'function') {
                     onPolygonCreated(polygonGroup);
                 }
-                
+
                 return polygonGroup;
             }
             return null;
@@ -455,21 +570,21 @@ const PolygonManager = {
                 onPolygonCreated(polygonGroup);
             }
         }
-        
+
         // Event handlers
         const clickHandler = (e) => {
             // Don't process clicks if panning is active
             if (PanZoomManager.isPanning) return;
-    
+
             // Only respond to left mouse button (button 0)
             if (e.evt.button !== 0) return;
-            
+
             if (!getDrawingMode()) return;
-            
+
             // Don't process clicks on existing polygons or their parts
             let node = e.target;
             let clickedOnExistingPolygon = false;
-            
+
             while (node && node !== stage) {
                 if (node instanceof Konva.Group && node.name() === 'group') {
                     clickedOnExistingPolygon = true;
@@ -477,25 +592,25 @@ const PolygonManager = {
                 }
                 node = node.getParent();
             }
-            
+
             if (clickedOnExistingPolygon) return;
-            
+
             // Allow clicking on any part of the stage, not just empty space
             const pos = stage.getPointerPosition();
-            
+
             // Convert to stage coordinates (accounting for pan/zoom)
             const stageX = (pos.x - stage.x()) / stage.scaleX();
             const stageY = (pos.y - stage.y()) / stage.scaleY();
-            
+
             if (tempPoints.length < 4) {
                 // Add point
                 tempPoints.push({ x: stageX, y: stageY });
-                
+
                 // Create vertex
                 const vertex = createDrawingVertex(stageX, stageY, tempPoints.length < 4);
                 drawingGroup.add(vertex);
                 tempVertices.push(vertex);
-                
+
                 // Create line if we have at least 2 points
                 if (tempPoints.length >= 2) {
                     const line = new Konva.Line({
@@ -511,7 +626,7 @@ const PolygonManager = {
                     drawingGroup.add(line);
                     tempLines.push(line);
                 }
-                
+
                 // If we have 4 points, complete the polygon
                 if (tempPoints.length === 4) {
                     const completedPolygon = completePolygon();
@@ -528,15 +643,15 @@ const PolygonManager = {
         const mouseMoveHandler = () => {
             // Don't process mouse movement if panning is active
             if (PanZoomManager.isPanning) return;
-            
+
             if (!getDrawingMode() || tempPoints.length === 4) return;
-            
+
             const pos = stage.getPointerPosition();
-            
+
             // Convert to stage coordinates (accounting for pan/zoom)
             const stageX = (pos.x - stage.x()) / stage.scaleX();
             const stageY = (pos.y - stage.y()) / stage.scaleY();
-            
+
             // Update or create temporary vertex
             if (tempVertices.length > tempPoints.length) {
                 // Update existing temp vertex
@@ -550,7 +665,7 @@ const PolygonManager = {
                 updateTempLine();
             }
         };
-        
+
         const contextMenuHandler = (e) => {
             // Use the passed function to get drawing mode state
             if (getDrawingMode()) {
@@ -558,12 +673,12 @@ const PolygonManager = {
                 clearTempElements();
             }
         };
-        
+
         // Register event listeners
         stage.on('click', clickHandler);
         stage.on('mousemove', mouseMoveHandler);
         stage.on('contextmenu', contextMenuHandler);
-        
+
         // Return cleanup function
         return {
             clearTempElements: () => {

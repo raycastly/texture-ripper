@@ -25,6 +25,41 @@ const LeftPanelManager = {
         let drawingMode = false;
         let drawingModeHandlers = null;
 
+        // Helper to create a background image with undo support
+        function addBackgroundImage(img) {
+            const scale = Math.min(stage.width() / img.width, stage.height() / img.height);
+            const konvaImg = new Konva.Image({
+                x: (stage.width() - img.width * scale) / 2,
+                y: (stage.height() - img.height * scale) / 2,
+                image: img,
+                width: img.width * scale,
+                height: img.height * scale,
+                draggable: !imagesLocked
+            });
+
+            bgLayer.add(konvaImg);
+            bgImages.push(konvaImg);
+            bgLayer.batchDraw();
+
+            // Undo for image add
+            UndoManager.push({
+                undo: () => {
+                    konvaImg.remove();
+                    const idx = bgImages.indexOf(konvaImg);
+                    if (idx > -1) bgImages.splice(idx, 1);
+                    tr.nodes([]);
+                    bgLayer.batchDraw();
+                },
+                redo: () => {
+                    bgLayer.add(konvaImg);
+                    bgImages.push(konvaImg);
+                    bgLayer.batchDraw();
+                }
+            });
+
+            return konvaImg;
+        }
+
         // Lock/Unlock Images button
         const lockBtn = document.getElementById('lockImagesLeft');
         lockBtn.addEventListener('click', () => {
@@ -66,22 +101,7 @@ const LeftPanelManager = {
                     reader.onload = (evt) => {
                         const img = new Image();
                         img.onload = () => {
-                            const scale = Math.min(stage.width() / img.width, stage.height() / img.height);
-
-                            const konvaImg = new Konva.Image({
-                                x: (stage.width() - img.width * scale) / 2,
-                                y: (stage.height() - img.height * scale) / 2,
-                                image: img,
-                                width: img.width * scale,
-                                height: img.height * scale,
-                                draggable: !imagesLocked
-                            });
-
-                            bgLayer.add(konvaImg);
-                            bgImages.push(konvaImg);
-                            bgLayer.batchDraw();
-
-                            // Show feedback
+                            addBackgroundImage(img);
                             FeedbackManager.show('Image pasted successfully!');
                         };
                         img.src = evt.target.result;
@@ -110,8 +130,25 @@ const LeftPanelManager = {
                     polygonLayer,
                     () => drawingMode,
                     (newPolygon) => {
-                        // Set the newly created polygon as selected
                         selectedGroup = newPolygon;
+                        // Guard against duplicate callback (initDrawingMode fires twice)
+                        if (!newPolygon._undoPushed) {
+                            newPolygon._undoPushed = true;
+                            UndoManager.push({
+                                undo: () => {
+                                    newPolygon.remove();
+                                    dirtyPolygons.delete(newPolygon._id);
+                                    if (selectedGroup === newPolygon) selectedGroup = null;
+                                    polygonLayer.batchDraw();
+                                },
+                                redo: () => {
+                                    polygonLayer.add(newPolygon);
+                                    dirtyPolygons.add(newPolygon._id);
+                                    selectedGroup = newPolygon;
+                                    polygonLayer.batchDraw();
+                                }
+                            });
+                        }
                     },
                     dirtyPolygons
                 );
@@ -173,20 +210,7 @@ const LeftPanelManager = {
             reader.onload = evt => {
                 const img = new Image();
                 img.onload = () => {
-                    const scale = Math.min(stage.width() / img.width, stage.height() / img.height);
-
-                    const konvaImg = new Konva.Image({
-                        x: (stage.width() - img.width * scale) / 2,
-                        y: (stage.height() - img.height * scale) / 2,
-                        image: img,
-                        width: img.width * scale,
-                        height: img.height * scale,
-                        draggable: !imagesLocked // Set initial draggable state based on lock status
-                    });
-
-                    bgLayer.add(konvaImg);
-                    bgImages.push(konvaImg);
-                    bgLayer.batchDraw();
+                    addBackgroundImage(img);
                 };
                 img.src = evt.target.result;
             };
@@ -197,13 +221,25 @@ const LeftPanelManager = {
         const dragDropHandler = DragDropManager.init(
             container,
             (files) => {
-                DragDropManager.handleImageFiles(
-                    files,
-                    stage,
-                    bgLayer,
-                    bgImages,
-                    imagesLocked
-                );
+                let loaded = 0;
+                const total = files.length;
+                UndoManager.beginBatch();
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = evt => {
+                        const img = new Image();
+                        img.onload = () => {
+                            addBackgroundImage(img);
+                            loaded++;
+                            if (loaded === total) {
+                                UndoManager.endBatch();
+                                FeedbackManager.show(`${total} image(s) dropped`);
+                            }
+                        };
+                        img.src = evt.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
             },
             {
                 showOverlay: true,
@@ -215,6 +251,20 @@ const LeftPanelManager = {
         document.getElementById(addBtnId).addEventListener('click', () => {
             const newGroup = PolygonManager.createPolygonGroup(stage, polygonLayer, null, dirtyPolygons);
             setSelectedPolygon(newGroup);
+            UndoManager.push({
+                undo: () => {
+                    newGroup.remove();
+                    dirtyPolygons.delete(newGroup._id);
+                    if (selectedGroup === newGroup) selectedGroup = null;
+                    polygonLayer.batchDraw();
+                },
+                redo: () => {
+                    polygonLayer.add(newGroup);
+                    dirtyPolygons.add(newGroup._id);
+                    setSelectedPolygon(newGroup);
+                    polygonLayer.batchDraw();
+                }
+            });
         });
 
         // Delete button
@@ -260,32 +310,76 @@ const LeftPanelManager = {
             polygonLayer.draw();
         }
 
-        // Helper function for deleting selected objects
+        // Helper function for deleting selected objects (with undo)
         function deleteSelectedObjects() {
             // Case 1: polygon selected
             if (selectedGroup) {
-                if (window.rightPanel) window.rightPanel.removeTexture(selectedGroup._id);
-                selectedGroup.destroy();
+                const groupToDelete = selectedGroup;
+                const groupId = groupToDelete._id;
+                let detachedTexture = null;
+                if (window.rightPanel && window.rightPanel.detachTexture) {
+                    detachedTexture = window.rightPanel.detachTexture(groupId);
+                }
+                groupToDelete.remove();
+                dirtyPolygons.delete(groupId);
                 selectedGroup = null;
                 polygonLayer.draw();
+
+                UndoManager.push({
+                    undo: () => {
+                        polygonLayer.add(groupToDelete);
+                        dirtyPolygons.add(groupId);
+                        if (detachedTexture && window.rightPanel) {
+                            window.rightPanel.restoreTexture(groupId, detachedTexture);
+                        }
+                        polygonLayer.batchDraw();
+                    },
+                    redo: () => {
+                        groupToDelete.remove();
+                        dirtyPolygons.delete(groupId);
+                        if (detachedTexture && window.rightPanel) {
+                            window.rightPanel.detachTexture(groupId);
+                        }
+                        selectedGroup = null;
+                        polygonLayer.batchDraw();
+                    }
+                });
                 return;
             }
 
             // Case 2: background image selected with transformer
             const selectedNodes = tr.nodes();
             if (selectedNodes.length > 0) {
-                selectedNodes.forEach(node => {
-                    if (node instanceof Konva.Image) {
-                        node.destroy();
-                        // Remove from bgImages array
-                        const index = bgImages.indexOf(node);
-                        if (index > -1) {
-                            bgImages.splice(index, 1);
-                        }
+                const imagesToDelete = selectedNodes.filter(node => node instanceof Konva.Image);
+                if (imagesToDelete.length === 0) return;
+
+                imagesToDelete.forEach(node => {
+                    node.remove();
+                    const index = bgImages.indexOf(node);
+                    if (index > -1) bgImages.splice(index, 1);
+                });
+                tr.nodes([]);
+                bgLayer.draw();
+
+                UndoManager.push({
+                    undo: () => {
+                        imagesToDelete.forEach(node => {
+                            bgLayer.add(node);
+                            bgImages.push(node);
+                        });
+                        tr.nodes([]);
+                        bgLayer.batchDraw();
+                    },
+                    redo: () => {
+                        imagesToDelete.forEach(node => {
+                            node.remove();
+                            const index = bgImages.indexOf(node);
+                            if (index > -1) bgImages.splice(index, 1);
+                        });
+                        tr.nodes([]);
+                        bgLayer.batchDraw();
                     }
                 });
-                tr.nodes([]); // clear transformer
-                bgLayer.draw();
             }
         }
 
@@ -299,6 +393,71 @@ const LeftPanelManager = {
             ]
         });
         uiLayer.add(tr);
+
+        // Image drag undo (stage-level events)
+        let imgDragStartPos = null;
+
+        stage.on('dragstart', (e) => {
+            if (!(e.target instanceof Konva.Image)) return;
+            imgDragStartPos = { x: e.target.x(), y: e.target.y() };
+        });
+        stage.on('dragend', (e) => {
+            if (!(e.target instanceof Konva.Image) || !imgDragStartPos) return;
+            const img = e.target;
+            const start = { ...imgDragStartPos };
+            const end = { x: img.x(), y: img.y() };
+            imgDragStartPos = null;
+            if (start.x === end.x && start.y === end.y) return;
+            UndoManager.push({
+                undo: () => { img.position(start); tr.forceUpdate(); stage.batchDraw(); },
+                redo: () => { img.position(end); tr.forceUpdate(); stage.batchDraw(); }
+            });
+        });
+
+        // Transformer undo/redo for background images
+        let trStartState = null;
+        tr.on('transformstart', () => {
+            const nodes = tr.nodes();
+            trStartState = nodes.map(node => ({
+                node, x: node.x(), y: node.y(),
+                scaleX: node.scaleX(), scaleY: node.scaleY(),
+                rotation: node.rotation(),
+                width: node.width(), height: node.height()
+            }));
+        });
+        tr.on('transformend', () => {
+            if (!trStartState) return;
+            const beforeStates = trStartState;
+            const afterStates = beforeStates.map(s => ({
+                node: s.node, x: s.node.x(), y: s.node.y(),
+                scaleX: s.node.scaleX(), scaleY: s.node.scaleY(),
+                rotation: s.node.rotation(),
+                width: s.node.width(), height: s.node.height()
+            }));
+            trStartState = null;
+            UndoManager.push({
+                undo: () => {
+                    beforeStates.forEach(s => {
+                        s.node.position({ x: s.x, y: s.y });
+                        s.node.scale({ x: s.scaleX, y: s.scaleY });
+                        s.node.rotation(s.rotation);
+                        s.node.size({ width: s.width, height: s.height });
+                    });
+                    tr.forceUpdate();
+                    stage.batchDraw();
+                },
+                redo: () => {
+                    afterStates.forEach(s => {
+                        s.node.position({ x: s.x, y: s.y });
+                        s.node.scale({ x: s.scaleX, y: s.scaleY });
+                        s.node.rotation(s.rotation);
+                        s.node.size({ width: s.width, height: s.height });
+                    });
+                    tr.forceUpdate();
+                    stage.batchDraw();
+                }
+            });
+        });
 
         // Click to select background image or polygon
         stage.on('click', (e) => {
@@ -368,6 +527,12 @@ const LeftPanelManager = {
                     height: img.height() * Math.abs(img.scaleY())
                 });
 
+                const before = bgImages.map(img => ({
+                    img,
+                    x: img.x(),
+                    y: img.y()
+                }));
+
                 const sorted = [...bgImages].sort((a, b) => {
                     return getDims(b).height - getDims(a).height;
                 });
@@ -411,6 +576,32 @@ const LeftPanelManager = {
                 );
                 stage.scale({ x: scale, y: scale });
                 stage.position({ x: padding * scale, y: padding * scale });
+
+                const after = bgImages.map(img => ({
+                    img,
+                    x: img.x(),
+                    y: img.y()
+                }));
+
+                UndoManager.push({
+                    undo: () => {
+                        before.forEach(({ img, x, y }) => {
+                            img.position({ x, y });
+                        });
+
+                        tr.nodes([]);
+                        bgLayer.batchDraw();
+                    },
+
+                    redo: () => {
+                        after.forEach(({ img, x, y }) => {
+                            img.position({ x, y });
+                        });
+
+                        tr.nodes([]);
+                        bgLayer.batchDraw();
+                    }
+                });
 
                 bgLayer.batchDraw();
                 FeedbackManager.show('Arranged ' + bgImages.length + ' image(s)');
