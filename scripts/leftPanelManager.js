@@ -358,6 +358,65 @@ const LeftPanelManager = {
         PanZoomManager.initPanning(stage);
         PanZoomManager.initZooming(stage);
 
+        window.leftPanel = {
+            autoPackImages: () => {
+                if (bgImages.length === 0) return;
+
+                const padding = 10;
+                const getDims = (img) => ({
+                    width: img.width() * Math.abs(img.scaleX()),
+                    height: img.height() * Math.abs(img.scaleY())
+                });
+
+                const sorted = [...bgImages].sort((a, b) => {
+                    return getDims(b).height - getDims(a).height;
+                });
+
+                let totalArea = 0;
+                sorted.forEach(img => {
+                    const d = getDims(img);
+                    totalArea += d.width * d.height;
+                });
+                const targetRowWidth = Math.max(
+                    stage.width(),
+                    Math.sqrt(totalArea) * 1.4
+                );
+
+                let cursorX = 0;
+                let cursorY = 0;
+                let rowHeight = 0;
+
+                sorted.forEach(img => {
+                    const { width, height } = getDims(img);
+                    if (cursorX > 0 && cursorX + width > targetRowWidth) {
+                        cursorX = 0;
+                        cursorY += rowHeight + padding;
+                        rowHeight = 0;
+                    }
+                    img.position({ x: cursorX, y: cursorY });
+                    cursorX += width + padding;
+                    rowHeight = Math.max(rowHeight, height);
+                });
+
+                tr.nodes([]);
+
+                const viewWidth = stage.width();
+                const viewHeight = stage.height();
+                const layoutWidth = targetRowWidth;
+                const layoutHeight = cursorY + rowHeight;
+                const scale = Math.min(
+                    viewWidth / (layoutWidth + padding * 2),
+                    viewHeight / (layoutHeight + padding * 2),
+                    1
+                );
+                stage.scale({ x: scale, y: scale });
+                stage.position({ x: padding * scale, y: padding * scale });
+
+                bgLayer.batchDraw();
+                FeedbackManager.show('Arranged ' + bgImages.length + ' image(s)');
+            }
+        };
+
         return stage;
     }
 };
