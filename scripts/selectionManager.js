@@ -8,6 +8,10 @@ const SelectionManager = {
         stage.on('mousedown', (e) => {
             // Only left mouse button for selection
             if (e.evt.button !== 0) return;
+			
+			// Disable selection if shift key is pressed
+			// since shift + LMB is used for panning
+			if (e.evt.shiftKey) return;
             
             // Don't start selection if clicking on an image or transformer
             if (e.target !== stage && e.target.name() !== 'bgRect') return;

@@ -1,5 +1,33 @@
 # Changelog
 
+# [1.10.0](https://github.com/raycastly/texture-ripper/compare/v1.9.0...v1.10.0) (2026-07-11)
+
+
+### Features
+
+* add auto-pack for left panel source images ([#24](https://github.com/raycastly/texture-ripper/issues/24)) ([784fa0c](https://github.com/raycastly/texture-ripper/commit/784fa0c073ab6e7abbb04738610f28a353627fc1))
+
+# [1.9.0](https://github.com/raycastly/texture-ripper/compare/v1.8.0...v1.9.0) (2026-07-10)
+
+
+### Features
+
+* Minor UI Improvements ([6d77408](https://github.com/raycastly/texture-ripper/commit/6d7740896de02e9739e5855ce66a75cec1e6e1ca))
+
+# [1.8.0](https://github.com/raycastly/texture-ripper/compare/v1.7.0...v1.8.0) (2026-07-10)
+
+
+### Features
+
+* add padding/margin option to AutoPack ([bd0d5af](https://github.com/raycastly/texture-ripper/commit/bd0d5af591e5b85b8e6d6049e8f211c55653e546))
+
+# [1.7.0](https://github.com/raycastly/texture-ripper/compare/v1.6.0...v1.7.0) (2026-07-10)
+
+
+### Features
+
+* pan with shift and lmb/trackpad ([c53901d](https://github.com/raycastly/texture-ripper/commit/c53901db2a634a8751a8c9661de57e0cd84a7b74))
+
 # [1.6.0](https://github.com/raycastly/texture-ripper/compare/v1.5.2...v1.6.0) (2025-12-30)
 
 
