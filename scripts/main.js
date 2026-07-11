@@ -53,6 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.leftPanel) window.leftPanel.autoPackImages();
     });
 
+    document.getElementById('undo').addEventListener('click', () => {
+        if (window.leftPanel) UndoManager.undo();
+    });
+
+    document.getElementById('redo').addEventListener('click', () => {
+        if (window.leftPanel) UndoManager.redo();
+    });
+
     // Export button
     document.getElementById('exportRight').addEventListener('click', () => {
         const exportWidth = parseInt(document.getElementById('rightWidth').value);
