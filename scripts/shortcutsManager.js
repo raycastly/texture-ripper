@@ -48,4 +48,10 @@ document.addEventListener('keydown', (e) => {
         document.getElementById('autoPack').click();
         e.preventDefault();
     }
+
+    // Pack source textures
+    else if (e.code === CONFIG.SHORTCUTS.autoPackLeft) {
+        document.getElementById('autoPackLeft').click();
+        e.preventDefault();
+    }
 });
