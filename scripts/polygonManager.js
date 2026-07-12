@@ -1,6 +1,25 @@
 // ==================== POLYGON MANAGEMENT ====================
 const PolygonManager = {
     // Unified polygon creation function
+    computeDragSurfacePoints: (vertices, midpoints) => {
+        const points = [];
+        for (let i = 0; i < vertices.length; i++) {
+            const nextIdx = (i + 1) % vertices.length;
+            const P0 = vertices[i];
+            const P2 = vertices[nextIdx];
+            const M  = midpoints[i];
+            const numSamples = 10;
+            for (let j = 0; j <= numSamples; j++) {
+                const t = j / numSamples;
+                const mt = 1 - t;
+                const x = mt*mt*P0.x + 2*mt*t*M.x + t*t*P2.x;
+                const y = mt*mt*P0.y + 2*mt*t*M.y + t*t*P2.y;
+                points.push(x, y);
+            }
+        }
+        return points;
+    },
+
     createPolygonGroup: (stage, layer, points = null, dirtyPolygons = null, skipReorder = false) => {
         const group = new Konva.Group({
             draggable: true,

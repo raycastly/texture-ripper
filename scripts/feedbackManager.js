@@ -1,5 +1,6 @@
 const FeedbackManager = (() => {
     let feedbackEl = null;
+    let spinnerOverlay = null;
 
     function init() {
         if (!feedbackEl) {
@@ -15,7 +16,7 @@ const FeedbackManager = (() => {
                 background: 'rgba(0,0,0,0.85)',
                 color: '#fff',
                 borderRadius: '6px',
-                zIndex: 9999,
+                zIndex: 10000,
                 fontFamily: 'sans-serif',
                 fontSize: '16px',
                 pointerEvents: 'none',
@@ -26,6 +27,62 @@ const FeedbackManager = (() => {
                 wordWrap: 'break-word'
             });
             document.body.appendChild(feedbackEl);
+        }
+    }
+
+    function initSpinner() {
+        if (!spinnerOverlay) {
+            spinnerOverlay = document.createElement('div');
+            Object.assign(spinnerOverlay.style, {
+                position: 'fixed',
+                top: '0', left: '0', width: '100%', height: '100%',
+                background: 'rgba(0,0,0,0.5)',
+                display: 'none',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 9999
+            });
+
+            const box = document.createElement('div');
+            Object.assign(box.style, {
+                background: 'rgba(0,0,0,0.85)',
+                borderRadius: '8px',
+                padding: '24px 32px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px'
+            });
+
+            const spinner = document.createElement('div');
+            Object.assign(spinner.style, {
+                width: '32px', height: '32px',
+                border: '3px solid rgba(255,255,255,0.2)',
+                borderTop: '3px solid #fff',
+                borderRadius: '50%',
+                animation: 'feedback-spin 0.8s linear infinite'
+            });
+
+            const label = document.createElement('div');
+            label.className = 'spinner-label';
+            Object.assign(label.style, {
+                color: '#fff',
+                fontFamily: 'sans-serif',
+                fontSize: '14px'
+            });
+
+            // Add keyframes
+            if (!document.getElementById('feedback-spin-style')) {
+                const style = document.createElement('style');
+                style.id = 'feedback-spin-style';
+                style.textContent = '@keyframes feedback-spin { to { transform: rotate(360deg); } }';
+                document.head.appendChild(style);
+            }
+
+            box.appendChild(spinner);
+            box.appendChild(label);
+            spinnerOverlay.appendChild(box);
+            document.body.appendChild(spinnerOverlay);
         }
     }
 
@@ -47,5 +104,17 @@ const FeedbackManager = (() => {
         }, duration);
     }
 
-    return { show };
+    function showSpinner(message = 'Please wait...') {
+        initSpinner();
+        spinnerOverlay.querySelector('.spinner-label').textContent = message;
+        spinnerOverlay.style.display = 'flex';
+    }
+
+    function hideSpinner() {
+        if (spinnerOverlay) {
+            spinnerOverlay.style.display = 'none';
+        }
+    }
+
+    return { show, showSpinner, hideSpinner };
 })();
