@@ -70,7 +70,8 @@ const CONFIG = {
     SHORTCUTS: {
         uploadImage: 'KeyQ',
         toggleImageLock: 'KeyW',
-        
+        autoPackLeft: 'KeyE',
+
         toggleDrawingMode: 'KeyA',
         addRectangle: 'KeyS',
 

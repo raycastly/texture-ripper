@@ -1,5 +1,21 @@
 document.addEventListener('keydown', (e) => {
 
+    // Undo/Redo
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+        if (e.shiftKey) {
+            UndoManager.redo();
+        } else {
+            UndoManager.undo();
+        }
+        e.preventDefault();
+        return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyY') {
+        UndoManager.redo();
+        e.preventDefault();
+        return;
+    }
+
     // Drawing mode toggle
     if (e.code === CONFIG.SHORTCUTS.toggleDrawingMode) {
         document.getElementById('toggleDrawingMode').click();
@@ -46,6 +62,12 @@ document.addEventListener('keydown', (e) => {
     // Pack textures
     else if (e.code === CONFIG.SHORTCUTS.packTextures) {
         document.getElementById('autoPack').click();
+        e.preventDefault();
+    }
+
+    // Pack source textures
+    else if (e.code === CONFIG.SHORTCUTS.autoPackLeft) {
+        document.getElementById('autoPackLeft').click();
         e.preventDefault();
     }
 });
