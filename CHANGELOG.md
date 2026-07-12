@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.12.0](https://github.com/raycastly/texture-ripper/compare/v1.11.0...v1.12.0) (2026-07-12)
+
+
+### Features
+
+* link rects to images toggle ([#25](https://github.com/raycastly/texture-ripper/issues/25)) ([694415f](https://github.com/raycastly/texture-ripper/commit/694415f77b67374ab0898b442dd4aeeb0bb9e3e1))
+
 # [1.11.0](https://github.com/raycastly/texture-ripper/compare/v1.10.0...v1.11.0) (2026-07-11)
 
 
